@@ -40,6 +40,8 @@ async function disconnectWhatsApp() {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-unlink"></i><span>قطع الاتصال</span>';
   }
+  const result = await apiCall('/whatsapp/disconnect', { method: 'POST' });
+  showToast(result.message, result.success ? 'success' : 'error');
 }
 
 function showQRCode(qrDataUrl) {
