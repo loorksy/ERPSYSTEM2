@@ -42,16 +42,25 @@ function initDate() {
 }
 
 function switchTab(btn, tabId) {
-  const card = document.getElementById('settingsCard') && tabId && tabId.startsWith('settings-')
-    ? document.getElementById('settingsCard')
-    : btn.closest('.bg-white');
+  var card = btn.closest('[data-tabs-container="settings"]') || document.getElementById('settingsCard') || btn.closest('.bg-white');
   if (!card) return;
-  card.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-  card.querySelectorAll('.tab-btn').forEach(b => {
+  var tabs = card.querySelectorAll('.tab-content');
+  var targetTab = document.getElementById(tabId);
+  tabs.forEach(function(t) {
+    t.classList.add('hidden');
+    t.style.display = 'none';
+  });
+  if (targetTab) {
+    targetTab.classList.remove('hidden');
+    targetTab.style.display = '';
+    targetTab.setAttribute('aria-hidden', 'false');
+  }
+  tabs.forEach(function(t) {
+    if (t !== targetTab) t.setAttribute('aria-hidden', 'true');
+  });
+  card.querySelectorAll('.tab-btn').forEach(function(b) {
     b.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200';
   });
-  const tabEl = document.getElementById(tabId);
-  if (tabEl) tabEl.classList.remove('hidden');
   btn.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-indigo-600 text-white shadow-md';
 }
 
@@ -71,11 +80,20 @@ function showToast(message, type = 'success') {
 }
 
 async function apiCall(url, options = {}) {
+  var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  if (options.headers) {
+    headers = Object.assign({}, headers, options.headers);
+    delete options.headers;
+  }
   try {
-    const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
-    return await res.json();
+    var res = await fetch(url, { credentials: 'same-origin', headers: headers, ...options });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) {
+      return { success: false, message: data.message || data.error || ('خطأ من الخادم: ' + res.status) };
+    }
+    return data;
   } catch (err) {
-    return { success: false, message: 'خطأ في الاتصال بالخادم' };
+    return { success: false, message: 'خطأ في الاتصال بالخادم. تحقق من تشغيل السيرفر والشبكة.' };
   }
 }
 

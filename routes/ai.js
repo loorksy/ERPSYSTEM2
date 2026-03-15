@@ -8,10 +8,10 @@ function createRouter(io) {
 
   function createJob(userId) {
     const db = getDb();
-    const row = db.prepare(
-      'INSERT INTO analysis_jobs (user_id, status) VALUES (?, ?) RETURNING id'
-    ).get(userId, 'pending');
-    return row.id;
+    const result = db.prepare(
+      'INSERT INTO analysis_jobs (user_id, status) VALUES (?, ?)'
+    ).run(userId, 'pending');
+    return result && result.lastInsertRowid ? result.lastInsertRowid : null;
   }
 
   function updateJobProgress(jobId, current, total) {
@@ -71,17 +71,42 @@ function createRouter(io) {
         return res.json({ success: false, message: 'مزوّد غير مدعوم' });
       }
 
-      aiService.saveApiKey(provider, apiKey.trim());
-
-      const models = await aiService.fetchModels(provider, apiKey.trim());
-      if (models.length > 0) {
-        aiService.saveModelsCache(provider, models);
+      const trimmedKey = apiKey.trim();
+      let models = [];
+      try {
+        models = await aiService.fetchModels(provider, trimmedKey);
+      } catch (fetchErr) {
+        return res.json({
+          success: false,
+          message: 'فشل الاتصال بخدمة ' + (provider === 'openai' ? 'OpenAI' : 'Gemini') + ': ' + (fetchErr.message || 'تحقق من المفتاح والشبكة'),
+        });
       }
+      if (!models || models.length === 0) {
+        return res.json({
+          success: false,
+          message: 'لم يتم جلب أي موديلات. تحقق من صحة المفتاح وأن الحساب يسمح باستخدام واجهة الـ API.',
+        });
+      }
+
+      aiService.saveApiKey(provider, trimmedKey);
+      aiService.saveModelsCache(provider, models);
+
+      let defaultModel = models[0];
+      if (provider === 'openai') {
+        const preferred = models.find((m) => m.includes('gpt-4o-mini')) || models.find((m) => m.includes('gpt-4o'));
+        if (preferred) defaultModel = preferred;
+      }
+      if (provider === 'gemini') {
+        const preferred = models.find((m) => m.includes('gemini-1.5-flash')) || models.find((m) => m.includes('gemini-1.5-pro'));
+        if (preferred) defaultModel = preferred;
+      }
+      aiService.saveSelectedModel(provider, defaultModel);
 
       res.json({
         success: true,
-        message: `تم حفظ مفتاح ${provider === 'openai' ? 'OpenAI' : 'Gemini'} بنجاح`,
+        message: `تم حفظ المفتاح وربطه بأداة ترتيب الرسائل. الموديل: ${defaultModel}`,
         models,
+        selectedModel: defaultModel,
       });
     } catch (err) {
       res.json({ success: false, message: 'فشل حفظ المفتاح: ' + err.message });
@@ -124,6 +149,9 @@ function createRouter(io) {
       }
       const userId = req.session.userId;
       const jobId = createJob(userId);
+      if (!jobId) {
+        return res.json({ success: false, message: 'فشل إنشاء المهمة. جرّب مرة أخرى.' });
+      }
       const totalChunks = Math.ceil(text.length / 12000) || 1;
       setJobRunning(jobId, totalChunks);
 
@@ -192,7 +220,7 @@ function createRouter(io) {
       const db = getDb();
       const rows = db
         .prepare(
-          'SELECT id, status, progress_current, progress_total, provider, model, chunks_count, created_at, updated_at FROM analysis_jobs WHERE user_id = ? ORDER BY created_at DESC LIMIT 30'
+          'SELECT id, status, progress_current, progress_total, provider, model, chunks_count, exported_to_sheets, created_at, updated_at FROM analysis_jobs WHERE user_id = ? ORDER BY created_at DESC LIMIT 30'
         )
         .all(req.session.userId);
       res.json({ success: true, jobs: rows });

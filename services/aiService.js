@@ -136,7 +136,7 @@ async function fetchModels(provider, apiKey) {
     return [];
   } catch (err) {
     console.error(`[AI] Error fetching models for ${provider}:`, err.message);
-    return [];
+    throw new Error(err.message || 'فشل جلب الموديلات');
   }
 }
 

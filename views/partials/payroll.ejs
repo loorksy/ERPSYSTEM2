@@ -1,28 +1,223 @@
-<div class="max-w-5xl" dir="rtl">
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-    <div class="flex items-center gap-3 py-5 px-6 border-b border-slate-100">
+<div class="max-w-4xl mx-auto space-y-6 pb-8" dir="rtl">
+  <!-- عنوان الصفحة -->
+  <div class="flex items-center gap-3">
+    <div class="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0">
       <i class="fas fa-money-check-alt text-xl text-indigo-600"></i>
-      <h3 class="text-lg font-bold">تدقيق الرواتب</h3>
     </div>
-    <div class="p-6 md:p-10">
-      <div class="flex gap-2 mb-6 flex-wrap">
-        <button onclick="switchTab(this, 'payroll-group')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-indigo-600 text-white shadow-md">جماعي</button>
-        <button onclick="switchTab(this, 'payroll-individual')" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200">فردي</button>
-      </div>
-      <div id="payroll-group" class="tab-content">
-        <div class="flex flex-col items-center justify-center py-16 text-slate-400">
-          <i class="fas fa-money-check-alt text-5xl mb-4 opacity-40"></i>
-          <p class="text-lg font-medium">سيتم إضافة محتوى الجماعي هنا</p>
-          <p class="text-sm mt-2">سيتم بناء هذا القسم قريباً</p>
-        </div>
-      </div>
-      <div id="payroll-individual" class="tab-content hidden">
-        <div class="flex flex-col items-center justify-center py-16 text-slate-400">
-          <i class="fas fa-money-check-alt text-5xl mb-4 opacity-40"></i>
-          <p class="text-lg font-medium">سيتم إضافة محتوى الفردي هنا</p>
-          <p class="text-sm mt-2">سيتم بناء هذا القسم قريباً</p>
-        </div>
-      </div>
+    <div>
+      <h2 class="text-xl font-bold text-slate-800">تدقيق الرواتب</h2>
+      <p class="text-sm text-slate-500">مزامنة الدورة المالية ثم اختيار الجدول وتنفيذ التدقيق</p>
     </div>
   </div>
+
+  <!-- 1. مزامنة الدورة المالية -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="p-4 sm:p-6">
+      <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-sync-alt text-indigo-600"></i>
+        مزامنة الدورة المالية
+      </h3>
+      <p class="text-sm text-slate-600 mb-4">اختر الدورة المالية التي تحتوي على جداول الإدارة والوكيل (يتم جلبها من قسم Sheet).</p>
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+        <div class="flex-1 min-w-0">
+          <label for="payrollCycleSelect" class="block mb-2 font-semibold text-sm text-slate-700">الدورة المالية</label>
+          <select id="payrollCycleSelect" class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+            <option value="">— اختر الدورة —</option>
+          </select>
+        </div>
+        <button type="button" id="payrollLoadCycleBtn" onclick="payrollLoadCycle()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all shrink-0">
+          <i class="fas fa-check"></i> تحميل الدورة
+        </button>
+      </div>
+      <p id="payrollCycleHint" class="mt-2 text-xs text-slate-500 hidden">لا توجد دورات. أنشئ دورة من قسم Sheet أولاً.</p>
+    </div>
+  </section>
+
+  <!-- 2. حاوية الخيارات (تظهر بعد اختيار الدورة) -->
+  <section id="payrollOptionsSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden">
+    <div class="p-4 sm:p-6">
+      <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-cogs text-emerald-600"></i>
+        خيارات التدقيق
+      </h3>
+      <p class="text-sm text-slate-600 mb-4">اختر جدول البيانات من حساب Google ثم نفّذ التدقيق.</p>
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end flex-wrap">
+        <div class="flex-1 min-w-0 sm:min-w-[200px]">
+          <label for="payrollSpreadsheetSelect" class="block mb-2 font-semibold text-sm text-slate-700">جدول البيانات (Google Sheets)</label>
+          <select id="payrollSpreadsheetSelect" class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+            <option value="">— جاري التحميل... —</option>
+          </select>
+        </div>
+        <button type="button" id="payrollExecuteBtn" onclick="payrollExecute()" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] transition-all shrink-0">
+          <i class="fas fa-play"></i> تنفيذ
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. إعدادات التدقيق -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="p-4 sm:p-6">
+      <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-sliders-h text-amber-600"></i>
+        إعدادات التدقيق
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div>
+          <label for="payrollDiscountRate" class="block mb-2 font-semibold text-sm text-slate-700">نسبة الخصم (%)</label>
+          <input type="number" id="payrollDiscountRate" min="0" max="100" step="0.01" value="0"
+            class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+        </div>
+        <div>
+          <label for="payrollAgentColor" class="block mb-2 font-semibold text-sm text-slate-700">لون الوكيل</label>
+          <div class="flex items-center gap-2">
+            <input type="color" id="payrollAgentColor" value="#3b82f6"
+              class="w-12 h-11 rounded-xl border-2 border-slate-200 cursor-pointer p-1 bg-white">
+            <input type="text" id="payrollAgentColorText" value="#3b82f6" maxlength="7" dir="ltr"
+              class="flex-1 py-3 px-3 border-2 border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label for="payrollMgmtColor" class="block mb-2 font-semibold text-sm text-slate-700">لون الإدارة</label>
+          <div class="flex items-center gap-2">
+            <input type="color" id="payrollMgmtColor" value="#10b981"
+              class="w-12 h-11 rounded-xl border-2 border-slate-200 cursor-pointer p-1 bg-white">
+            <input type="text" id="payrollMgmtColorText" value="#10b981" maxlength="7" dir="ltr"
+              class="flex-1 py-3 px-3 border-2 border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div class="flex items-end">
+          <button type="button" onclick="payrollSaveSettings()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98] transition-all">
+            <i class="fas fa-save"></i> حفظ الإعدادات
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- منطقة النتائج (لاحقاً) -->
+  <section id="payrollResultsSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden">
+    <div class="p-4 sm:p-6">
+      <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <i class="fas fa-list-alt text-slate-600"></i>
+        النتائج
+      </h3>
+      <div id="payrollResultsContent" class="text-sm text-slate-500">
+        سيظهر هنا نتيجة التدقيق بعد التنفيذ.
+      </div>
+    </div>
+  </section>
 </div>
+
+<script>
+(function() {
+  var cycleSelect = document.getElementById('payrollCycleSelect');
+  var optionsSection = document.getElementById('payrollOptionsSection');
+  if (cycleSelect) {
+    cycleSelect.addEventListener('change', function() {
+      if (optionsSection) optionsSection.classList.add('hidden');
+    });
+  }
+})();
+
+function syncPayrollAgentColor() {
+  var color = document.getElementById('payrollAgentColor');
+  var text = document.getElementById('payrollAgentColorText');
+  if (color && text) { color.value = text.value; text.value = color.value; }
+}
+function syncPayrollAgentColorFromPicker() {
+  var color = document.getElementById('payrollAgentColor');
+  var text = document.getElementById('payrollAgentColorText');
+  if (color && text) text.value = color.value;
+}
+function syncPayrollMgmtColor() {
+  var color = document.getElementById('payrollMgmtColor');
+  var text = document.getElementById('payrollMgmtColorText');
+  if (color && text) { color.value = text.value; text.value = color.value; }
+}
+function syncPayrollMgmtColorFromPicker() {
+  var color = document.getElementById('payrollMgmtColor');
+  var text = document.getElementById('payrollMgmtColorText');
+  if (color && text) text.value = color.value;
+}
+
+document.getElementById('payrollAgentColor').addEventListener('input', syncPayrollAgentColorFromPicker);
+document.getElementById('payrollAgentColorText').addEventListener('input', syncPayrollAgentColor);
+document.getElementById('payrollMgmtColor').addEventListener('input', syncPayrollMgmtColorFromPicker);
+document.getElementById('payrollMgmtColorText').addEventListener('input', syncPayrollMgmtColor);
+
+async function payrollLoadCycles() {
+  var sel = document.getElementById('payrollCycleSelect');
+  var hint = document.getElementById('payrollCycleHint');
+  if (!sel) return;
+  try {
+    var res = await fetch('/api/sheet/cycles');
+    var data = await res.json();
+    if (!data.success || !data.cycles || data.cycles.length === 0) {
+      sel.innerHTML = '<option value="">— لا توجد دورات —</option>';
+      if (hint) hint.classList.remove('hidden');
+      return;
+    }
+    if (hint) hint.classList.add('hidden');
+    sel.innerHTML = '<option value="">— اختر الدورة —</option>' + data.cycles.map(function(c) {
+      return '<option value="' + c.id + '">' + (c.name || 'دورة #' + c.id) + '</option>';
+    }).join('');
+  } catch (_) {
+    sel.innerHTML = '<option value="">— خطأ في التحميل —</option>';
+    if (hint) hint.classList.remove('hidden');
+  }
+}
+
+function payrollLoadCycle() {
+  var sel = document.getElementById('payrollCycleSelect');
+  var optionsSection = document.getElementById('payrollOptionsSection');
+  if (!sel || !sel.value) {
+    if (typeof showToast === 'function') showToast('اختر دورة مالية أولاً', 'error');
+    return;
+  }
+  if (optionsSection) optionsSection.classList.remove('hidden');
+  payrollLoadSpreadsheetsList();
+  if (typeof showToast === 'function') showToast('تم تحميل الدورة. اختر جدول البيانات ثم انقر تنفيذ.', 'success');
+}
+
+async function payrollLoadSpreadsheetsList() {
+  var sel = document.getElementById('payrollSpreadsheetSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— جاري التحميل... —</option>';
+  try {
+    var res = await fetch('/api/sheet/spreadsheets-list');
+    var data = await res.json();
+    if (!data.success) {
+      sel.innerHTML = '<option value="">' + (data.message || 'لم يتم الربط بـ Google') + '</option>';
+      return;
+    }
+    var list = data.spreadsheets || [];
+    sel.innerHTML = '<option value="">— اختر الجدول —</option>' + list.map(function(f) {
+      return '<option value="' + (f.id || '').replace(/"/g, '&quot;') + '">' + (f.name || f.id) + '</option>';
+    }).join('');
+  } catch (_) {
+    sel.innerHTML = '<option value="">خطأ في التحميل</option>';
+  }
+}
+
+function payrollExecute() {
+  var spreadsheetId = (document.getElementById('payrollSpreadsheetSelect').value || '').trim();
+  if (!spreadsheetId) {
+    if (typeof showToast === 'function') showToast('اختر جدول البيانات أولاً', 'error');
+    return;
+  }
+  if (typeof showToast === 'function') showToast('سيتم تنفيذ منطق التدقيق لاحقاً.', 'success');
+  document.getElementById('payrollResultsSection').classList.remove('hidden');
+}
+
+function payrollSaveSettings() {
+  var discount = document.getElementById('payrollDiscountRate').value;
+  var agentColor = document.getElementById('payrollAgentColor').value;
+  var mgmtColor = document.getElementById('payrollMgmtColor').value;
+  if (typeof showToast === 'function') showToast('تم حفظ الإعدادات (سيتم ربطها بالخادم لاحقاً)', 'success');
+}
+
+(function initPayrollPage() {
+  payrollLoadCycles();
+})();
+</script>

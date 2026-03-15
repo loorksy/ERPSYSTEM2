@@ -1,24 +1,99 @@
-const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
 const DB_PATH = path.join(__dirname, 'lorkerp.db');
 
-let db;
+let innerDb = null;
 
-function getDb() {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+function saveDb() {
+  if (!innerDb) return;
+  try {
+    const data = innerDb.export();
+    fs.writeFileSync(DB_PATH, Buffer.from(data));
+  } catch (err) {
+    console.error('[DB] Save error:', err.message);
   }
-  return db;
 }
 
-function initDatabase() {
-  const db = getDb();
+function wrapStmt(sql) {
+  return {
+    run(...params) {
+      const stmt = innerDb.prepare(sql);
+      try {
+        if (params.length) stmt.bind(params);
+        stmt.step();
+        stmt.free();
+        const idStmt = innerDb.prepare('SELECT last_insert_rowid() as id');
+        idStmt.step();
+        const id = idStmt.get()[0];
+        idStmt.free();
+        saveDb();
+        return { lastInsertRowid: id };
+      } catch (e) {
+        try { stmt.free(); } catch (_) {}
+        throw e;
+      }
+    },
+    get(...params) {
+      const stmt = innerDb.prepare(sql);
+      try {
+        if (params.length) stmt.bind(params);
+        const hasRow = stmt.step();
+        const row = hasRow ? stmt.getAsObject() : undefined;
+        stmt.free();
+        return row;
+      } catch (e) {
+        try { stmt.free(); } catch (_) {}
+        throw e;
+      }
+    },
+    all(...params) {
+      const stmt = innerDb.prepare(sql);
+      try {
+        if (params.length) stmt.bind(params);
+        const rows = [];
+        while (stmt.step()) rows.push(stmt.getAsObject());
+        stmt.free();
+        return rows;
+      } catch (e) {
+        try { stmt.free(); } catch (_) {}
+        throw e;
+      }
+    },
+  };
+}
 
-  db.exec(`
+function getDb() {
+  if (!innerDb) throw new Error('Database not initialized. Call initDatabase() first.');
+  return {
+    exec(sql) {
+      innerDb.run(sql);
+      saveDb();
+    },
+    prepare(sql) {
+      return wrapStmt(sql);
+    },
+  };
+}
+
+async function initDatabase() {
+  if (innerDb) return getDb();
+
+  const initSqlJs = require('sql.js');
+  const SQL = await initSqlJs();
+
+  if (fs.existsSync(DB_PATH)) {
+    const buf = fs.readFileSync(DB_PATH);
+    innerDb = new SQL.Database(new Uint8Array(buf));
+  } else {
+    innerDb = new SQL.Database();
+  }
+
+  innerDb.run('PRAGMA journal_mode = WAL');
+  innerDb.run('PRAGMA foreign_keys = ON');
+
+  innerDb.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -76,6 +151,7 @@ function initDatabase() {
       model TEXT,
       chunks_count INTEGER DEFAULT 0,
       error_message TEXT,
+      exported_to_sheets INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -89,12 +165,28 @@ function initDatabase() {
       last_sync DATETIME,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
-  `);
 
-  const adminUser = db.prepare('SELECT * FROM users WHERE username = ?').get(process.env.ADMIN_USERNAME || 'admin');
-  if (!adminUser) {
+    CREATE TABLE IF NOT EXISTS financial_cycles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      management_data TEXT,
+      agent_data TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  saveDb();
+
+  try {
+    innerDb.run('ALTER TABLE analysis_jobs ADD COLUMN exported_to_sheets INTEGER DEFAULT 0');
+    saveDb();
+  } catch (_) {}
+
+  const adminUser = wrapStmt('SELECT * FROM users WHERE username = ?').get(process.env.ADMIN_USERNAME || 'admin');
+  if (!adminUser || !adminUser.username) {
     const hashedPassword = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10);
-    db.prepare('INSERT INTO users (username, password, display_name, role) VALUES (?, ?, ?, ?)').run(
+    wrapStmt('INSERT INTO users (username, password, display_name, role) VALUES (?, ?, ?, ?)').run(
       process.env.ADMIN_USERNAME || 'admin',
       hashedPassword,
       'مدير النظام',
@@ -102,7 +194,7 @@ function initDatabase() {
     );
   }
 
-  return db;
+  return getDb();
 }
 
 module.exports = { getDb, initDatabase };

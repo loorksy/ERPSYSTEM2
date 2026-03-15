@@ -18,8 +18,6 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-initDatabase();
-
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -30,8 +28,9 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://cdnjs.cloudflare.com"],
     },
   },
 }));
@@ -60,6 +59,7 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const whatsappRoutes = require('./routes/whatsapp')(io);
 const sheetsRoutes = require('./routes/sheets');
+const sheetRoutes = require('./routes/sheet');
 const settingsRoutes = require('./routes/settings');
 const pagesRoutes = require('./routes/pages');
 const aiRoutes = require('./routes/ai');
@@ -68,6 +68,7 @@ app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/whatsapp', whatsappRoutes);
 app.use('/sheets', sheetsRoutes);
+app.use('/api/sheet', sheetRoutes);
 app.use('/settings', settingsRoutes);
 app.use('/ai', aiRoutes(io));
 app.use('/', pagesRoutes);
@@ -107,9 +108,16 @@ if (waSession.hasExistingSession()) {
   }, 3000);
 }
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[LorkERP] Server running on http://0.0.0.0:${PORT}`);
-  console.log(`[LorkERP] WhatsApp module initialized`);
-});
+initDatabase()
+  .then(() => {
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`[LorkERP] Server running on http://0.0.0.0:${PORT}`);
+      console.log(`[LorkERP] WhatsApp module initialized`);
+    });
+  })
+  .catch((err) => {
+    console.error('[LorkERP] Database init failed:', err);
+    process.exit(1);
+  });
 
 module.exports = { app, server, io };

@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
+const { google } = require('googleapis');
+
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
+
+function getOAuth2Client(credentials) {
+  const clientId = credentials?.client_id || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = credentials?.client_secret || process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  return new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
+}
+
+function ensureConfigRow(db) {
+  const row = db.prepare('SELECT id FROM google_sheets_config WHERE id = 1').get();
+  if (!row) {
+    db.prepare(`
+      INSERT INTO google_sheets_config (id, spreadsheet_id, credentials, token, sync_enabled, updated_at)
+      VALUES (1, NULL, NULL, NULL, 0, CURRENT_TIMESTAMP)
+    `).run();
+  }
+}
 
 router.get('/', requireAuth, (req, res) => {
   const db = getDb();
@@ -14,19 +34,53 @@ router.get('/', requireAuth, (req, res) => {
   });
 });
 
+/** حالة الربط: هل الاعتماد من env، متصل، ومعرّف الجدول */
+router.get('/status', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    ensureConfigRow(db);
+    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const hasEnv = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+    const creds = config?.credentials ? JSON.parse(config.credentials) : null;
+    const canAuth = hasEnv || (creds?.client_id && creds?.client_secret);
+    const connected = !!(config?.token && config.token !== 'null');
+    res.json({
+      success: true,
+      hasEnvCredentials: !!hasEnv,
+      canAuth,
+      connected,
+      spreadsheet_id: config?.spreadsheet_id || null
+    });
+  } catch (e) {
+    res.json({ success: false, message: e.message });
+  }
+});
+
 router.post('/configure', requireAuth, (req, res) => {
   try {
     const { spreadsheet_id, client_id, client_secret } = req.body;
     const db = getDb();
-
+    ensureConfigRow(db);
+    const credentials = (client_id && client_secret) ? JSON.stringify({ client_id, client_secret }) : null;
     db.prepare(`
-      INSERT OR REPLACE INTO google_sheets_config (id, spreadsheet_id, credentials, updated_at)
-      VALUES (1, ?, ?, CURRENT_TIMESTAMP)
-    `).run(spreadsheet_id, JSON.stringify({ client_id, client_secret }));
-
+      UPDATE google_sheets_config SET spreadsheet_id = ?, credentials = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
+    `).run(spreadsheet_id || null, credentials);
     res.json({ success: true, message: 'تم حفظ الإعدادات بنجاح' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ أثناء حفظ الإعدادات' });
+  }
+});
+
+/** حفظ معرّف جدول البيانات فقط (بعد تسجيل الدخول بـ Google) */
+router.post('/save-spreadsheet', requireAuth, (req, res) => {
+  try {
+    const { spreadsheet_id } = req.body;
+    const db = getDb();
+    ensureConfigRow(db);
+    db.prepare('UPDATE google_sheets_config SET spreadsheet_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(spreadsheet_id || null);
+    res.json({ success: true, message: 'تم حفظ معرّف الجدول' });
+  } catch (error) {
+    res.json({ success: false, message: 'حدث خطأ' });
   }
 });
 
@@ -45,53 +99,162 @@ router.post('/toggle-sync', requireAuth, (req, res) => {
   }
 });
 
-router.get('/auth', requireAuth, async (req, res) => {
+/** قطع الاتصال بحساب Google (لمن يريد إعادة تسجيل الدخول) */
+router.post('/disconnect', requireAuth, (req, res) => {
   try {
     const db = getDb();
-    const config = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
-    if (!config || !config.credentials) {
-      return res.redirect('/sheets?error=no_config');
+    ensureConfigRow(db);
+    db.prepare('UPDATE google_sheets_config SET token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run();
+    res.json({ success: true, message: 'تم قطع الاتصال. يمكنك تسجيل الدخول مرة أخرى.' });
+  } catch (error) {
+    res.json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+/** تسجيل الدخول باستخدام Google — يستخدم env أو credentials المحفوظة */
+router.get('/auth', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    ensureConfigRow(db);
+    const config = db.prepare('SELECT credentials FROM google_sheets_config WHERE id = 1').get();
+    const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(credentials);
+    if (!oauth2Client) {
+      return res.redirect('/settings?sheets=no_credentials');
     }
-
-    const { google } = require('googleapis');
-    const creds = JSON.parse(config.credentials);
-    const oauth2Client = new google.auth.OAuth2(
-      creds.client_id,
-      creds.client_secret,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/sheets/callback'
-    );
-
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/spreadsheets']
+      prompt: 'consent',
+      scope: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.readonly']
     });
-
     res.redirect(authUrl);
   } catch (error) {
-    res.redirect('/sheets?error=auth_failed');
+    res.redirect('/settings?sheets=auth_failed');
   }
 });
 
 router.get('/callback', requireAuth, async (req, res) => {
   try {
     const { code } = req.query;
+    if (!code) return res.redirect('/settings?sheets=callback_failed');
     const db = getDb();
-    const config = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
-
-    const { google } = require('googleapis');
-    const creds = JSON.parse(config.credentials);
-    const oauth2Client = new google.auth.OAuth2(
-      creds.client_id,
-      creds.client_secret,
-      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/sheets/callback'
-    );
-
+    ensureConfigRow(db);
+    const config = db.prepare('SELECT credentials, spreadsheet_id FROM google_sheets_config WHERE id = 1').get();
+    const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(credentials);
+    if (!oauth2Client) return res.redirect('/settings?sheets=no_credentials');
     const { tokens } = await oauth2Client.getToken(code);
-    db.prepare('UPDATE google_sheets_config SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(JSON.stringify(tokens));
-
-    res.redirect('/sheets?success=connected');
+    db.prepare(`
+      UPDATE google_sheets_config SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
+    `).run(JSON.stringify(tokens));
+    res.redirect('/settings?sheets=connected');
   } catch (error) {
-    res.redirect('/sheets?error=callback_failed');
+    res.redirect('/settings?sheets=callback_failed');
+  }
+});
+
+/** قائمة أوراق الجدول (للاختيار عند الإلحاق) */
+router.get('/sheets-list', requireAuth, async (req, res) => {
+  try {
+    const db = getDb();
+    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    if (!config?.spreadsheet_id || !config?.token) {
+      return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول' });
+    }
+    const creds = config.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(creds);
+    if (!oauth2Client) return res.json({ success: false, message: 'بيانات الاعتماد غير متوفرة' });
+    oauth2Client.setCredentials(JSON.parse(config.token));
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+    const meta = await sheets.spreadsheets.get({ spreadsheetId: config.spreadsheet_id });
+    const titles = (meta.data.sheets || []).map(s => ({ id: s.properties.sheetId, title: s.properties.title }));
+    res.json({ success: true, sheets: titles });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل جلب قائمة الأوراق' });
+  }
+});
+
+/** تحويل جدول markdown إلى مصفوفة صفوف */
+function markdownTableToRows(tableMarkdown) {
+  if (!tableMarkdown || typeof tableMarkdown !== 'string') return [];
+  const lines = tableMarkdown.trim().split('\n').filter(l => l.trim().startsWith('|'));
+  if (lines.length < 2) return [];
+  const header = lines[0].split('|').map(c => c.trim()).filter(Boolean);
+  const separator = lines[1];
+  const dataLines = lines.slice(2);
+  const rows = [header];
+  for (const line of dataLines) {
+    const cells = line.split('|');
+    cells.shift();
+    if (cells[cells.length - 1]?.trim() === '') cells.pop();
+    rows.push(cells.map(c => c.trim()));
+  }
+  return rows;
+}
+
+/** تصدير النتائج إلى Google Sheet — ورقة جديدة أو إلحاق بورقة موجودة */
+router.post('/export', requireAuth, async (req, res) => {
+  try {
+    const { tableMarkdown, rows: rawRows, sheetName, mode, targetSheetTitle, jobId } = req.body;
+    const db = getDb();
+    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    if (!config?.spreadsheet_id || !config?.token) {
+      return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول. اربط من الإعدادات → Google Sheets.' });
+    }
+    const dataRows = Array.isArray(rawRows) && rawRows.length
+      ? rawRows
+      : markdownTableToRows(tableMarkdown);
+    if (!dataRows.length) {
+      return res.json({ success: false, message: 'لا توجد بيانات للتصدير' });
+    }
+    const credentials = config.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(credentials);
+    if (!oauth2Client) return res.json({ success: false, message: 'بيانات الاعتماد غير متوفرة' });
+    oauth2Client.setCredentials(JSON.parse(config.token));
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+    const spreadsheetId = config.spreadsheet_id;
+    let sheetTitle = (sheetName && String(sheetName).trim()) || `تحليل رسائل ${new Date().toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' })}`;
+
+    if (mode === 'appendToSheet' && targetSheetTitle) {
+      const range = `'${targetSheetTitle}'!A1`;
+      await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range,
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: { values: dataRows }
+      });
+      if (jobId != null && Number.isInteger(Number(jobId))) {
+        const db2 = getDb();
+        db2.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+      }
+      return res.json({ success: true, message: `تم إلحاق ${dataRows.length} صف بورقة "${targetSheetTitle}"` });
+    }
+
+    const createRes = await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [{
+          addSheet: {
+            properties: { title: sheetTitle }
+          }
+        }]
+      }
+    });
+    const newSheetId = createRes.data.replies[0].addSheet.properties.sheetId;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${sheetTitle}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: dataRows }
+    });
+    if (jobId != null && Number.isInteger(Number(jobId))) {
+      const db = getDb();
+      db.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+    }
+    res.json({ success: true, message: `تم إنشاء الورقة "${sheetTitle}" وتصدير ${dataRows.length} صف` });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل التصدير' });
   }
 });
 

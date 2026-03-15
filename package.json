@@ -22,7 +22,7 @@
     "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "^10.4.27",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.6.0",
+    "sql.js": "^1.10.3",
     "compression": "^1.7.4",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
@@ -38,7 +38,8 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.0",
     "tailwindcss": "^4.2.1",
-    "whatsapp-web.js": "*"
+    "whatsapp-web.js": "*",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

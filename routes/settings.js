@@ -5,10 +5,13 @@ const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 
 router.get('/', requireAuth, (req, res) => {
+  const db = getDb();
+  const sheetsConfig = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
   res.render('dashboard', {
     title: 'الإعدادات',
     page: 'settings',
-    user: req.session.user
+    user: req.session.user,
+    sheetsConfig: sheetsConfig || null
   });
 });
 
