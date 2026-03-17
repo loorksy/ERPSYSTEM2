@@ -86,6 +86,12 @@
           </a>
         </li>
         <li>
+          <a href="/search" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'search' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
+            <i class="fas fa-search w-5 text-center <%= page === 'search' ? 'text-indigo-400' : '' %>"></i>
+            <span>البحث</span>
+          </a>
+        </li>
+        <li>
           <a href="/clients" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'clients' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-users w-5 text-center <%= page === 'clients' ? 'text-indigo-400' : '' %>"></i>
             <span>بيانات العملاء</span>
@@ -130,13 +136,7 @@
           </a>
         </li>
 
-        <li class="pt-4 pb-2 px-4 text-[0.7rem] font-bold uppercase text-white/35 tracking-wider">واتساب والعملاء</li>
-        <li>
-          <a href="/wa-bot" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'wa-bot' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
-            <i class="fas fa-robot w-5 text-center <%= page === 'wa-bot' ? 'text-indigo-400' : '' %>"></i>
-            <span>بوت واتساب</span>
-          </a>
-        </li>
+        <li class="pt-4 pb-2 px-4 text-[0.7rem] font-bold uppercase text-white/35 tracking-wider">التواصل والعملاء</li>
         <li>
           <a href="/client-portal" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'client-portal' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-headset w-5 text-center <%= page === 'client-portal' ? 'text-indigo-400' : '' %>"></i>
@@ -182,7 +182,9 @@
         <%- include('partials/sheet') %>
       <% } else if (page === 'payroll') { %>
         <%- include('partials/payroll') %>
-      <% } else if (page === 'clients') { %>
+      <% } else if (page === 'search') { %>
+        <%- include('partials/search') %>
+          <% } else if (page === 'clients') { %>
         <%- include('partials/clients') %>
       <% } else if (page === 'messages') { %>
         <%- include('partials/messages') %>
@@ -196,16 +198,10 @@
         <%- include('partials/transfer-companies') %>
       <% } else if (page === 'shipping') { %>
         <%- include('partials/shipping') %>
-      <% } else if (page === 'wa-bot') { %>
-        <%- include('partials/wa-bot') %>
       <% } else if (page === 'client-portal') { %>
         <%- include('partials/client-portal') %>
       <% } else if (page === 'settings') { %>
         <%- include('partials/settings') %>
-      <% } else if (page === 'whatsapp') { %>
-        <%- include('partials/whatsapp') %>
-      <% } else if (page === 'sheets') { %>
-        <%- include('partials/sheets') %>
       <% } %>
     </div>
   </main>
@@ -227,22 +223,15 @@
       <i class="fas fa-users text-lg"></i>
       <span>العملاء</span>
     </a>
-    <a href="/wa-bot" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'wa-bot' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-robot text-lg"></i>
-      <span>البوت</span>
-    </a>
-    <a href="/settings" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'settings' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-cog text-lg"></i>
-      <span>الإعدادات</span>
+    <a href="/search" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'search' ? 'text-indigo-600' : 'text-slate-400' %>">
+      <i class="fas fa-search text-lg"></i>
+      <span>البحث</span>
     </a>
   </nav>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/app.js"></script>
-  <% if (page === 'whatsapp' || page === 'wa-bot') { %>
-    <script src="/js/whatsapp.js"></script>
-  <% } %>
-  <% if (page === 'sheets' || page === 'sheet') { %>
+  <% if (page === 'sheet') { %>
     <script src="/js/sheets.js"></script>
   <% } %>
   <% if (page === 'settings') { %>

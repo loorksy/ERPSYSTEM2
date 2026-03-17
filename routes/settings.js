@@ -56,4 +56,19 @@ router.post('/update-profile', requireAuth, (req, res) => {
   }
 });
 
+router.post('/reset-data', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.session.userId;
+    db.prepare('DELETE FROM payroll_user_audit_cache WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM payroll_cycle_cache WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM payroll_cycle_columns WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM payroll_settings WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM financial_cycles WHERE user_id = ?').run(userId);
+    res.json({ success: true, message: 'تم حذف بيانات الدورات والتدقيق لهذه الحساب وإعادة التعيين.' });
+  } catch (error) {
+    res.json({ success: false, message: 'فشل حذف البيانات: ' + (error.message || '') });
+  }
+});
+
 module.exports = router;

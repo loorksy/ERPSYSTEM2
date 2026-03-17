@@ -1,7 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
   initDate();
+  initHomeSheetsStatus();
 });
+
+function initHomeSheetsStatus() {
+  var el = document.getElementById('homeSheetsStatus');
+  if (!el) return;
+  fetch('/sheets/status', { credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success && data.connected) {
+        el.textContent = 'مفعل';
+        el.className = 'text-xs font-medium py-0.5 px-2.5 rounded-full bg-emerald-50 text-emerald-600';
+      } else {
+        el.textContent = 'غير مفعل';
+        el.className = 'text-xs font-medium py-0.5 px-2.5 rounded-full bg-red-50 text-red-500';
+      }
+    })
+    .catch(function() {
+      el.textContent = 'غير مفعل';
+      el.className = 'text-xs font-medium py-0.5 px-2.5 rounded-full bg-red-50 text-red-500';
+    });
+}
+
 
 function initSidebar() {
   const menuToggle = document.getElementById('menuToggle');

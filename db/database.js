@@ -111,15 +111,6 @@ async function initDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE TABLE IF NOT EXISTS whatsapp_sessions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_data TEXT,
-      phone_number TEXT,
-      status TEXT DEFAULT 'disconnected',
-      connected_at DATETIME,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
     CREATE TABLE IF NOT EXISTS ai_config (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider TEXT NOT NULL,
@@ -183,10 +174,47 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS payroll_settings (
       user_id INTEGER PRIMARY KEY,
       discount_rate REAL DEFAULT 0,
-      agent_color TEXT DEFAULT '#3b82f6',
-      management_color TEXT DEFAULT '#10b981',
+      agent_color TEXT DEFAULT '#8b5cf6',
+      management_color TEXT DEFAULT '#facc15',
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS payroll_cycle_columns (
+      user_id INTEGER NOT NULL,
+      cycle_id INTEGER NOT NULL,
+      mgmt_user_id_col TEXT DEFAULT 'A',
+      agent_user_id_col TEXT DEFAULT 'A',
+      agent_salary_col TEXT DEFAULT 'D',
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, cycle_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS payroll_cycle_cache (
+      user_id INTEGER NOT NULL,
+      cycle_id INTEGER NOT NULL,
+      management_data TEXT,
+      agent_data TEXT,
+      management_sheet_name TEXT,
+      agent_sheet_name TEXT,
+      audited_agent_ids TEXT,
+      audited_mgmt_ids TEXT,
+      found_in_target_sheet_ids TEXT,
+      synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      stale_after DATETIME,
+      PRIMARY KEY (user_id, cycle_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS payroll_user_audit_cache (
+      user_id INTEGER NOT NULL,
+      cycle_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      audit_status TEXT DEFAULT 'غير مدقق',
+      audit_source TEXT,
+      details_json TEXT,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, cycle_id, member_user_id)
+    );
+
   `);
   saveDb();
 

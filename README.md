@@ -6,7 +6,6 @@
 
 - **تصميم متجاوب** - يعمل كتطبيق موبايل على الهاتف وكداشبورد على اللابتوب
 - **واجهة عربية كاملة** - دعم RTL مع خط Tajawal
-- **ربط واتساب** - اتصال عبر مسح QR Code
 - **مزامنة Google Sheets** - ربط وتزامن البيانات مع جداول بيانات Google
 - **نظام مصادقة آمن** - تسجيل دخول مع تشفير كلمات المرور
 - **قابل للتوسع** - مبني بهيكلية جاهزة لإضافة أقسام وصفحات جديدة
@@ -58,7 +57,6 @@ LorkERP/
 ├── routes/
 │   ├── auth.js            # مسارات تسجيل الدخول
 │   ├── dashboard.js       # لوحة التحكم
-│   ├── whatsapp.js        # ربط واتساب
 │   ├── sheets.js          # مزامنة Google Sheets
 │   └── settings.js        # الإعدادات
 ├── views/
@@ -68,7 +66,6 @@ LorkERP/
 │   ├── error.ejs
 │   └── partials/
 │       ├── home.ejs       # الصفحة الرئيسية
-│       ├── whatsapp.ejs   # صفحة واتساب
 │       ├── sheets.ejs     # صفحة Google Sheets
 │       └── settings.ejs   # صفحة الإعدادات
 └── public/
@@ -76,7 +73,6 @@ LorkERP/
     │   └── style.css      # الأنماط الرئيسية
     └── js/
         ├── app.js         # السكريبت الرئيسي
-        ├── whatsapp.js    # سكريبت واتساب
         └── sheets.js      # سكريبت Google Sheets
 ```
 
@@ -86,9 +82,6 @@ LorkERP/
 # تثبيت Node.js
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
-
-# تثبيت chromium لـ whatsapp-web.js
-sudo apt-get install -y chromium-browser
 
 # استنساخ المشروع وتثبيت التبعيات
 git clone <repository-url>

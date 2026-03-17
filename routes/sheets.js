@@ -24,14 +24,7 @@ function ensureConfigRow(db) {
 }
 
 router.get('/', requireAuth, (req, res) => {
-  const db = getDb();
-  const config = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
-  res.render('dashboard', {
-    title: 'مزامنة Google Sheets',
-    page: 'sheets',
-    user: req.session.user,
-    sheetsConfig: config || null
-  });
+  res.redirect('/settings');
 });
 
 /** حالة الربط: هل الاعتماد من env، متصل، ومعرّف الجدول */

@@ -467,8 +467,8 @@ router.get('/payroll-settings', requireAuth, (req, res) => {
     res.json({
       success: true,
       discountRate: row ? row.discount_rate : 0,
-      agentColor: row ? (row.agent_color || '#3b82f6') : '#3b82f6',
-      managementColor: row ? (row.management_color || '#10b981') : '#10b981'
+      agentColor: row ? (row.agent_color || '#8b5cf6') : '#8b5cf6',
+      managementColor: row ? (row.management_color || '#facc15') : '#facc15'
     });
   } catch (e) {
     res.json({ success: false, message: e.message });
@@ -487,11 +487,11 @@ router.post('/payroll-settings', requireAuth, (req, res) => {
     `).run(
       req.session.userId,
       Number(discountRate) || 0,
-      String(agentColor || '#3b82f6').slice(0, 20),
-      String(managementColor || '#10b981').slice(0, 20),
+      String(agentColor || '#8b5cf6').slice(0, 20),
+      String(managementColor || '#facc15').slice(0, 20),
       Number(discountRate) || 0,
-      String(agentColor || '#3b82f6').slice(0, 20),
-      String(managementColor || '#10b981').slice(0, 20)
+      String(agentColor || '#8b5cf6').slice(0, 20),
+      String(managementColor || '#facc15').slice(0, 20)
     );
     res.json({ success: true, message: 'تم حفظ إعدادات التدقيق' });
   } catch (e) {
@@ -761,15 +761,37 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       try {
         const metaMgmtForSheets = await sheets.spreadsheets.get({ spreadsheetId: cycleMgmtSsId });
         existingMgmtSheetTitles = (metaMgmtForSheets.data.sheets || []).map(s => (s.properties?.title || ''));
+        const existingLower = new Set(existingMgmtSheetTitles.map(t => String(t).toLowerCase()));
         sheetNamesOrdered.forEach(st => {
           const found = metaMgmtForSheets.data.sheets?.find(sh => (sh.properties?.title || '') === st);
           if (found?.properties?.sheetId != null) sheetIdByName[st] = found.properties.sheetId;
         });
+        // إزالة الأسماء التي تتكرر فقط باختلاف حالة الأحرف
+        const uniqueByLower = [];
+        const seenLower = new Set();
+        for (const name of sheetNamesOrdered) {
+          const lower = String(name).toLowerCase();
+          if (seenLower.has(lower)) continue;
+          seenLower.add(lower);
+          uniqueByLower.push(name);
+        }
+        // استبدال القائمة المنظَّفة
+        while (sheetNamesOrdered.length) sheetNamesOrdered.pop();
+        uniqueByLower.forEach(n => sheetNamesOrdered.push(n));
       } catch (err) {
         throw new Error('لا يمكن الوصول إلى جدول الإدارة (الدورة). تأكد أن الدورة مرتبطة بجدول في حساب Google المرتبط بالتطبيق: ' + (err.message || ''));
       }
     }
-    const toCreate = sheetNamesOrdered.filter(st => !existingMgmtSheetTitles.includes(st));
+    const existingLowerSet = new Set(existingMgmtSheetTitles.map(t => String(t).toLowerCase()));
+    const toCreate = [];
+    const toCreateLower = new Set();
+    sheetNamesOrdered.forEach(st => {
+      const lower = String(st).toLowerCase();
+      if (existingLowerSet.has(lower)) return;
+      if (toCreateLower.has(lower)) return;
+      toCreateLower.add(lower);
+      toCreate.push(st);
+    });
     const addSheetRequests = toCreate.map(st => ({
       addSheet: { properties: { title: st } }
     }));
@@ -1052,6 +1074,39 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     }
 
     const spreadsheetUrl = meta.data.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+
+    try {
+      const { saveCycleCache, saveUserAuditStatus } = require('../services/payrollSearchService');
+      const auditedAgentIdsSet = new Set();
+      const auditedMgmtIdsSet = new Set();
+      results.forEach(r => {
+        if (r.type.startsWith('سحب وكالة')) {
+          if (r.userId) auditedAgentIdsSet.add(r.userId);
+        }
+        if (r.type === 'سحب إدارة') {
+          if (r.userId) auditedMgmtIdsSet.add(r.userId);
+        }
+        if (r.userId && (r.type.startsWith('سحب وكالة') || r.type === 'سحب إدارة')) {
+          const src = r.type.startsWith('سحب وكالة') ? 'تدقيق وكيل من النظام' : 'تدقيق ادارة من النظام';
+          saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
+            type: r.type,
+            title: r.title
+          });
+        }
+      });
+      saveCycleCache(req.session.userId, cycleId, {
+        managementData: managementRows,
+        agentData: agentRows,
+        managementSheetName: cycleMgmtSheetName,
+        agentSheetName: cycleAgentSheetName,
+        auditedAgentIds: auditedAgentIdsSet,
+        auditedMgmtIds: auditedMgmtIdsSet,
+        foundInTargetSheetIds: new Set(),
+        staleAfter: null
+      });
+    } catch (cacheErr) {
+      console.error('[payroll-execute] failed to update search cache', cacheErr.message);
+    }
     res.json({
       success: true,
       message,
