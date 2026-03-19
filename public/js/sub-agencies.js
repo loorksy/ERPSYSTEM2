@@ -46,7 +46,7 @@
         return '<div class="agency-card" style="background:' + color + '; color:#1e293b;" onclick="subAgenciesOpenDashboard(' + a.id + ')">' +
           '<h5>' + (a.name || '') + '</h5>' +
           '<p class="agency-meta">نسبة الوكالة: ' + (a.commission_percent || 0) + '%</p>' +
-          '<p class="agency-balance" style="color:' + textColor + '">رصيد: ' + bal.toLocaleString('ar-SA') + ' (' + balLabel + ')</p>' +
+          '<p class="agency-balance" style="color:' + textColor + '">رصيد: ' + (window.formatMoney ? window.formatMoney(bal) : bal.toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + ' (' + balLabel + ')</p>' +
           '</div>';
       }).join('');
     });
@@ -101,7 +101,7 @@
     apiCall('/api/sub-agencies/' + currentAgencyId + '/profit' + (cycleId ? '?cycleId=' + cycleId : '')).then(function(res) {
       if (res.success) {
         const el = document.getElementById('subAgencyProfit');
-        if (el) el.textContent = (res.profit || 0).toLocaleString('ar-SA');
+        if (el) el.textContent = (window.formatMoney ? window.formatMoney(res.profit || 0) : (res.profit || 0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $');
       }
     });
     apiCall('/api/sub-agencies/' + currentAgencyId + '/users').then(function(res) {
@@ -184,7 +184,7 @@
         const sign = isPlus ? '+' : '-';
         const date = r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-';
         return '<div class="tx-item">' +
-          '<div class="flex-1 min-w-0"><span class="font-semibold" style="' + cls + '">' + (r.typeLabel || r.type) + '</span> ' + sign + (r.amount || 0).toLocaleString('ar-SA') + (r.notes ? ' <span class="text-slate-500 text-sm">- ' + r.notes + '</span>' : '') + '</div>' +
+          '<div class="flex-1 min-w-0"><span class="font-semibold" style="' + cls + '">' + (r.typeLabel || r.type) + '</span> ' + sign + (window.formatMoney ? window.formatMoney(r.amount || 0) : (r.amount || 0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + (r.notes ? ' <span class="text-slate-500 text-sm">- ' + r.notes + '</span>' : '') + '</div>' +
           '<div class="text-xs text-slate-400">' + date + '</div>' +
           '</div>';
       }).join('');

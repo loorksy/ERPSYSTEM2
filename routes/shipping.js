@@ -108,7 +108,8 @@ router.post('/sub-agencies', requireAuth, (req, res) => {
     const db = getDb();
     const pct = parseFloat(commissionPercent);
     const pctVal = (isNaN(pct) || pct < 0) ? 0 : Math.min(100, pct);
-    const r = db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent) VALUES (?, ?)').run(String(name).trim(), pctVal);
+    const companyPct = 100 - pctVal;
+    const r = db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });

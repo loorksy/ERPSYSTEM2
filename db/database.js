@@ -239,6 +239,7 @@ async function initDatabase() {
       amount REAL NOT NULL,
       notes TEXT,
       cycle_id INTEGER,
+      member_user_id TEXT,
       shipping_transaction_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
@@ -273,6 +274,67 @@ async function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- مزامنة الوكالات الفرعية
+    CREATE TABLE IF NOT EXISTS agency_sheet_mapping (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sub_agency_id INTEGER NOT NULL,
+      cycle_id INTEGER NOT NULL,
+      sheet_name TEXT NOT NULL,
+      spreadsheet_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(sub_agency_id, cycle_id),
+      FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_agency_link (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      member_user_id TEXT NOT NULL UNIQUE,
+      sub_agency_id INTEGER NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS agency_cycle_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cycle_id INTEGER NOT NULL,
+      sub_agency_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      user_name TEXT,
+      base_profit_w REAL DEFAULT 0,
+      synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(cycle_id, sub_agency_id, member_user_id),
+      FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS agency_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cycle_id INTEGER NOT NULL,
+      synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      users_count INTEGER DEFAULT 0,
+      agencies_count INTEGER DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS cash_box_snapshot (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cycle_id INTEGER NOT NULL,
+      snapshot_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      cash_balance REAL DEFAULT 0,
+      source_first_sheet_w REAL DEFAULT 0,
+      source_y_z REAL DEFAULT 0,
+      company_profit REAL DEFAULT 0,
+      details_json TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS deferred_balance_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cycle_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      extra_id_c TEXT,
+      balance_d REAL DEFAULT 0,
+      sheet_source TEXT,
+      synced_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
   `);
   saveDb();
 
@@ -286,6 +348,8 @@ async function initDatabase() {
   try { innerDb.run('ALTER TABLE financial_cycles ADD COLUMN agent_sheet_name TEXT'); saveDb(); } catch (_) {}
   try { innerDb.run('ALTER TABLE shipping_sub_agencies ADD COLUMN commission_percent REAL DEFAULT 0'); saveDb(); } catch (_) {}
   try { innerDb.run('ALTER TABLE shipping_sub_agencies ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP'); saveDb(); } catch (_) {}
+  try { innerDb.run('ALTER TABLE shipping_sub_agencies ADD COLUMN company_percent REAL DEFAULT 0'); saveDb(); } catch (_) {}
+  try { innerDb.run('ALTER TABLE sub_agency_transactions ADD COLUMN member_user_id TEXT'); saveDb(); } catch (_) {}
 
   const adminUser = wrapStmt('SELECT * FROM users WHERE username = ?').get(process.env.ADMIN_USERNAME || 'admin');
   if (!adminUser || !adminUser.username) {

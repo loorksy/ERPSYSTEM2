@@ -1,11 +1,10 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const helmet = require('helmet');
 const compression = require('compression');
-const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const net = require('net');
@@ -13,11 +12,13 @@ const { Server } = require('socket.io');
 const { initDatabase } = require('./db/database');
 const { startBackgroundSync } = require('./services/cycleSyncWorker');
 
-const PORT = parseInt(process.env.PORT || 3000, 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const LOCK_FILE = path.join(__dirname, '.server.lock');
+const isPM2 = !!process.env.pm_id;
 
-/** منع تشغيل أكثر من نسخة واحدة على نفس المنفذ */
+/** منع تشغيل أكثر من نسخة واحدة على نفس المنفذ (لا يُطبّق تحت PM2 لأن PM2 يدير النسخ) */
 function ensureSingleInstance() {
+  if (isPM2) return;
   if (fs.existsSync(LOCK_FILE)) {
     try {
       const content = fs.readFileSync(LOCK_FILE, 'utf8').trim();
@@ -50,16 +51,14 @@ function ensureSingleInstance() {
   process.on('SIGINT', () => { removeLock(); });
 }
 
-/** التحقق من أن المنفذ غير مستخدم قبل البدء */
+/** التحقق من أن المنفذ غير مستخدم (محاولة اتصال بدل الربط لتجنب TIME_WAIT) */
 function isPortInUse(port) {
   return new Promise((resolve) => {
-    const s = net.createServer();
-    s.once('error', () => resolve(true));
-    s.once('listening', () => {
-      s.close();
-      resolve(false);
+    const client = net.createConnection({ port, host: '127.0.0.1' }, () => {
+      client.destroy();
+      resolve(true);
     });
-    s.listen(port, '127.0.0.1');
+    client.once('error', () => resolve(false));
   });
 }
 
@@ -73,6 +72,22 @@ const SESSION_MAX_AGE_SECONDS = Math.floor(SESSION_MAX_AGE_MS / 1000);
 
 const sessionsDir = path.join(__dirname, 'sessions');
 if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir, { recursive: true });
+
+/** في وضع التطوير (dev) نستخدم MemoryStore لتجنب خطأ EPERM على Windows عند rename ملفات الجلسات */
+const isDev = process.env.NODE_ENV === 'development' || process.env.USE_MEMORY_SESSION === '1';
+let sessionStore;
+if (isDev) {
+  console.log('[LorkERP] Using MemoryStore for sessions (dev mode - avoids EPERM on Windows)');
+} else {
+  sessionStore = new (require('session-file-store')(require('express-session')))({
+    path: sessionsDir,
+    ttl: SESSION_MAX_AGE_SECONDS,
+    retries: 5,
+    reapInterval: 3600,
+    reapAsync: true,
+    logFn: () => {},
+  });
+}
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -95,16 +110,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'lorkerp-secret',
-  store: new FileStore({
-    path: sessionsDir,
-    ttl: SESSION_MAX_AGE_SECONDS,
-    retries: 5,
-    reapInterval: 3600,
-    reapAsync: true,
-    logFn: () => {},
-  }),
   resave: true,
   saveUninitialized: false,
   cookie: {
@@ -113,7 +120,10 @@ app.use(session({
     maxAge: SESSION_MAX_AGE_MS,
     sameSite: 'lax',
   },
-}));
+};
+if (sessionStore) sessionConfig.store = sessionStore;
+
+app.use(session(sessionConfig));
 
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -173,13 +183,19 @@ io.on('connection', (socket) => {
   });
 });
 
-// إغلاق نظيف عند إعادة التشغيل من nodemon لتحرير المنفذ فوراً
+let isShuttingDown = false;
 function gracefulShutdown() {
-  console.log('[LorkERP] جاري إغلاق الخادم...');
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log('[LorkERP] Server shutting down (SIGTERM/SIGINT)...');
   server.close(() => {
+    console.log('[LorkERP] Server stopped.');
     process.exit(0);
   });
-  setTimeout(() => process.exit(0), 3000);
+  setTimeout(() => {
+    console.log('[LorkERP] Forced exit after timeout.');
+    process.exit(0);
+  }, 5000);
 }
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
@@ -201,7 +217,7 @@ initDatabase()
       process.exit(1);
     }
     server.listen(PORT, '0.0.0.0', () => {
-      console.log(`[LorkERP] Server running on http://0.0.0.0:${PORT}`);
+      console.log(`[LorkERP] Server started on http://0.0.0.0:${PORT} (PID ${process.pid})`);
       try {
         startBackgroundSync(60000, 5);
         console.log('[LorkERP] Payroll cycle background sync started');

@@ -1,0 +1,92 @@
+<div class="max-w-4xl" dir="rtl">
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="flex items-center gap-3 py-5 px-6 border-b border-slate-100">
+      <i class="fas fa-clock-rotate-left text-xl text-sky-600"></i>
+      <h3 class="text-lg font-bold">رصيد المؤجل</h3>
+    </div>
+    <div class="p-6">
+      <p class="text-sm text-slate-600 mb-4">المستخدمون الذين لم يتم تدقيق رواتبهم من جدول الوكيل.</p>
+      <div class="flex flex-wrap gap-3 mb-6">
+        <label class="text-sm font-medium text-slate-600">الدورة المالية:</label>
+        <select id="deferredCycleSelect" class="px-4 py-2 rounded-xl border border-slate-200 text-sm" onchange="deferredLoadUsers()">
+          <option value="">-- اختر الدورة --</option>
+        </select>
+        <button type="button" onclick="deferredRefresh()" class="px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-medium hover:bg-sky-700">
+          <i class="fas fa-sync-alt ml-1"></i> تحديث من Google
+        </button>
+      </div>
+      <div id="deferredUsersList" class="space-y-2">
+        <p class="text-slate-400 text-center py-8">اختر الدورة المالية</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  function apiCall(url, opts) {
+    if (typeof window.apiCall === 'function') return window.apiCall(url, opts);
+    return fetch(url, { credentials: 'same-origin', ...opts }).then(r => r.json());
+  }
+  function showToast(msg, type) {
+    if (typeof window.showToast === 'function') window.showToast(msg, type);
+    else alert(msg);
+  }
+  window.deferredLoadUsers = function() {
+    var sel = document.getElementById('deferredCycleSelect');
+    var list = document.getElementById('deferredUsersList');
+    if (!sel || !list) return;
+    var cycleId = sel.value;
+    if (!cycleId) {
+      list.innerHTML = '<p class="text-slate-400 text-center py-8">اختر الدورة المالية</p>';
+      return;
+    }
+    list.innerHTML = '<p class="text-slate-400 text-center py-8">جاري التحميل...</p>';
+    apiCall('/dashboard/deferred-users?cycleId=' + cycleId).then(function(res) {
+      if (!res.success) {
+        list.innerHTML = '<p class="text-red-500 text-center py-8">' + (res.message || 'فشل') + '</p>';
+        return;
+      }
+      var users = res.users || [];
+      if (users.length === 0) {
+        list.innerHTML = '<p class="text-slate-400 text-center py-8">لا يوجد مستخدمون غير مدققين</p>';
+        return;
+      }
+      list.innerHTML = users.map(function(u) {
+        return '<div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-2">' +
+          '<div><span class="font-semibold text-slate-800">رقم المستخدم: ' + (u.member_user_id || '') + '</span></div>' +
+          '<div class="text-sm text-slate-600">المعرف: ' + (u.extra_id_c || '-') + '</div>' +
+          '<div class="font-bold text-sky-600">الرصيد: ' + (window.formatMoney ? window.formatMoney(u.balance_d || 0) : (u.balance_d || 0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + '</div>' +
+          '</div>';
+      }).join('');
+    });
+  };
+  window.deferredRefresh = function() {
+    var sel = document.getElementById('deferredCycleSelect');
+    if (!sel || !sel.value) {
+      showToast('اختر الدورة أولاً', 'error');
+      return;
+    }
+    apiCall('/dashboard/refresh-deferred', { method: 'POST', body: JSON.stringify({ cycleId: sel.value }) }).then(function(res) {
+      showToast(res.message || (res.success ? 'تم التحديث' : 'فشل'), res.success ? 'success' : 'error');
+      if (res.success) deferredLoadUsers();
+    });
+  };
+  document.addEventListener('DOMContentLoaded', function() {
+    var urlCycle = (new URLSearchParams(window.location.search)).get('cycleId');
+    apiCall('/dashboard/stats' + (urlCycle ? '?cycleId=' + urlCycle : '')).then(function(res) {
+      var sel = document.getElementById('deferredCycleSelect');
+      if (!sel || !res.success) return;
+      var cycles = res.cycles || [];
+      sel.innerHTML = '<option value="">-- اختر الدورة --</option>' + cycles.map(function(c) {
+        return '<option value="' + c.id + '">' + (c.name || '') + '</option>';
+      }).join('');
+      var cycleId = urlCycle ? parseInt(urlCycle, 10) : res.cycleId;
+      if (cycleId && cycles.some(function(c) { return c.id === cycleId; })) {
+        sel.value = cycleId;
+        deferredLoadUsers();
+      }
+    });
+  });
+})();
+</script>

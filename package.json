@@ -8,7 +8,7 @@
     "css:watch": "postcss src/input.css -o public/css/tailwind.css --watch",
     "prestart": "npm run css:build",
     "start": "node server.js",
-    "dev": "npm run css:build && nodemon server.js"
+    "dev": "npm run css:build && cross-env NODE_ENV=development nodemon server.js"
   },
   "keywords": [
     "erp",
@@ -41,6 +41,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.7"
   },
   "nodemonConfig": {

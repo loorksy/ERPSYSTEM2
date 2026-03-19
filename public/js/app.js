@@ -1,8 +1,51 @@
+window.currencySymbol = '$';
+window.formatMoney = function(num) {
+  var n = typeof num === 'number' ? num : parseFloat(num) || 0;
+  var s = n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var sym = window.currencySymbol;
+  return (sym && sym !== '') ? s + ' ' + sym : s;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
   initDate();
   initHomeSheetsStatus();
+  initHomeStats();
+  fetch('/settings/currency', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(d => { if (d.success && d.symbol) window.currencySymbol = d.symbol; })
+    .catch(() => {});
 });
+
+function initHomeStats() {
+  var cycleSel = document.getElementById('homeCycleSelect');
+  if (!cycleSel) return;
+  window.homeLoadStats = function() {
+    var cycleId = cycleSel ? cycleSel.value : '';
+    fetch('/dashboard/stats' + (cycleId ? '?cycleId=' + cycleId : ''), { credentials: 'same-origin' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.success) return;
+        var cycles = data.cycles || [];
+        if (cycleSel && cycles.length && !cycleSel.dataset.filled) {
+          cycleSel.innerHTML = '<option value="">-- اختر الدورة --</option>' + cycles.map(function(c) {
+            return '<option value="' + c.id + '"' + (c.id === data.cycleId ? ' selected' : '') + '>' + (c.name || '') + '</option>';
+          }).join('');
+          cycleSel.dataset.filled = '1';
+        }
+        var cash = document.getElementById('cashBalance');
+        var deferred = document.getElementById('deferredBalance');
+        var shipping = document.getElementById('shippingBalance');
+        if (cash) cash.textContent = formatMoney(data.cashBalance || 0);
+        if (deferred) deferred.textContent = formatMoney(data.deferredBalance || 0);
+        if (shipping) shipping.textContent = formatMoney(data.shippingBalance || 0);
+        var link = document.getElementById('deferredBalanceLink');
+        if (link && data.cycleId) link.href = '/deferred-balance?cycleId=' + data.cycleId;
+      })
+      .catch(function() {});
+  };
+  homeLoadStats();
+}
 
 function initHomeSheetsStatus() {
   var el = document.getElementById('homeSheetsStatus');

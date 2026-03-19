@@ -7,6 +7,7 @@ const fs = require('fs');
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { google } = require('googleapis');
+const { syncAgenciesFromManagementTable, fetchDeferredBalanceUsers, calculateCashBoxBalance } = require('../services/agencySyncService');
 
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
 
@@ -567,6 +568,36 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       } catch (syncErr) {
         console.error('Cycle sync from Google failed', syncErr);
         /* نتابع بالبيانات المحفوظة إن فشلت المزامنة */
+      }
+    }
+
+    /** مزامنة الوكالات الفرعية من جدول الإدارة (خطوة إضافية - لا تعطل التدقيق) */
+    if (mgmtSsId) {
+      try {
+        const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, sheets);
+        if (!syncResult.success && syncResult.error) {
+          console.error('[AgencySync]', syncResult.error);
+        }
+      } catch (agencySyncErr) {
+        console.error('[AgencySync] Failed', agencySyncErr);
+      }
+    }
+
+    /** تحديث رصيد المؤجل من جدول الوكيل (لا تعطل التدقيق) */
+    if (agentSsId) {
+      try {
+        await fetchDeferredBalanceUsers(cycleId, req.session.userId, sheets);
+      } catch (deferredErr) {
+        console.error('[DeferredBalance] Failed', deferredErr);
+      }
+    }
+
+    /** حساب رصيد الصندوق (لا تعطل التدقيق) */
+    if (mgmtSsId) {
+      try {
+        await calculateCashBoxBalance(cycleId, req.session.userId, sheets);
+      } catch (cashErr) {
+        console.error('[CashBox] Failed', cashErr);
       }
     }
 

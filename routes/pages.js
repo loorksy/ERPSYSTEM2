@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const pages = [
   { path: '/sheet', page: 'sheet', title: 'Sheet' },
   { path: '/payroll', page: 'payroll', title: 'تدقيق الرواتب' },
+  { path: '/deferred-balance', page: 'deferred-balance', title: 'رصيد المؤجل' },
   { path: '/search', page: 'search', title: 'البحث' },
   { path: '/clients', page: 'clients', title: 'بيانات العملاء' },
   { path: '/messages', page: 'messages', title: 'ترتيب الرسائل' },

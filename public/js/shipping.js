@@ -16,8 +16,8 @@
       if (res.success) {
         var g = document.getElementById('shippingGoldBalance');
         var c = document.getElementById('shippingCrystalBalance');
-        if (g) g.textContent = (res.goldBalance || 0).toLocaleString('ar-SA');
-        if (c) c.textContent = (res.crystalBalance || 0).toLocaleString('ar-SA');
+        if (g) g.textContent = (window.formatMoney || function(n){ return (n||0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $'; })(res.goldBalance || 0);
+        if (c) c.textContent = (window.formatMoney || function(n){ return (n||0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $'; })(res.crystalBalance || 0);
       }
     });
   }
@@ -188,7 +188,7 @@
         else if (r.purchase_source === 'administration') buyer = 'الإدارة';
         var pm = r.payment_method === 'cash' ? 'كاش' : r.payment_method === 'debt' ? 'دين' : r.payment_method === 'salary_deduction' ? 'خصم من راتب' : r.payment_method === 'agency_deduction' ? 'خصم من نسبة الوكالة' : r.payment_method;
         return '<div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-2">' +
-          '<div><span class="font-semibold ' + (r.type === 'buy' ? 'text-blue-600' : 'text-emerald-600') + '">' + typeLabel + '</span> ' + itemLabel + ' | ' + r.quantity + ' × ' + r.unit_price + ' = ' + r.total + '</div>' +
+          '<div><span class="font-semibold ' + (r.type === 'buy' ? 'text-blue-600' : 'text-emerald-600') + '">' + typeLabel + '</span> ' + itemLabel + ' | ' + (r.quantity||0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' × ' + (r.unit_price||0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' = ' + (window.formatMoney ? window.formatMoney(r.total) : (r.total||0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + '</div>' +
           '<div class="text-sm text-slate-600">' + buyer + ' | ' + pm + ' | ' + statusLabel + '</div>' +
           '<div class="text-xs text-slate-400">' + date + '</div>' +
           '</div>';

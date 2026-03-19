@@ -7,9 +7,34 @@
     <div class="p-6 md:p-10">
       <!-- Tabs -->
       <div class="flex gap-2 mb-6 flex-wrap" id="settingsTabsBar">
+        <button type="button" class="settings-tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200" data-settings-tab="settings-general">عام</button>
         <button type="button" class="settings-tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-indigo-600 text-white shadow-md" data-settings-tab="settings-profile">الملف الشخصي</button>
         <button type="button" class="settings-tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200" data-settings-tab="settings-ai">الذكاء الاصطناعي</button>
         <button type="button" class="settings-tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200" data-settings-tab="settings-sheets">Google Sheets</button>
+      </div>
+
+      <!-- General Tab -->
+      <div id="settings-general" class="settings-tab-panel hidden" data-settings-panel="settings-general">
+        <div class="space-y-8">
+          <div>
+            <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-coins text-amber-500"></i> نوع العملة</h4>
+            <p class="text-sm text-slate-600 mb-4">يتم عرض جميع المبالغ في النظام بأرقام غربية مع رمز العملة المحدد.</p>
+            <form id="currencyForm" onsubmit="saveCurrency(event)">
+              <div class="mb-5">
+                <label for="currencySelect" class="block mb-2 font-semibold text-sm text-slate-800">العملة</label>
+                <select id="currencySelect" name="currency" class="w-full max-w-xs py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800">
+                  <% (typeof currencyOptions !== 'undefined' ? currencyOptions : []).forEach(function(opt) { %>
+                    <option value="<%= opt.code %>" <%= (typeof currency !== 'undefined' && currency === opt.code) ? 'selected' : '' %>><%= opt.label %></option>
+                  <% }); %>
+                </select>
+              </div>
+              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-[0_4px_12px_rgba(79,70,229,0.4)]">
+                <i class="fas fa-save"></i>
+                <span>حفظ</span>
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
 
       <!-- Profile Tab -->
@@ -306,6 +331,25 @@ function disconnectSheets() {
     })
     .catch(function() { if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error'); })
     .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-unlink"></i> قطع الاتصال'; } });
+}
+
+async function saveCurrency(e) {
+  e.preventDefault();
+  var sel = document.getElementById('currencySelect');
+  if (!sel) return;
+  var currency = sel.value;
+  try {
+    var res = await fetch('/settings/currency', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currency: currency })
+    });
+    var data = await res.json();
+    if (typeof showToast === 'function') showToast(data.message || (data.success ? 'تم حفظ العملة' : 'فشل'), data.success ? 'success' : 'error');
+    if (data.success && data.symbol) window.currencySymbol = data.symbol;
+  } catch (_) {
+    if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+  }
 }
 
 async function resetPayrollData() {

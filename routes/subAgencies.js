@@ -47,14 +47,15 @@ router.post('/add', requireAuth, (req, res) => {
     const db = getDb();
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const r = db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent) VALUES (?, ?)').run(String(name).trim(), pctVal);
+    const companyPct = 100 - pctVal;
+    const r = db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
   }
 });
 
-/** تحديث نسبة الوكالة */
+/** تحديث نسبة الوكالة (company_percent = 100 - commission_percent) */
 router.post('/:id/update-percent', requireAuth, (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -62,8 +63,9 @@ router.post('/:id/update-percent', requireAuth, (req, res) => {
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
+    const companyPct = 100 - pctVal;
     const db = getDb();
-    db.prepare('UPDATE shipping_sub_agencies SET commission_percent = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pctVal, id);
+    db.prepare('UPDATE shipping_sub_agencies SET commission_percent = ?, company_percent = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pctVal, companyPct, id);
     res.json({ success: true, message: 'تم تحديث النسبة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل التحديث' });
