@@ -58,44 +58,70 @@
       </div>
 
       <!-- استيراد من Google -->
-      <div id="panelGoogle" class="space-y-4 max-lg:space-y-3">
+      <div id="panelGoogle" class="space-y-5">
         <p class="text-sm text-slate-600">اختر من جداول البيانات في حسابك — يتم جلب القائمة تلقائياً من Google.</p>
-        <div class="space-y-1.5 max-lg:space-y-1">
-          <label class="block font-semibold text-sm text-slate-800">جدول الإدارة</label>
-          <select id="mgmtSpreadsheetId" class="w-full py-2.5 max-lg:py-2 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
-            <option value="">— جاري التحميل... —</option>
-          </select>
-          <label class="block mt-1.5 max-lg:mt-1 text-xs text-slate-500">ورقة الإدارة (اختياري)</label>
-          <select id="mgmtSheetName" class="w-full py-2 max-lg:py-1.5 px-4 border border-slate-200 rounded-xl text-sm bg-white">
-            <option value="">أول ورقة تلقائياً</option>
-          </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- الإدارة -->
+          <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-100 space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fas fa-building text-amber-600"></i>
+              الإدارة
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">جدول الإدارة</label>
+                <select id="mgmtSpreadsheetId" class="w-full py-2.5 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all">
+                  <option value="">— جاري التحميل... —</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">ورقة الإدارة (اختياري)</label>
+                <select id="mgmtSheetName" class="w-full py-2.5 px-4 border border-slate-200 rounded-xl text-sm bg-white">
+                  <option value="">أول ورقة تلقائياً</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <!-- الوكيل -->
+          <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-100 space-y-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fas fa-user-tie text-indigo-600"></i>
+              الوكيل
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">جدول الوكيل</label>
+                <select id="agentSpreadsheetId" class="w-full py-2.5 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                  <option value="">— جاري التحميل... —</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">ورقة الوكيل (اختياري)</label>
+                <select id="agentSheetName" class="w-full py-2.5 px-4 border border-slate-200 rounded-xl text-sm bg-white">
+                  <option value="">أول ورقة تلقائياً</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="space-y-1.5 max-lg:space-y-1">
-          <label class="block font-semibold text-sm text-slate-800">جدول الوكيل</label>
-          <select id="agentSpreadsheetId" class="w-full py-2.5 max-lg:py-2 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
-            <option value="">— جاري التحميل... —</option>
-          </select>
-          <label class="block mt-1.5 max-lg:mt-1 text-xs text-slate-500">ورقة الوكيل (اختياري)</label>
-          <select id="agentSheetName" class="w-full py-2 max-lg:py-1.5 px-4 border border-slate-200 rounded-xl text-sm bg-white">
-            <option value="">أول ورقة تلقائياً</option>
-          </select>
-        </div>
-        <button type="button" id="btnFetchGoogle" onclick="fetchFromGoogle()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 max-lg:py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+        <button type="button" id="btnFetchGoogle" onclick="fetchFromGoogle()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
           <i class="fas fa-cloud-download-alt"></i> جلب البيانات من Google
         </button>
       </div>
 
       <!-- رفع يدوي -->
-      <div id="panelUpload" class="space-y-4 max-lg:space-y-3 hidden">
-        <div class="space-y-2">
-          <label class="block font-semibold text-sm text-slate-800">ملف الإدارة (Excel أو CSV)</label>
-          <input type="file" id="fileManagement" accept=".xlsx,.xls,.csv" class="w-full py-3 px-4 border-2 border-dashed border-slate-200 rounded-xl text-sm bg-slate-50 hover:border-indigo-300 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-semibold">
+      <div id="panelUpload" class="space-y-5 hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-100">
+            <label class="block font-semibold text-sm text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-building text-amber-600"></i> ملف الإدارة</label>
+            <input type="file" id="fileManagement" accept=".xlsx,.xls,.csv" class="w-full py-2.5 px-4 border-2 border-dashed border-slate-200 rounded-xl text-sm bg-white hover:border-amber-300 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-50 file:text-amber-700 file:font-semibold">
+          </div>
+          <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-100">
+            <label class="block font-semibold text-sm text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-user-tie text-indigo-600"></i> ملف الوكيل</label>
+            <input type="file" id="fileAgent" accept=".xlsx,.xls,.csv" class="w-full py-2.5 px-4 border-2 border-dashed border-slate-200 rounded-xl text-sm bg-white hover:border-indigo-300 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-semibold">
+          </div>
         </div>
-        <div class="space-y-2">
-          <label class="block font-semibold text-sm text-slate-800">ملف الوكيل (Excel أو CSV)</label>
-          <input type="file" id="fileAgent" accept=".xlsx,.xls,.csv" class="w-full py-3 px-4 border-2 border-dashed border-slate-200 rounded-xl text-sm bg-slate-50 hover:border-indigo-300 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-semibold">
-        </div>
-        <button type="button" id="btnUploadFiles" onclick="uploadFiles()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-sky-600 text-white hover:bg-sky-700 transition-colors">
+        <button type="button" id="btnUploadFiles" onclick="uploadFiles()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm bg-sky-600 text-white hover:bg-sky-700 transition-colors">
           <i class="fas fa-upload"></i> تحميل وقراءة الملفات
         </button>
       </div>
