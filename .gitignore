@@ -3,8 +3,8 @@ node_modules/
 db/*.db
 db/*.db-shm
 db/*.db-wal
-whatsapp-session/
-.wwebjs_auth/
-.wwebjs_cache/
 uploads/
 sessions/
+.server.lock
+whatsapp-session/
+.wwebjs_auth/

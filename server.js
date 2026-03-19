@@ -1,6 +1,14 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+process.on('uncaughtException', (err) => {
+  console.error('[LorkERP] uncaughtException:', err.message);
+  console.error(err.stack);
+});
+process.on('unhandledRejection', (reason, p) => {
+  console.error('[LorkERP] unhandledRejection:', reason);
+});
+
 const express = require('express');
 const session = require('express-session');
 const helmet = require('helmet');
@@ -12,7 +20,7 @@ const { Server } = require('socket.io');
 const { initDatabase } = require('./db/database');
 const { startBackgroundSync } = require('./services/cycleSyncWorker');
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '3020', 10);
 const LOCK_FILE = path.join(__dirname, '.server.lock');
 const isPM2 = !!process.env.pm_id;
 

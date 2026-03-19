@@ -1,8 +1,6 @@
 /**
  * PM2 ecosystem config for LorkERP
  * Usage: pm2 start ecosystem.config.cjs
- *
- * Ensure .env exists with PORT=3020 (or set env.PORT below).
  */
 module.exports = {
   apps: [
@@ -14,10 +12,9 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
+        PORT: '3020',
       },
-      env_file: '.env',
-      // PORT comes from .env; override here if needed:
-      // env: { PORT: '3020', NODE_ENV: 'production' },
+      watch: false,
       max_restarts: 10,
       min_uptime: '10s',
       listen_timeout: 8000,
