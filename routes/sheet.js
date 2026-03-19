@@ -341,7 +341,7 @@ function columnLetterToIndex(letter) {
 }
 
 /** إنشاء دورة مالية (اسم + بيانات الإدارة + الوكيل + مراجع Google إن وُجدت) */
-router.post('/cycles', requireAuth, (req, res) => {
+router.post('/cycles', requireAuth, async (req, res) => {
   try {
     const {
       name,
@@ -359,12 +359,25 @@ router.post('/cycles', requireAuth, (req, res) => {
       return res.json({ success: false, message: 'أدخل اسم الدورة' });
     }
     const db = getDb();
-    const managementJson = managementData != null ? JSON.stringify(managementData) : null;
-    const agentJson = agentData != null ? JSON.stringify(agentData) : null;
     const mgmtSs = managementSpreadsheetId ? String(managementSpreadsheetId).trim() : null;
     const mgmtSn = managementSheetName ? String(managementSheetName).trim() : null;
     const agentSs = agentSpreadsheetId ? String(agentSpreadsheetId).trim() : null;
     const agentSn = agentSheetName ? String(agentSheetName).trim() : null;
+
+    let managementJson = managementData != null ? JSON.stringify(managementData) : null;
+    let agentJson = agentData != null ? JSON.stringify(agentData) : null;
+
+    if (mgmtSs && agentSs && (!managementJson || !agentJson)) {
+      const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+      if (config?.token) {
+        const credentials = config.credentials ? JSON.parse(config.credentials) : null;
+        const managementRows = await readSheetFromGoogle(mgmtSs, mgmtSn, credentials, config.token);
+        const agentRows = await readSheetFromGoogle(agentSs, agentSn, credentials, config.token);
+        managementJson = managementRows ? JSON.stringify(managementRows) : null;
+        agentJson = agentRows ? JSON.stringify(agentRows) : null;
+      }
+    }
+
     const result = db.prepare(
       `INSERT INTO financial_cycles (user_id, name, management_data, agent_data,
        management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name)

@@ -265,18 +265,23 @@ async function saveCycle() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
   try {
+    var mgmtId = (document.getElementById('mgmtSpreadsheetId')?.value || '').trim();
+    var agentId = (document.getElementById('agentSpreadsheetId')?.value || '').trim();
+    var payload = {
+      name: name,
+      managementSpreadsheetId: mgmtId || undefined,
+      managementSheetName: (document.getElementById('mgmtSheetName')?.value || '').trim() || undefined,
+      agentSpreadsheetId: agentId || undefined,
+      agentSheetName: (document.getElementById('agentSheetName')?.value || '').trim() || undefined
+    };
+    if (!mgmtId || !agentId) {
+      payload.managementData = currentManagementRows;
+      payload.agentData = currentAgentRows;
+    }
     var res = await fetch('/api/sheet/cycles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name,
-        managementData: currentManagementRows,
-        agentData: currentAgentRows,
-        managementSpreadsheetId: document.getElementById('mgmtSpreadsheetId')?.value || undefined,
-        managementSheetName: document.getElementById('mgmtSheetName')?.value || undefined,
-        agentSpreadsheetId: document.getElementById('agentSpreadsheetId')?.value || undefined,
-        agentSheetName: document.getElementById('agentSheetName')?.value || undefined
-      })
+      body: JSON.stringify(payload)
     });
     var data;
     try {
