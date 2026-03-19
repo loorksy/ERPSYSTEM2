@@ -352,6 +352,9 @@ router.post('/cycles', requireAuth, (req, res) => {
       agentSpreadsheetId,
       agentSheetName
     } = req.body;
+    if (!req.session?.userId) {
+      return res.status(401).json({ success: false, message: 'انتهت الجلسة. سجّل دخولك مجدداً.' });
+    }
     if (!name || !String(name).trim()) {
       return res.json({ success: false, message: 'أدخل اسم الدورة' });
     }
@@ -368,9 +371,11 @@ router.post('/cycles', requireAuth, (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(req.session.userId, String(name).trim(), managementJson, agentJson, mgmtSs, mgmtSn, agentSs, agentSn);
     const id = result.lastInsertRowid != null ? result.lastInsertRowid : null;
+    console.log('[LorkERP] Cycle saved:', { id, name: String(name).trim(), userId: req.session.userId });
     res.json({ success: true, id, message: 'تم حفظ الدورة المالية' });
   } catch (e) {
-    res.json({ success: false, message: e.message });
+    console.error('[LorkERP] Cycle save error:', e.message);
+    res.json({ success: false, message: e.message || 'فشل حفظ الدورة' });
   }
 });
 

@@ -13,6 +13,7 @@ function saveDb() {
     fs.writeFileSync(DB_PATH, Buffer.from(data));
   } catch (err) {
     console.error('[DB] Save error:', err.message);
+    throw new Error('فشل حفظ قاعدة البيانات: ' + err.message);
   }
 }
 

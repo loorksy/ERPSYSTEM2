@@ -278,7 +278,20 @@ async function saveCycle() {
         agentSheetName: document.getElementById('agentSheetName')?.value || undefined
       })
     });
-    var data = await res.json();
+    var data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      if (typeof showToast === 'function') showToast('خطأ في استجابة الخادم (تحقق من السجلات)', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ الدورة';
+      return;
+    }
+    if (res.status === 401) {
+      if (typeof showToast === 'function') showToast(data.message || 'انتهت الجلسة. سجّل دخولك مجدداً.', 'error');
+      setTimeout(function() { window.location.href = '/login'; }, 1500);
+      return;
+    }
     if (data.success) {
       if (typeof showToast === 'function') showToast(data.message || 'تم حفظ الدورة', 'success');
       closeCreateCycleModal();
@@ -286,8 +299,8 @@ async function saveCycle() {
     } else {
       if (typeof showToast === 'function') showToast(data.message || 'فشل الحفظ', 'error');
     }
-  } catch (_) {
-    if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('خطأ في الاتصال: ' + (err.message || 'تحقق من الاتصال'), 'error');
   }
   btn.disabled = false;
   btn.innerHTML = '<i class="fas fa-save"></i> حفظ الدورة';
