@@ -43,10 +43,10 @@ function safeHexColor(input, fallback) {
   return fallback;
 }
 
-router.get('/cycles', requireAuth, (req, res) => {
+router.get('/cycles', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = db
+    const rows = await db
       .prepare(
         'SELECT id, name, created_at FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
       )
@@ -57,7 +57,7 @@ router.get('/cycles', requireAuth, (req, res) => {
   }
 });
 
-router.get('/pending-cycles', requireAuth, (req, res) => {
+router.get('/pending-cycles', requireAuth, async (req, res) => {
   try {
     const userIdRaw = req.query.userId;
     if (!userIdRaw) {
@@ -69,17 +69,17 @@ router.get('/pending-cycles', requireAuth, (req, res) => {
     }
 
     const db = getDb();
-    const cycles = db
+    const cycles = await db
       .prepare(
         'SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
       )
       .all(req.session.userId);
 
     const pending = [];
-    cycles.forEach(cycle => {
-      const cache = getCycleCache(req.session.userId, cycle.id);
-      if (!cache) return;
-      const cols = getCycleColumns(req.session.userId, cycle.id);
+    for (const cycle of cycles) {
+      const cache = await getCycleCache(req.session.userId, cycle.id);
+      if (!cache) continue;
+      const cols = await getCycleColumns(req.session.userId, cycle.id);
       const mgmtIdx = (cols.mgmt_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
       const agentIdx = (cols.agent_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
 
@@ -97,9 +97,9 @@ router.get('/pending-cycles', requireAuth, (req, res) => {
       if (id && id === member) inAgent = true;
     });
 
-      if (!inMgmt && !inAgent) return;
+      if (!inMgmt && !inAgent) continue;
 
-      const cachedAudit = getUserAuditStatus(req.session.userId, cycle.id, member);
+      const cachedAudit = await getUserAuditStatus(req.session.userId, cycle.id, member);
       const manual = classifyManualStatus({
         inMgmt,
         inAgent,
@@ -113,7 +113,7 @@ router.get('/pending-cycles', requireAuth, (req, res) => {
           name: cycle.name || `دورة #${cycle.id}`
         });
       }
-    });
+    }
 
     res.json({ success: true, cycles: pending });
   } catch (e) {
@@ -126,7 +126,7 @@ router.get('/cycle-sheets', requireAuth, async (req, res) => {
     const cycleId = Number(req.query.cycleId);
     if (!cycleId) return res.json({ success: false, message: 'معرّف الدورة مطلوب' });
     const db = getDb();
-    const cycle = db
+    const cycle = await db
       .prepare(
         'SELECT management_spreadsheet_id FROM financial_cycles WHERE id = ? AND user_id = ?'
       )
@@ -135,7 +135,7 @@ router.get('/cycle-sheets', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'هذه الدورة غير مرتبطة بجدول إدارة في Google' });
     }
 
-    const config = db
+    const config = await db
       .prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1')
       .get();
     if (!config?.token) {
@@ -170,7 +170,7 @@ router.get('/cycle-sheets', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/user-across-cycles', requireAuth, (req, res) => {
+router.get('/user-across-cycles', requireAuth, async (req, res) => {
   try {
     const userIdRaw = req.query.userId;
     const discountRate = req.query.discountRate != null ? Number(req.query.discountRate) : null;
@@ -183,7 +183,7 @@ router.get('/user-across-cycles', requireAuth, (req, res) => {
     }
 
     const db = getDb();
-    const cycles = db
+    const cycles = await db
       .prepare(
         'SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
       )
@@ -192,11 +192,11 @@ router.get('/user-across-cycles', requireAuth, (req, res) => {
     const results = [];
     let globalName = '';
 
-    cycles.forEach(cycle => {
-      const cache = getCycleCache(req.session.userId, cycle.id);
-      if (!cache) return;
+    for (const cycle of cycles) {
+      const cache = await getCycleCache(req.session.userId, cycle.id);
+      if (!cache) continue;
 
-      const cols = getCycleColumns(req.session.userId, cycle.id);
+      const cols = await getCycleColumns(req.session.userId, cycle.id);
       const mgmtColIdx = (cols.mgmt_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
       const agentUserColIdx = (cols.agent_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
       const agentSalaryColIdx = (cols.agent_salary_col || 'D').toUpperCase().charCodeAt(0) - 65;
@@ -254,7 +254,7 @@ router.get('/user-across-cycles', requireAuth, (req, res) => {
         agentColored: agentColored
       });
 
-      const cachedAudit = getUserAuditStatus(req.session.userId, cycle.id, queryId);
+      const cachedAudit = await getUserAuditStatus(req.session.userId, cycle.id, queryId);
       const finalAuditStatus = cachedAudit?.status || manual.status;
       const finalAuditSource = cachedAudit?.source || manual.source;
 
@@ -267,7 +267,7 @@ router.get('/user-across-cycles', requireAuth, (req, res) => {
         auditStatus: finalAuditStatus,
         auditSource: finalAuditSource
       });
-    });
+    }
 
     if (!results.length) {
       return res.json({
@@ -287,7 +287,7 @@ router.get('/user-across-cycles', requireAuth, (req, res) => {
   }
 });
 
-router.get('/search-user', requireAuth, (req, res) => {
+router.get('/search-user', requireAuth, async (req, res) => {
   try {
     const userIdRaw = req.query.userId;
     const cycleId = Number(req.query.cycleId);
@@ -301,7 +301,7 @@ router.get('/search-user', requireAuth, (req, res) => {
     }
 
     const db = getDb();
-    const cycle = db
+    const cycle = await db
       .prepare(
         'SELECT id, user_id, name FROM financial_cycles WHERE id = ? AND user_id = ?'
       )
@@ -310,12 +310,12 @@ router.get('/search-user', requireAuth, (req, res) => {
       return res.json({ success: false, message: 'الدورة غير موجودة' });
     }
 
-    const cycleCache = getCycleCache(req.session.userId, cycleId);
+    const cycleCache = await getCycleCache(req.session.userId, cycleId);
     if (!cycleCache) {
       return res.json({ success: false, message: 'لم يتم مزامنة الدورة بعد. انتظر المزامنة الخلفية أو نفّذ التدقيق من قسم الرواتب.' });
     }
 
-    const cols = getCycleColumns(req.session.userId, cycleId);
+    const cols = await getCycleColumns(req.session.userId, cycleId);
     const mgmtColIdx = (cols.mgmt_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
     const agentUserColIdx = (cols.agent_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
     const agentSalaryColIdx = (cols.agent_salary_col || 'D').toUpperCase().charCodeAt(0) - 65;
@@ -374,7 +374,7 @@ router.get('/search-user', requireAuth, (req, res) => {
     });
 
     const cachedAudit = canonicalId
-      ? getUserAuditStatus(req.session.userId, cycleId, canonicalId)
+      ? await getUserAuditStatus(req.session.userId, cycleId, canonicalId)
       : null;
 
     const finalAuditStatus = cachedAudit?.status || manual.status;
@@ -397,7 +397,7 @@ router.get('/search-user', requireAuth, (req, res) => {
   }
 });
 
-router.post('/execute-audit', requireAuth, (req, res) => {
+router.post('/execute-audit', requireAuth, async (req, res) => {
   try {
     const { cycleId, memberId } = req.body || {};
     const cycleIdNum = Number(cycleId);
@@ -407,7 +407,7 @@ router.post('/execute-audit', requireAuth, (req, res) => {
     }
 
     const db = getDb();
-    const cycle = db
+    const cycle = await db
       .prepare(
         'SELECT id, user_id FROM financial_cycles WHERE id = ? AND user_id = ?'
       )
@@ -416,14 +416,14 @@ router.post('/execute-audit', requireAuth, (req, res) => {
       return res.json({ success: false, message: 'الدورة غير موجودة' });
     }
 
-    const cache = getCycleCache(req.session.userId, cycleIdNum);
+    const cache = await getCycleCache(req.session.userId, cycleIdNum);
     let auditedAgentIds = cache?.auditedAgentIds || new Set();
     let auditedMgmtIds = cache?.auditedMgmtIds || new Set();
 
     auditedAgentIds.add(member);
     auditedMgmtIds.add(member);
 
-    saveUserAuditStatus(
+    await saveUserAuditStatus(
       req.session.userId,
       cycleIdNum,
       member,
@@ -433,7 +433,7 @@ router.post('/execute-audit', requireAuth, (req, res) => {
     );
 
     if (cache) {
-      saveCycleCache(req.session.userId, cycleIdNum, {
+      await saveCycleCache(req.session.userId, cycleIdNum, {
         managementData: cache.managementData,
         agentData: cache.agentData,
         managementSheetName: cache.managementSheetName,
@@ -472,7 +472,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'اختر الدورة وأدخل رقم المستخدم أولاً' });
     }
     const db = getDb();
-    const cycle = db
+    const cycle = await db
       .prepare(
         `SELECT id, user_id, name,
                 management_spreadsheet_id, management_sheet_name,
@@ -488,7 +488,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       });
     }
 
-    const cache = getCycleCache(req.session.userId, cycleIdNum);
+    const cache = await getCycleCache(req.session.userId, cycleIdNum);
     if (!cache) {
       return res.json({
         success: false,
@@ -496,7 +496,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       });
     }
 
-    const cols = getCycleColumns(req.session.userId, cycleIdNum);
+    const cols = await getCycleColumns(req.session.userId, cycleIdNum);
     const mgmtIdx = (cols.mgmt_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
     const agentIdx = (cols.agent_user_id_col || 'A').toUpperCase().charCodeAt(0) - 65;
     const agentSalaryIdx = columnLetterToIndex(cols.agent_salary_col || 'D') ?? 3;
@@ -542,7 +542,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       statusLabel = 'سحب ادارة';
     }
 
-    const config = db
+    const config = await db
       .prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1')
       .get();
     if (!config?.token) {
@@ -807,7 +807,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
     if (inAgent) auditedAgentIds.add(member);
     if (inMgmt) auditedMgmtIds.add(member);
 
-    saveUserAuditStatus(
+    await saveUserAuditStatus(
       req.session.userId,
       cycleIdNum,
       member,
@@ -821,7 +821,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       }
     );
 
-    saveCycleCache(req.session.userId, cycleIdNum, {
+    await saveCycleCache(req.session.userId, cycleIdNum, {
       managementData: cache.managementData,
       agentData: cache.agentData,
       managementSheetName: cache.managementSheetName,

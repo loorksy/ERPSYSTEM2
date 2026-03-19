@@ -13,10 +13,10 @@ function getOAuth2Client(credentials) {
   return new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
 }
 
-function ensureConfigRow(db) {
-  const row = db.prepare('SELECT id FROM google_sheets_config WHERE id = 1').get();
+async function ensureConfigRow(db) {
+  const row = await db.prepare('SELECT id FROM google_sheets_config WHERE id = 1').get();
   if (!row) {
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO google_sheets_config (id, spreadsheet_id, credentials, token, sync_enabled, updated_at)
       VALUES (1, NULL, NULL, NULL, 0, CURRENT_TIMESTAMP)
     `).run();
@@ -28,11 +28,11 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 /** حالة الربط: هل الاعتماد من env، متصل، ومعرّف الجدول */
-router.get('/status', requireAuth, (req, res) => {
+router.get('/status', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    ensureConfigRow(db);
-    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    await ensureConfigRow(db);
+    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
     const hasEnv = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
     const creds = config?.credentials ? JSON.parse(config.credentials) : null;
     const canAuth = hasEnv || (creds?.client_id && creds?.client_secret);
@@ -49,13 +49,13 @@ router.get('/status', requireAuth, (req, res) => {
   }
 });
 
-router.post('/configure', requireAuth, (req, res) => {
+router.post('/configure', requireAuth, async (req, res) => {
   try {
     const { spreadsheet_id, client_id, client_secret } = req.body;
     const db = getDb();
-    ensureConfigRow(db);
+    await ensureConfigRow(db);
     const credentials = (client_id && client_secret) ? JSON.stringify({ client_id, client_secret }) : null;
-    db.prepare(`
+    await db.prepare(`
       UPDATE google_sheets_config SET spreadsheet_id = ?, credentials = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
     `).run(spreadsheet_id || null, credentials);
     res.json({ success: true, message: 'تم حفظ الإعدادات بنجاح' });
@@ -65,27 +65,27 @@ router.post('/configure', requireAuth, (req, res) => {
 });
 
 /** حفظ معرّف جدول البيانات فقط (بعد تسجيل الدخول بـ Google) */
-router.post('/save-spreadsheet', requireAuth, (req, res) => {
+router.post('/save-spreadsheet', requireAuth, async (req, res) => {
   try {
     const { spreadsheet_id } = req.body;
     const db = getDb();
-    ensureConfigRow(db);
-    db.prepare('UPDATE google_sheets_config SET spreadsheet_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(spreadsheet_id || null);
+    await ensureConfigRow(db);
+    await db.prepare('UPDATE google_sheets_config SET spreadsheet_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(spreadsheet_id || null);
     res.json({ success: true, message: 'تم حفظ معرّف الجدول' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
   }
 });
 
-router.post('/toggle-sync', requireAuth, (req, res) => {
+router.post('/toggle-sync', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const config = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
     if (!config) {
       return res.json({ success: false, message: 'يرجى إعداد Google Sheets أولاً' });
     }
     const newState = config.sync_enabled ? 0 : 1;
-    db.prepare('UPDATE google_sheets_config SET sync_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(newState);
+    await db.prepare('UPDATE google_sheets_config SET sync_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(newState);
     res.json({ success: true, enabled: !!newState, message: newState ? 'تم تفعيل المزامنة' : 'تم إيقاف المزامنة' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
@@ -93,11 +93,11 @@ router.post('/toggle-sync', requireAuth, (req, res) => {
 });
 
 /** قطع الاتصال بحساب Google (لمن يريد إعادة تسجيل الدخول) */
-router.post('/disconnect', requireAuth, (req, res) => {
+router.post('/disconnect', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    ensureConfigRow(db);
-    db.prepare('UPDATE google_sheets_config SET token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run();
+    await ensureConfigRow(db);
+    await db.prepare('UPDATE google_sheets_config SET token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run();
     res.json({ success: true, message: 'تم قطع الاتصال. يمكنك تسجيل الدخول مرة أخرى.' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
@@ -105,11 +105,11 @@ router.post('/disconnect', requireAuth, (req, res) => {
 });
 
 /** تسجيل الدخول باستخدام Google — يستخدم env أو credentials المحفوظة */
-router.get('/auth', requireAuth, (req, res) => {
+router.get('/auth', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    ensureConfigRow(db);
-    const config = db.prepare('SELECT credentials FROM google_sheets_config WHERE id = 1').get();
+    await ensureConfigRow(db);
+    const config = await db.prepare('SELECT credentials FROM google_sheets_config WHERE id = 1').get();
     const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
     if (!oauth2Client) {
@@ -131,13 +131,13 @@ router.get('/callback', requireAuth, async (req, res) => {
     const { code } = req.query;
     if (!code) return res.redirect('/settings?sheets=callback_failed');
     const db = getDb();
-    ensureConfigRow(db);
-    const config = db.prepare('SELECT credentials, spreadsheet_id FROM google_sheets_config WHERE id = 1').get();
+    await ensureConfigRow(db);
+    const config = await db.prepare('SELECT credentials, spreadsheet_id FROM google_sheets_config WHERE id = 1').get();
     const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
     if (!oauth2Client) return res.redirect('/settings?sheets=no_credentials');
     const { tokens } = await oauth2Client.getToken(code);
-    db.prepare(`
+    await db.prepare(`
       UPDATE google_sheets_config SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
     `).run(JSON.stringify(tokens));
     res.redirect('/settings?sheets=connected');
@@ -150,7 +150,7 @@ router.get('/callback', requireAuth, async (req, res) => {
 router.get('/sheets-list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.spreadsheet_id || !config?.token) {
       return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول' });
     }
@@ -190,7 +190,7 @@ router.post('/export', requireAuth, async (req, res) => {
   try {
     const { tableMarkdown, rows: rawRows, sheetName, mode, targetSheetTitle, jobId } = req.body;
     const db = getDb();
-    const config = db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.spreadsheet_id || !config?.token) {
       return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول. اربط من الإعدادات → Google Sheets.' });
     }
@@ -219,7 +219,7 @@ router.post('/export', requireAuth, async (req, res) => {
       });
       if (jobId != null && Number.isInteger(Number(jobId))) {
         const db2 = getDb();
-        db2.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+        await db2.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
       }
       return res.json({ success: true, message: `تم إلحاق ${dataRows.length} صف بورقة "${targetSheetTitle}"` });
     }
@@ -243,7 +243,7 @@ router.post('/export', requireAuth, async (req, res) => {
     });
     if (jobId != null && Number.isInteger(Number(jobId))) {
       const db = getDb();
-      db.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+      await db.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
     }
     res.json({ success: true, message: `تم إنشاء الورقة "${sheetTitle}" وتصدير ${dataRows.length} صف` });
   } catch (e) {

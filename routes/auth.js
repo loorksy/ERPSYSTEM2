@@ -10,24 +10,26 @@ router.get('/login', (req, res) => {
   res.render('login', { title: 'تسجيل الدخول', error: null });
 });
 
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const db = getDb();
-
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.render('login', { title: 'تسجيل الدخول', error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+router.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const db = getDb();
+    const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return res.render('login', { title: 'تسجيل الدخول', error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+    }
+    req.session.userId = user.id;
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      displayName: user.display_name,
+      role: user.role
+    };
+    res.redirect('/dashboard');
+  } catch (e) {
+    console.error('[auth] Login error:', e.message);
+    res.render('login', { title: 'تسجيل الدخول', error: 'حدث خطأ. حاول مرة أخرى.' });
   }
-
-  req.session.userId = user.id;
-  req.session.user = {
-    id: user.id,
-    username: user.username,
-    displayName: user.display_name,
-    role: user.role
-  };
-
-  res.redirect('/dashboard');
 });
 
 router.get('/logout', (req, res) => {

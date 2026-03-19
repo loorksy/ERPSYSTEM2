@@ -20,25 +20,30 @@ const CURRENCY_OPTIONS = [
   { code: 'NONE', label: 'بدون رمز' }
 ];
 
-router.get('/', requireAuth, (req, res) => {
-  const db = getDb();
-  const sheetsConfig = db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
-  const currencyRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
-  const currency = currencyRow?.value || 'USD';
-  res.render('dashboard', {
-    title: 'الإعدادات',
-    page: 'settings',
-    user: req.session.user,
-    sheetsConfig: sheetsConfig || null,
-    currency,
-    currencyOptions: CURRENCY_OPTIONS
-  });
-});
-
-router.get('/currency', requireAuth, (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
+    const sheetsConfig = await db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
+    const currencyRow = await db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
+    const currency = currencyRow?.value || 'USD';
+    res.render('dashboard', {
+      title: 'الإعدادات',
+      page: 'settings',
+      user: req.session.user,
+      sheetsConfig: sheetsConfig || null,
+      currency,
+      currencyOptions: CURRENCY_OPTIONS
+    });
+  } catch (e) {
+    console.error('[settings] Error:', e.message);
+    res.status(500).render('error', { title: 'خطأ', error: e.message });
+  }
+});
+
+router.get('/currency', requireAuth, async (req, res) => {
+  try {
+    const db = getDb();
+    const row = await db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
     const currency = row?.value || 'USD';
     const symbol = getCurrencySymbol(currency);
     res.json({ success: true, currency, symbol });
@@ -47,19 +52,19 @@ router.get('/currency', requireAuth, (req, res) => {
   }
 });
 
-router.post('/currency', requireAuth, (req, res) => {
+router.post('/currency', requireAuth, async (req, res) => {
   try {
     const { currency } = req.body || {};
     const code = CURRENCY_OPTIONS.some(c => c.code === currency) ? currency : 'USD';
     const db = getDb();
-    db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)').run('currency', code);
+    await db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)').run('currency', code);
     res.json({ success: true, message: 'تم حفظ العملة', currency: code, symbol: getCurrencySymbol(code) });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }
 });
 
-router.post('/change-password', requireAuth, (req, res) => {
+router.post('/change-password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
     const db = getDb();
@@ -72,13 +77,13 @@ router.post('/change-password', requireAuth, (req, res) => {
       return res.json({ success: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
     if (!bcrypt.compareSync(currentPassword, user.password)) {
       return res.json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashedPassword, req.session.userId);
+    await db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashedPassword, req.session.userId);
 
     res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
   } catch (error) {
@@ -86,12 +91,12 @@ router.post('/change-password', requireAuth, (req, res) => {
   }
 });
 
-router.post('/update-profile', requireAuth, (req, res) => {
+router.post('/update-profile', requireAuth, async (req, res) => {
   try {
     const { displayName } = req.body;
     const db = getDb();
 
-    db.prepare('UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(displayName, req.session.userId);
+    await db.prepare('UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(displayName, req.session.userId);
     req.session.user.displayName = displayName;
 
     res.json({ success: true, message: 'تم تحديث الملف الشخصي بنجاح' });
@@ -100,15 +105,15 @@ router.post('/update-profile', requireAuth, (req, res) => {
   }
 });
 
-router.post('/reset-data', requireAuth, (req, res) => {
+router.post('/reset-data', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const userId = req.session.userId;
-    db.prepare('DELETE FROM payroll_user_audit_cache WHERE user_id = ?').run(userId);
-    db.prepare('DELETE FROM payroll_cycle_cache WHERE user_id = ?').run(userId);
-    db.prepare('DELETE FROM payroll_cycle_columns WHERE user_id = ?').run(userId);
-    db.prepare('DELETE FROM payroll_settings WHERE user_id = ?').run(userId);
-    db.prepare('DELETE FROM financial_cycles WHERE user_id = ?').run(userId);
+    await db.prepare('DELETE FROM payroll_user_audit_cache WHERE user_id = ?').run(userId);
+    await db.prepare('DELETE FROM payroll_cycle_cache WHERE user_id = ?').run(userId);
+    await db.prepare('DELETE FROM payroll_cycle_columns WHERE user_id = ?').run(userId);
+    await db.prepare('DELETE FROM payroll_settings WHERE user_id = ?').run(userId);
+    await db.prepare('DELETE FROM financial_cycles WHERE user_id = ?').run(userId);
     res.json({ success: true, message: 'تم حذف بيانات الدورات والتدقيق لهذه الحساب وإعادة التعيين.' });
   } catch (error) {
     res.json({ success: false, message: 'فشل حذف البيانات: ' + (error.message || '') });

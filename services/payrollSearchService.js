@@ -58,9 +58,9 @@ function computeSalaryWithDiscount(rawSalaries, discountRatePct) {
   return { before: sum, after };
 }
 
-function getCycleColumns(userId, cycleId) {
+async function getCycleColumns(userId, cycleId) {
   const db = getDb();
-  const row = db
+  const row = await db
     .prepare(
       'SELECT mgmt_user_id_col, agent_user_id_col, agent_salary_col FROM payroll_cycle_columns WHERE user_id = ? AND cycle_id = ?'
     )
@@ -73,9 +73,9 @@ function getCycleColumns(userId, cycleId) {
   };
 }
 
-function saveCycleColumns(userId, cycleId, cols) {
+async function saveCycleColumns(userId, cycleId, cols) {
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO payroll_cycle_columns (user_id, cycle_id, mgmt_user_id_col, agent_user_id_col, agent_salary_col, updated_at)
      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
      ON CONFLICT(user_id, cycle_id) DO UPDATE SET
@@ -92,9 +92,9 @@ function saveCycleColumns(userId, cycleId, cols) {
   );
 }
 
-function getCycleCache(userId, cycleId) {
+async function getCycleCache(userId, cycleId) {
   const db = getDb();
-  const row = db
+  const row = await db
     .prepare(
       `SELECT management_data, agent_data, management_sheet_name, agent_sheet_name,
               audited_agent_ids, audited_mgmt_ids, found_in_target_sheet_ids,
@@ -117,9 +117,9 @@ function getCycleCache(userId, cycleId) {
   };
 }
 
-function saveCycleCache(userId, cycleId, payload) {
+async function saveCycleCache(userId, cycleId, payload) {
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO payroll_cycle_cache (
        user_id, cycle_id,
        management_data, agent_data,
@@ -151,9 +151,9 @@ function saveCycleCache(userId, cycleId, payload) {
   );
 }
 
-function saveUserAuditStatus(userId, cycleId, memberUserId, status, source, details) {
+async function saveUserAuditStatus(userId, cycleId, memberUserId, status, source, details) {
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO payroll_user_audit_cache (user_id, cycle_id, member_user_id, audit_status, audit_source, details_json, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
      ON CONFLICT(user_id, cycle_id, member_user_id) DO UPDATE SET
@@ -171,9 +171,9 @@ function saveUserAuditStatus(userId, cycleId, memberUserId, status, source, deta
   );
 }
 
-function getUserAuditStatus(userId, cycleId, memberUserId) {
+async function getUserAuditStatus(userId, cycleId, memberUserId) {
   const db = getDb();
-  const row = db
+  const row = await db
     .prepare(
       `SELECT audit_status, audit_source, details_json
          FROM payroll_user_audit_cache

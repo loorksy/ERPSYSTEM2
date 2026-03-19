@@ -1,0 +1,238 @@
+-- PostgreSQL schema for LorkERP
+-- Run: psql postgresql://lork:123456@localhost:5432/lorkerp -f db/schema.pg.sql
+
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  role TEXT DEFAULT 'admin',
+  avatar TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ai_config (
+  id SERIAL PRIMARY KEY,
+  provider TEXT NOT NULL,
+  api_key_encrypted TEXT NOT NULL,
+  selected_model TEXT,
+  models_cache TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS message_analyses (
+  id SERIAL PRIMARY KEY,
+  input_text TEXT,
+  output_table TEXT,
+  provider TEXT,
+  model TEXT,
+  chunks_count INTEGER DEFAULT 1,
+  status TEXT DEFAULT 'completed',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS analysis_jobs (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  status TEXT DEFAULT 'pending',
+  progress_current INTEGER DEFAULT 0,
+  progress_total INTEGER DEFAULT 0,
+  output_table TEXT,
+  provider TEXT,
+  model TEXT,
+  chunks_count INTEGER DEFAULT 0,
+  error_message TEXT,
+  exported_to_sheets INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS google_sheets_config (
+  id SERIAL PRIMARY KEY,
+  spreadsheet_id TEXT,
+  credentials TEXT,
+  token TEXT,
+  sync_enabled INTEGER DEFAULT 0,
+  last_sync TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS financial_cycles (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  management_data TEXT,
+  agent_data TEXT,
+  management_spreadsheet_id TEXT,
+  management_sheet_name TEXT,
+  agent_spreadsheet_id TEXT,
+  agent_sheet_name TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS payroll_settings (
+  user_id INTEGER PRIMARY KEY,
+  discount_rate REAL DEFAULT 0,
+  agent_color TEXT DEFAULT '#8b5cf6',
+  management_color TEXT DEFAULT '#facc15',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS payroll_cycle_columns (
+  user_id INTEGER NOT NULL,
+  cycle_id INTEGER NOT NULL,
+  mgmt_user_id_col TEXT DEFAULT 'A',
+  agent_user_id_col TEXT DEFAULT 'A',
+  agent_salary_col TEXT DEFAULT 'D',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, cycle_id)
+);
+
+CREATE TABLE IF NOT EXISTS payroll_cycle_cache (
+  user_id INTEGER NOT NULL,
+  cycle_id INTEGER NOT NULL,
+  management_data TEXT,
+  agent_data TEXT,
+  management_sheet_name TEXT,
+  agent_sheet_name TEXT,
+  audited_agent_ids TEXT,
+  audited_mgmt_ids TEXT,
+  found_in_target_sheet_ids TEXT,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  stale_after TIMESTAMP,
+  PRIMARY KEY (user_id, cycle_id)
+);
+
+CREATE TABLE IF NOT EXISTS payroll_user_audit_cache (
+  user_id INTEGER NOT NULL,
+  cycle_id INTEGER NOT NULL,
+  member_user_id TEXT NOT NULL,
+  audit_status TEXT DEFAULT 'غير مدقق',
+  audit_source TEXT,
+  details_json TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, cycle_id, member_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS shipping_approved (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shipping_sub_agencies (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  commission_percent REAL DEFAULT 0,
+  company_percent REAL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sub_agency_transactions (
+  id SERIAL PRIMARY KEY,
+  sub_agency_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  amount REAL NOT NULL,
+  notes TEXT,
+  cycle_id INTEGER,
+  member_user_id TEXT,
+  shipping_transaction_id INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+);
+
+CREATE TABLE IF NOT EXISTS shipping_companies (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shipping_transactions (
+  id SERIAL PRIMARY KEY,
+  type TEXT NOT NULL,
+  item_type TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unit_price REAL NOT NULL,
+  total REAL NOT NULL,
+  payment_method TEXT NOT NULL,
+  status TEXT DEFAULT 'completed',
+  buyer_type TEXT,
+  buyer_user_id TEXT,
+  buyer_approved_id INTEGER,
+  buyer_sub_agency_id INTEGER,
+  salary_deduction_user_id TEXT,
+  purchase_source TEXT,
+  purchase_company_id INTEGER,
+  purchase_company_name TEXT,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS agency_sheet_mapping (
+  id SERIAL PRIMARY KEY,
+  sub_agency_id INTEGER NOT NULL,
+  cycle_id INTEGER NOT NULL,
+  sheet_name TEXT NOT NULL,
+  spreadsheet_id TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(sub_agency_id, cycle_id),
+  FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_agency_link (
+  id SERIAL PRIMARY KEY,
+  member_user_id TEXT NOT NULL UNIQUE,
+  sub_agency_id INTEGER NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+);
+
+CREATE TABLE IF NOT EXISTS agency_cycle_users (
+  id SERIAL PRIMARY KEY,
+  cycle_id INTEGER NOT NULL,
+  sub_agency_id INTEGER NOT NULL,
+  member_user_id TEXT NOT NULL,
+  user_name TEXT,
+  base_profit_w REAL DEFAULT 0,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(cycle_id, sub_agency_id, member_user_id),
+  FOREIGN KEY (sub_agency_id) REFERENCES shipping_sub_agencies(id)
+);
+
+CREATE TABLE IF NOT EXISTS agency_sync_log (
+  id SERIAL PRIMARY KEY,
+  cycle_id INTEGER NOT NULL,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  users_count INTEGER DEFAULT 0,
+  agencies_count INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS cash_box_snapshot (
+  id SERIAL PRIMARY KEY,
+  cycle_id INTEGER NOT NULL,
+  snapshot_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  cash_balance REAL DEFAULT 0,
+  source_first_sheet_w REAL DEFAULT 0,
+  source_y_z REAL DEFAULT 0,
+  company_profit REAL DEFAULT 0,
+  details_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS deferred_balance_users (
+  id SERIAL PRIMARY KEY,
+  cycle_id INTEGER NOT NULL,
+  member_user_id TEXT NOT NULL,
+  extra_id_c TEXT,
+  balance_d REAL DEFAULT 0,
+  sheet_source TEXT,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

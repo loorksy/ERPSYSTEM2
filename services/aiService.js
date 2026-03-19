@@ -78,9 +78,9 @@ function mergeMarkdownTables(tables) {
   return [headerLine, separatorLine, ...allRows].join('\n');
 }
 
-function getProviderConfig(provider) {
+async function getProviderConfig(provider) {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM ai_config WHERE provider = ?').get(provider);
+  const row = await db.prepare('SELECT * FROM ai_config WHERE provider = ?').get(provider);
   if (!row) return null;
   return {
     ...row,
@@ -88,9 +88,9 @@ function getProviderConfig(provider) {
   };
 }
 
-function getActiveProvider() {
+async function getActiveProvider() {
   const db = getDb();
-  const configs = db.prepare('SELECT * FROM ai_config ORDER BY updated_at DESC').all();
+  const configs = await db.prepare('SELECT * FROM ai_config ORDER BY updated_at DESC').all();
   for (const c of configs) {
     const key = decrypt(c.api_key_encrypted);
     if (key) return { ...c, apiKey: key };
@@ -98,14 +98,14 @@ function getActiveProvider() {
   return null;
 }
 
-function getPreferredProvider() {
+async async function getPreferredProvider() {
   const db = getDb();
-  const configs = db.prepare('SELECT * FROM ai_config WHERE selected_model IS NOT NULL ORDER BY updated_at DESC').all();
+  const configs = await db.prepare('SELECT * FROM ai_config WHERE selected_model IS NOT NULL ORDER BY updated_at DESC').all();
   for (const c of configs) {
     const key = decrypt(c.api_key_encrypted);
     if (key && c.selected_model) return { ...c, apiKey: key };
   }
-  return getActiveProvider();
+  return await getActiveProvider();
 }
 
 async function fetchModels(provider, apiKey) {
@@ -184,7 +184,7 @@ async function analyzeChunk(config, text, chunkIndex, totalChunks) {
 }
 
 async function analyzeMessages(text, onProgress) {
-  const config = getPreferredProvider();
+  const config = await getPreferredProvider();
   if (!config || !config.apiKey || !config.selected_model) {
     throw new Error('لم يتم إعداد مزوّد الذكاء الاصطناعي. اذهب للإعدادات أولاً.');
   }
@@ -207,7 +207,7 @@ async function analyzeMessages(text, onProgress) {
 
   try {
     const db = getDb();
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO message_analyses (input_text, output_table, provider, model, chunks_count)
       VALUES (?, ?, ?, ?, ?)
     `).run(
@@ -227,34 +227,34 @@ async function analyzeMessages(text, onProgress) {
   };
 }
 
-function saveApiKey(provider, apiKey) {
+async function saveApiKey(provider, apiKey) {
   const db = getDb();
   const encrypted = encrypt(apiKey);
-  const existing = db.prepare('SELECT id FROM ai_config WHERE provider = ?').get(provider);
+  const existing = await db.prepare('SELECT id FROM ai_config WHERE provider = ?').get(provider);
   if (existing) {
-    db.prepare('UPDATE ai_config SET api_key_encrypted = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
+    await db.prepare('UPDATE ai_config SET api_key_encrypted = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
       .run(encrypted, provider);
   } else {
-    db.prepare('INSERT INTO ai_config (provider, api_key_encrypted) VALUES (?, ?)')
+    await db.prepare('INSERT INTO ai_config (provider, api_key_encrypted) VALUES (?, ?)')
       .run(provider, encrypted);
   }
 }
 
-function saveSelectedModel(provider, model) {
+async function saveSelectedModel(provider, model) {
   const db = getDb();
-  db.prepare('UPDATE ai_config SET selected_model = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
+  await db.prepare('UPDATE ai_config SET selected_model = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
     .run(model, provider);
 }
 
-function saveModelsCache(provider, models) {
+async function saveModelsCache(provider, models) {
   const db = getDb();
-  db.prepare('UPDATE ai_config SET models_cache = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
+  await db.prepare('UPDATE ai_config SET models_cache = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
     .run(JSON.stringify(models), provider);
 }
 
-function getAIStatus() {
+async function getAIStatus() {
   const db = getDb();
-  const configs = db.prepare('SELECT provider, selected_model, models_cache, updated_at FROM ai_config').all();
+  const configs = await db.prepare('SELECT provider, selected_model, models_cache, updated_at FROM ai_config').all();
   const result = {};
   for (const c of configs) {
     result[c.provider] = {

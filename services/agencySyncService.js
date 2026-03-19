@@ -63,7 +63,7 @@ function isHeaderRow(row, colIdx) {
  */
 async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = db.prepare(
+  const cycle = await db.prepare(
     'SELECT id, management_spreadsheet_id FROM financial_cycles WHERE id = ? AND user_id = ?'
   ).get(cycleId, userId);
   if (!cycle || !cycle.management_spreadsheet_id) {
@@ -90,10 +90,10 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
     const seenUserIds = new Set();
 
     for (const sheetName of agencySheetNames) {
-      let agency = db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
+      let agency = await db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
       if (!agency) {
-        db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, 0, 0)').run(sheetName);
-        agency = db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
+        await db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, 0, 0)').run(sheetName);
+        agency = await db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
       }
 
       const companyPercent = (agency.company_percent != null && !isNaN(agency.company_percent)) ? agency.company_percent : (100 - (agency.commission_percent || 0));
@@ -116,7 +116,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
         const userName = (row[COL_B] != null ? String(row[COL_B]) : '').trim();
         const baseProfitW = parseDecimal(row[COL_W]);
 
-        db.prepare(
+        await db.prepare(
           `INSERT INTO agency_cycle_users (cycle_id, sub_agency_id, member_user_id, user_name, base_profit_w, synced_at)
            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
            ON CONFLICT(cycle_id, sub_agency_id, member_user_id) DO UPDATE SET
@@ -125,7 +125,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
              synced_at = CURRENT_TIMESTAMP`
         ).run(cycleId, agency.id, memberUserId, userName, baseProfitW);
 
-        db.prepare(
+        await db.prepare(
           `INSERT INTO user_agency_link (member_user_id, sub_agency_id, updated_at)
            VALUES (?, ?, CURRENT_TIMESTAMP)
            ON CONFLICT(member_user_id) DO UPDATE SET sub_agency_id = excluded.sub_agency_id, updated_at = CURRENT_TIMESTAMP`
@@ -138,12 +138,12 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
 
         const agencyProfit = baseProfitW * (agencyPercent / 100);
         if (agencyProfit > 0) {
-          const existing = db.prepare(
+          const existing = await db.prepare(
             `SELECT id FROM sub_agency_transactions
              WHERE sub_agency_id = ? AND cycle_id = ? AND member_user_id = ? AND type = 'profit'`
           ).get(agency.id, cycleId, memberUserId);
           if (!existing) {
-            db.prepare(
+            await db.prepare(
               `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, cycle_id, member_user_id)
                VALUES (?, 'profit', ?, ?, ?, ?)`
             ).run(agency.id, agencyProfit, `ربح من مزامنة - مستخدم ${memberUserId}`, cycleId, memberUserId);
@@ -152,7 +152,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
       }
 
       try {
-        db.prepare(
+        await db.prepare(
           `INSERT INTO agency_sheet_mapping (sub_agency_id, cycle_id, sheet_name, spreadsheet_id)
            VALUES (?, ?, ?, ?)
            ON CONFLICT(sub_agency_id, cycle_id) DO UPDATE SET sheet_name = excluded.sheet_name, spreadsheet_id = excluded.spreadsheet_id`
@@ -160,7 +160,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
       } catch (_) {}
     }
 
-    db.prepare(
+    await db.prepare(
       'INSERT INTO agency_sync_log (cycle_id, synced_at, users_count, agencies_count) VALUES (?, CURRENT_TIMESTAMP, ?, ?)'
     ).run(cycleId, totalUsers, agencySheetNames.length);
 
@@ -176,14 +176,14 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
  */
 async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = db.prepare(
+  const cycle = await db.prepare(
     'SELECT management_spreadsheet_id, management_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
   ).get(cycleId, userId);
   if (!cycle || !cycle.management_spreadsheet_id) return null;
 
   let sheets = sheetsApi;
   if (!sheets) {
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return null;
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -206,7 +206,7 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const headerRows = rows.length > 0 && isHeaderRow(rows[0], 0) ? 1 : 0;
   const dataRows = rows.slice(headerRows);
 
-  const userLinks = db.prepare('SELECT member_user_id, sub_agency_id FROM user_agency_link').all();
+  const userLinks = await db.prepare('SELECT member_user_id, sub_agency_id FROM user_agency_link').all();
   const userToAgency = {};
   userLinks.forEach(r => { userToAgency[r.member_user_id] = r.sub_agency_id; });
 
@@ -219,7 +219,7 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
     const wNum = parseDecimal(row[COL_W]);
     const agencyId = memberUserId ? userToAgency[memberUserId] : null;
     if (agencyId) {
-      const agency = db.prepare('SELECT company_percent, commission_percent FROM shipping_sub_agencies WHERE id = ?').get(agencyId);
+      const agency = await db.prepare('SELECT company_percent, commission_percent FROM shipping_sub_agencies WHERE id = ?').get(agencyId);
       const cp = (agency?.company_percent != null && !isNaN(agency.company_percent)) ? agency.company_percent : (100 - (agency?.commission_percent || 0));
       sourceFirstSheetW += wNum * (cp / 100);
       companyProfit += wNum * (cp / 100);
@@ -232,7 +232,7 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const cashBalance = sourceFirstSheetW + sourceYZ;
   const details = { sourceFirstSheetW, sourceYZ, companyProfit };
 
-  db.prepare(
+  await db.prepare(
     `INSERT INTO cash_box_snapshot (cycle_id, snapshot_at, cash_balance, source_first_sheet_w, source_y_z, company_profit, details_json)
      VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)`
   ).run(cycleId, cashBalance, sourceFirstSheetW, sourceYZ, companyProfit, JSON.stringify(details));
@@ -245,19 +245,19 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
  */
 async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = db.prepare(
+  const cycle = await db.prepare(
     'SELECT agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
   ).get(cycleId, userId);
   if (!cycle || !cycle.agent_spreadsheet_id) return [];
 
-  const audited = db.prepare(
+  const audited = await db.prepare(
     'SELECT member_user_id FROM payroll_user_audit_cache WHERE cycle_id = ? AND user_id = ? AND audit_status = ?'
   ).all(cycleId, userId, 'مدقق');
   const auditedSet = new Set((audited || []).map(r => String(r.member_user_id)));
 
   let sheets = sheetsApi;
   if (!sheets) {
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return [];
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -283,7 +283,7 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
   const dataRows = rows.slice(headerRows);
 
   const result = [];
-  db.prepare('DELETE FROM deferred_balance_users WHERE cycle_id = ?').run(cycleId);
+  await db.prepare('DELETE FROM deferred_balance_users WHERE cycle_id = ?').run(cycleId);
 
   for (const row of dataRows) {
     const memberUserId = normalizeUserId(row[COL_A]);
@@ -293,7 +293,7 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
     const balanceD = parseDecimal(row[COL_D]);
 
     result.push({ member_user_id: memberUserId, extra_id_c: extraIdC, balance_d: balanceD });
-    db.prepare(
+    await db.prepare(
       'INSERT INTO deferred_balance_users (cycle_id, member_user_id, extra_id_c, balance_d, sheet_source, synced_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
     ).run(cycleId, memberUserId, extraIdC, balanceD, sheetToUse);
   }

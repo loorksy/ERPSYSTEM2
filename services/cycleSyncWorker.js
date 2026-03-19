@@ -88,7 +88,7 @@ async function syncSingleCycle(db, oauth2Client, cycleRow, ttlMinutes) {
   const managementRows = mgmtResult.values || [];
   const agentRows = agentResult.values || [];
 
-  const cols = getCycleColumns(cycleRow.user_id, cycleRow.id);
+  const cols = await getCycleColumns(cycleRow.user_id, cycleRow.id);
   const mgmtIdx = columnLetterToIndex(cols.mgmt_user_id_col || 'A') ?? 0;
   const agentIdx = columnLetterToIndex(cols.agent_user_id_col || 'A') ?? 0;
 
@@ -109,7 +109,7 @@ async function syncSingleCycle(db, oauth2Client, cycleRow, ttlMinutes) {
   const foundInTargetSheetIds = new Set();
 
   const staleAfter = new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString();
-  saveCycleCache(cycleRow.user_id, cycleRow.id, {
+  await saveCycleCache(cycleRow.user_id, cycleRow.id, {
     managementData: managementRows,
     agentData: agentRows,
     managementSheetName: mgmtResult.sheetTitleUsed || cycleRow.management_sheet_name || null,
@@ -122,44 +122,45 @@ async function syncSingleCycle(db, oauth2Client, cycleRow, ttlMinutes) {
 }
 
 async function runCycleSyncOnce(ttlMinutes = 5) {
-  const db = getDb();
-  const config = db
-    .prepare('SELECT token, credentials, sync_enabled FROM google_sheets_config WHERE id = 1')
-    .get();
-  if (!config || !config.token || !config.sync_enabled) return;
-  const credentials = config.credentials ? JSON.parse(config.credentials) : null;
-  const oauth2Client = getOAuth2Client(credentials);
-  if (!oauth2Client) return;
-  oauth2Client.setCredentials(typeof config.token === 'string' ? JSON.parse(config.token) : config.token);
+  try {
+    const db = getDb();
+    const config = await db.prepare('SELECT token, credentials, sync_enabled FROM google_sheets_config WHERE id = 1').get();
+    if (!config || !config.token || !config.sync_enabled) return;
+    const credentials = config.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(credentials);
+    if (!oauth2Client) return;
+    oauth2Client.setCredentials(typeof config.token === 'string' ? JSON.parse(config.token) : config.token);
 
-  const cycles = db
-    .prepare(
+    const cycles = await db.prepare(
       `SELECT id, user_id, management_spreadsheet_id, management_sheet_name,
               agent_spreadsheet_id, agent_sheet_name
          FROM financial_cycles
         WHERE management_spreadsheet_id IS NOT NULL
           AND agent_spreadsheet_id IS NOT NULL`
-    )
-    .all();
+    ).all();
 
-  for (const c of cycles) {
-    try {
-      const existing = getCycleCache(c.user_id, c.id);
-      if (existing && existing.staleAfter && new Date(existing.staleAfter) > new Date()) {
-        continue;
+    for (const c of cycles) {
+      try {
+        const existing = await getCycleCache(c.user_id, c.id);
+        if (existing && existing.staleAfter && new Date(existing.staleAfter) > new Date()) {
+          continue;
+        }
+        await syncSingleCycle(db, oauth2Client, c, ttlMinutes);
+      } catch (e) {
+        console.error('[cycleSyncWorker] Failed to sync cycle', c.id, e.message);
       }
-      await syncSingleCycle(db, oauth2Client, c, ttlMinutes);
-    } catch (e) {
-      console.error('[cycleSyncWorker] Failed to sync cycle', c.id, e.message);
     }
+  } catch (e) {
+    console.error('[cycleSyncWorker] runCycleSyncOnce error:', e.message);
+    throw e;
   }
 }
 
 function startBackgroundSync(intervalMs = 60000, ttlMinutes = 5) {
-  if (intervalMs <= 0) return;
+  if (intervalMs <= 0 || process.env.DISABLE_BACKGROUND_SYNC === '1') return;
   setInterval(() => {
     runCycleSyncOnce(ttlMinutes).catch(err => {
-      console.error('[cycleSyncWorker] runCycleSyncOnce error', err.message);
+      console.error('[cycleSyncWorker] runCycleSyncOnce error:', err.message);
     });
   }, intervalMs);
 }

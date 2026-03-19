@@ -4,18 +4,19 @@ const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 
 /** قائمة الوكالات مع الرصيد */
-router.get('/list', requireAuth, (req, res) => {
+router.get('/list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const agencies = db.prepare(`
+    const agencies = await db.prepare(`
       SELECT id, name, commission_percent, created_at
       FROM shipping_sub_agencies
       ORDER BY name
     `).all();
-    const balances = agencies.map(a => {
-      const bal = calculateAgencyBalance(db, a.id);
-      return { ...a, balance: bal };
-    });
+    const balances = [];
+    for (const a of agencies) {
+      const bal = await calculateAgencyBalance(db, a.id);
+      balances.push({ ...a, balance: bal });
+    }
     res.json({ success: true, agencies: balances });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الوكالات' });
@@ -23,8 +24,8 @@ router.get('/list', requireAuth, (req, res) => {
 });
 
 /** حساب رصيد الوكالة: أرباح + مكافآت - خصومات - مستحقات */
-function calculateAgencyBalance(db, subAgencyId) {
-  const rows = db.prepare(`
+async function calculateAgencyBalance(db, subAgencyId) {
+  const rows = await db.prepare(`
     SELECT type, SUM(amount) as total
     FROM sub_agency_transactions
     WHERE sub_agency_id = ?
@@ -40,7 +41,7 @@ function calculateAgencyBalance(db, subAgencyId) {
 }
 
 /** إضافة وكالة */
-router.post('/add', requireAuth, (req, res) => {
+router.post('/add', requireAuth, async (req, res) => {
   try {
     const { name, commissionPercent } = req.body || {};
     if (!name || !String(name).trim()) return res.json({ success: false, message: 'اسم الوكالة مطلوب' });
@@ -48,7 +49,7 @@ router.post('/add', requireAuth, (req, res) => {
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
     const companyPct = 100 - pctVal;
-    const r = db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
+    const r = await db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -56,7 +57,7 @@ router.post('/add', requireAuth, (req, res) => {
 });
 
 /** تحديث نسبة الوكالة (company_percent = 100 - commission_percent) */
-router.post('/:id/update-percent', requireAuth, (req, res) => {
+router.post('/:id/update-percent', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { commissionPercent } = req.body || {};
@@ -65,7 +66,7 @@ router.post('/:id/update-percent', requireAuth, (req, res) => {
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
     const companyPct = 100 - pctVal;
     const db = getDb();
-    db.prepare('UPDATE shipping_sub_agencies SET commission_percent = ?, company_percent = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pctVal, companyPct, id);
+    await db.prepare('UPDATE shipping_sub_agencies SET commission_percent = ?, company_percent = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pctVal, companyPct, id);
     res.json({ success: true, message: 'تم تحديث النسبة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل التحديث' });
@@ -73,14 +74,14 @@ router.post('/:id/update-percent', requireAuth, (req, res) => {
 });
 
 /** تفاصيل وكالة واحدة */
-router.get('/:id', requireAuth, (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const agency = db.prepare('SELECT * FROM shipping_sub_agencies WHERE id = ?').get(id);
+    const agency = await db.prepare('SELECT * FROM shipping_sub_agencies WHERE id = ?').get(id);
     if (!agency) return res.json({ success: false, message: 'الوكالة غير موجودة' });
-    const balance = calculateAgencyBalance(db, id);
+    const balance = await calculateAgencyBalance(db, id);
     res.json({ success: true, agency: { ...agency, balance } });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب التفاصيل' });
@@ -88,10 +89,10 @@ router.get('/:id', requireAuth, (req, res) => {
 });
 
 /** الدورات المالية */
-router.get('/cycles/list', requireAuth, (req, res) => {
+router.get('/cycles/list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = db.prepare('SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
+    const rows = await db.prepare('SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
     res.json({ success: true, cycles: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الدورات', cycles: [] });
@@ -99,18 +100,18 @@ router.get('/cycles/list', requireAuth, (req, res) => {
 });
 
 /** حساب ربح الوكالة (يشمل الأرباح + المكافآت) */
-router.get('/:id/profit', requireAuth, (req, res) => {
+router.get('/:id/profit', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { cycleId } = req.query || {};
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const agency = db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(id);
+    const agency = await db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(id);
     if (!agency) return res.json({ success: false, message: 'الوكالة غير موجودة' });
     let sql = `SELECT SUM(amount) as total FROM sub_agency_transactions WHERE sub_agency_id = ? AND type IN ('profit', 'reward')`;
     const params = [id];
     if (cycleId) { sql += ' AND cycle_id = ?'; params.push(cycleId); }
-    const row = db.prepare(sql).get(...params);
+    const row = await db.prepare(sql).get(...params);
     const profit = row?.total || 0;
     res.json({ success: true, profit, commissionPercent: agency.commission_percent });
   } catch (e) {
@@ -119,7 +120,7 @@ router.get('/:id/profit', requireAuth, (req, res) => {
 });
 
 /** إضافة مكافأة */
-router.post('/:id/reward', requireAuth, (req, res) => {
+router.post('/:id/reward', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { amount, notes } = req.body || {};
@@ -127,7 +128,7 @@ router.post('/:id/reward', requireAuth, (req, res) => {
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'المبلغ غير صالح' });
     const db = getDb();
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes)
       VALUES (?, 'reward', ?, ?)
     `).run(id, amt, notes || null);
@@ -138,7 +139,7 @@ router.post('/:id/reward', requireAuth, (req, res) => {
 });
 
 /** سجل المعاملات */
-router.get('/:id/transactions', requireAuth, (req, res) => {
+router.get('/:id/transactions', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { fromDate, toDate, type } = req.query || {};
@@ -150,7 +151,7 @@ router.get('/:id/transactions', requireAuth, (req, res) => {
     if (fromDate) { sql += ' AND date(created_at) >= date(?)'; params.push(fromDate); }
     if (toDate) { sql += ' AND date(created_at) <= date(?)'; params.push(toDate); }
     sql += ' ORDER BY created_at DESC';
-    const rows = db.prepare(sql).all(...params);
+    const rows = await db.prepare(sql).all(...params);
     const typeLabels = { profit: 'ربح', reward: 'مكافأة', deduction: 'خصم', due: 'مستحقات' };
     const list = rows.map(r => ({ ...r, typeLabel: typeLabels[r.type] || r.type }));
     res.json({ success: true, transactions: list });
@@ -160,12 +161,12 @@ router.get('/:id/transactions', requireAuth, (req, res) => {
 });
 
 /** المستخدمين التابعين للوكالة (من الشحن) */
-router.get('/:id/users', requireAuth, (req, res) => {
+router.get('/:id/users', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const rows = db.prepare(`
+    const rows = await db.prepare(`
       SELECT DISTINCT buyer_user_id as user_id
       FROM shipping_transactions
       WHERE buyer_type = 'sub_agent' AND buyer_sub_agency_id = ? AND buyer_user_id IS NOT NULL
@@ -178,19 +179,19 @@ router.get('/:id/users', requireAuth, (req, res) => {
 });
 
 /** ربط عمليات الشحن: عند البيع لوكيل فرعي نضيف ربح + خصم إن وجد */
-function registerShippingForAgency(db, tx) {
+async function registerShippingForAgency(db, tx) {
   if (tx.type !== 'sell' || tx.buyer_type !== 'sub_agent' || !tx.buyer_sub_agency_id) return;
-  const agency = db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(tx.buyer_sub_agency_id);
+  const agency = await db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(tx.buyer_sub_agency_id);
   if (!agency) return;
   const profit = (tx.total || 0) * (agency.commission_percent || 0) / 100;
   if (profit > 0) {
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, shipping_transaction_id)
       VALUES (?, 'profit', ?, ?, ?)
     `).run(tx.buyer_sub_agency_id, profit, 'ربح من بيع', tx.id);
   }
   if (tx.payment_method === 'agency_deduction' && tx.total > 0) {
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, shipping_transaction_id)
       VALUES (?, 'due', ?, ?, ?)
     `).run(tx.buyer_sub_agency_id, tx.total, 'خصم من نسبة الوكالة', tx.id);

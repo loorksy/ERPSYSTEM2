@@ -78,7 +78,7 @@ function parseUploadedFile(filePath, mimetype) {
 router.get('/spreadsheets-list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) {
       return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google. اربط من الإعدادات → Google Sheets.' });
     }
@@ -106,7 +106,7 @@ router.get('/spreadsheet-sheets', requireAuth, async (req, res) => {
     const spreadsheetId = req.query.spreadsheetId;
     if (!spreadsheetId) return res.json({ success: false, message: 'معرّف الجدول مطلوب' });
     const db = getDb();
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -122,10 +122,10 @@ router.get('/spreadsheet-sheets', requireAuth, async (req, res) => {
 });
 
 /** قائمة الدورات المالية للمستخدم */
-router.get('/cycles', requireAuth, (req, res) => {
+router.get('/cycles', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = db.prepare(
+    const rows = await db.prepare(
       'SELECT id, name, created_at FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
     ).all(req.session.userId);
     res.json({ success: true, cycles: rows });
@@ -135,10 +135,10 @@ router.get('/cycles', requireAuth, (req, res) => {
 });
 
 /** بنية دورة مالية (عدد الأعمدة + مراجع Google لملء قوائم الأعمدة من الأوراق الفعلية) */
-router.get('/cycles/:id/structure', requireAuth, (req, res) => {
+router.get('/cycles/:id/structure', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const row = db.prepare(
+    const row = await db.prepare(
       'SELECT id, name, management_data, agent_data, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
     ).get(req.params.id, req.session.userId);
     if (!row) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -222,7 +222,7 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
   try {
     const cycleId = req.params.id;
     const db = getDb();
-    const cycle = db.prepare(
+    const cycle = await db.prepare(
       'SELECT id, name, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
     ).get(cycleId, req.session.userId);
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -236,7 +236,7 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       });
     }
 
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -253,7 +253,7 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
     const managementRows = mgmtResult.values;
     const agentRows = agentResult.values;
 
-    db.prepare(
+    await db.prepare(
       'UPDATE financial_cycles SET management_data = ?, agent_data = ?, management_sheet_name = ?, agent_sheet_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?'
     ).run(
       JSON.stringify(managementRows),
@@ -290,7 +290,7 @@ router.get('/spreadsheet-columns', requireAuth, async (req, res) => {
     const { spreadsheetId, sheetName } = req.query;
     if (!spreadsheetId) return res.json({ success: false, message: 'معرّف الجدول مطلوب' });
     const db = getDb();
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -368,7 +368,7 @@ router.post('/cycles', requireAuth, async (req, res) => {
     let agentJson = agentData != null ? JSON.stringify(agentData) : null;
 
     if (mgmtSs && agentSs && (!managementJson || !agentJson)) {
-      const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+      const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
       if (config?.token) {
         const credentials = config.credentials ? JSON.parse(config.credentials) : null;
         const managementRows = await readSheetFromGoogle(mgmtSs, mgmtSn, credentials, config.token);
@@ -378,7 +378,7 @@ router.post('/cycles', requireAuth, async (req, res) => {
       }
     }
 
-    const result = db.prepare(
+    const result = await db.prepare(
       `INSERT INTO financial_cycles (user_id, name, management_data, agent_data,
        management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
@@ -397,7 +397,7 @@ router.post('/import-google', requireAuth, async (req, res) => {
   try {
     const { managementSpreadsheetId, managementSheetName, agentSpreadsheetId, agentSheetName } = req.body;
     const db = getDb();
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) {
       return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google. اربط من الإعدادات → Google Sheets.' });
     }
@@ -479,10 +479,10 @@ function getSheetIdByTitle(meta, title) {
 }
 
 /** جلب إعدادات التدقيق */
-router.get('/payroll-settings', requireAuth, (req, res) => {
+router.get('/payroll-settings', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const row = db.prepare('SELECT discount_rate, agent_color, management_color FROM payroll_settings WHERE user_id = ?').get(req.session.userId);
+    const row = await db.prepare('SELECT discount_rate, agent_color, management_color FROM payroll_settings WHERE user_id = ?').get(req.session.userId);
     res.json({
       success: true,
       discountRate: row ? row.discount_rate : 0,
@@ -495,11 +495,11 @@ router.get('/payroll-settings', requireAuth, (req, res) => {
 });
 
 /** حفظ إعدادات التدقيق */
-router.post('/payroll-settings', requireAuth, (req, res) => {
+router.post('/payroll-settings', requireAuth, async (req, res) => {
   try {
     const { discountRate, agentColor, managementColor } = req.body;
     const db = getDb();
-    db.prepare(`
+    await db.prepare(`
       INSERT INTO payroll_settings (user_id, discount_rate, agent_color, management_color, updated_at)
       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(user_id) DO UPDATE SET discount_rate = ?, agent_color = ?, management_color = ?, updated_at = CURRENT_TIMESTAMP
@@ -540,11 +540,11 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'اختر الدورة المالية وجدول البيانات' });
     }
     const db = getDb();
-    const payrollSettingsRow = db.prepare('SELECT discount_rate FROM payroll_settings WHERE user_id = ?').get(req.session.userId);
+    const payrollSettingsRow = await db.prepare('SELECT discount_rate FROM payroll_settings WHERE user_id = ?').get(req.session.userId);
     const discountRatePct = Number(bodyDiscountRate) ?? Number(payrollSettingsRow?.discount_rate) ?? 0;
     const discountMultiplier = Math.max(0, Math.min(1, 1 - discountRatePct / 100));
 
-    const cycle = db.prepare(
+    const cycle = await db.prepare(
       'SELECT name, management_data, agent_data, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
     ).get(cycleId, req.session.userId);
     if (!cycle) return res.json({ success: false, message: 'الدورة المالية غير موجودة' });
@@ -556,7 +556,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     const agentSsId = cycle.agent_spreadsheet_id ? String(cycle.agent_spreadsheet_id).trim() : null;
     const agentSheetNameCycle = cycle.agent_sheet_name ? String(cycle.agent_sheet_name).trim() : null;
 
-    const config = db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
     if (!config?.token) return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -572,7 +572,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
         const agentResult = await fetchSheetWithFallback(sheets, agentSsId, agentSheetNameCycle, mgmtSsId === agentSsId ? mgmtResult.sheetTitleUsed : null);
         managementRows = mgmtResult.values;
         agentRows = agentResult.values;
-        db.prepare(
+        await db.prepare(
           'UPDATE financial_cycles SET management_data = ?, agent_data = ?, management_sheet_name = ?, agent_sheet_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?'
         ).run(
           JSON.stringify(managementRows),
@@ -784,7 +784,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
         valueInputOption: 'USER_ENTERED',
         requestBody: { values: agentRows }
       });
-      db.prepare(
+      await db.prepare(
         `UPDATE financial_cycles SET management_spreadsheet_id = ?, management_sheet_name = 'الإدارة',
          agent_spreadsheet_id = ?, agent_sheet_name = 'الوكيل' WHERE id = ? AND user_id = ?`
       ).run(newSpreadsheetId, newSpreadsheetId, cycleId, req.session.userId);
@@ -1137,13 +1137,13 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
         }
         if (r.userId && (r.type.startsWith('سحب وكالة') || r.type === 'سحب إدارة')) {
           const src = r.type.startsWith('سحب وكالة') ? 'تدقيق وكيل من النظام' : 'تدقيق ادارة من النظام';
-          saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
+          await saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
             type: r.type,
             title: r.title
           });
         }
       });
-      saveCycleCache(req.session.userId, cycleId, {
+      await saveCycleCache(req.session.userId, cycleId, {
         managementData: managementRows,
         agentData: agentRows,
         managementSheetName: cycleMgmtSheetName,

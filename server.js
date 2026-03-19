@@ -236,7 +236,8 @@ initDatabase()
     });
   })
   .catch((err) => {
-    console.error('[LorkERP] Database init failed:', err);
+    console.error('[LorkERP] Database init failed:', err.message);
+    console.error('[LorkERP] Server cannot start without database. Fix the error and restart.');
     process.exit(1);
   });
 
