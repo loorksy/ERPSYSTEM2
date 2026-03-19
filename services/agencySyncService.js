@@ -63,9 +63,7 @@ function isHeaderRow(row, colIdx) {
  */
 async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = await db.prepare(
-    'SELECT id, management_spreadsheet_id FROM financial_cycles WHERE id = ? AND user_id = ?'
-  ).get(cycleId, userId);
+  const cycle = (await db.query('SELECT id, management_spreadsheet_id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, userId])).rows[0];
   if (!cycle || !cycle.management_spreadsheet_id) {
     return { success: false, error: 'الدورة غير موجودة أو غير مرتبطة بجدول الإدارة' };
   }
@@ -90,10 +88,10 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
     const seenUserIds = new Set();
 
     for (const sheetName of agencySheetNames) {
-      let agency = await db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
+      let agency = (await db.query('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = $1', [sheetName])).rows[0];
       if (!agency) {
-        await db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, 0, 0)').run(sheetName);
-        agency = await db.prepare('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = ?').get(sheetName);
+        await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, 0, 0)', [sheetName]);
+        agency = (await db.query('SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies WHERE name = $1', [sheetName])).rows[0];
       }
 
       const companyPercent = (agency.company_percent != null && !isNaN(agency.company_percent)) ? agency.company_percent : (100 - (agency.commission_percent || 0));
@@ -116,20 +114,22 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
         const userName = (row[COL_B] != null ? String(row[COL_B]) : '').trim();
         const baseProfitW = parseDecimal(row[COL_W]);
 
-        await db.prepare(
+        await db.query(
           `INSERT INTO agency_cycle_users (cycle_id, sub_agency_id, member_user_id, user_name, base_profit_w, synced_at)
-           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
            ON CONFLICT(cycle_id, sub_agency_id, member_user_id) DO UPDATE SET
              user_name = excluded.user_name,
              base_profit_w = excluded.base_profit_w,
-             synced_at = CURRENT_TIMESTAMP`
-        ).run(cycleId, agency.id, memberUserId, userName, baseProfitW);
+             synced_at = CURRENT_TIMESTAMP`,
+          [cycleId, agency.id, memberUserId, userName, baseProfitW]
+        );
 
-        await db.prepare(
+        await db.query(
           `INSERT INTO user_agency_link (member_user_id, sub_agency_id, updated_at)
-           VALUES (?, ?, CURRENT_TIMESTAMP)
-           ON CONFLICT(member_user_id) DO UPDATE SET sub_agency_id = excluded.sub_agency_id, updated_at = CURRENT_TIMESTAMP`
-        ).run(memberUserId, agency.id);
+           VALUES ($1, $2, CURRENT_TIMESTAMP)
+           ON CONFLICT(member_user_id) DO UPDATE SET sub_agency_id = excluded.sub_agency_id, updated_at = CURRENT_TIMESTAMP`,
+          [memberUserId, agency.id]
+        );
 
         if (!seenUserIds.has(memberUserId)) {
           seenUserIds.add(memberUserId);
@@ -138,31 +138,35 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
 
         const agencyProfit = baseProfitW * (agencyPercent / 100);
         if (agencyProfit > 0) {
-          const existing = await db.prepare(
+          const existing = (await db.query(
             `SELECT id FROM sub_agency_transactions
-             WHERE sub_agency_id = ? AND cycle_id = ? AND member_user_id = ? AND type = 'profit'`
-          ).get(agency.id, cycleId, memberUserId);
+             WHERE sub_agency_id = $1 AND cycle_id = $2 AND member_user_id = $3 AND type = 'profit'`,
+            [agency.id, cycleId, memberUserId]
+          )).rows[0];
           if (!existing) {
-            await db.prepare(
+            await db.query(
               `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, cycle_id, member_user_id)
-               VALUES (?, 'profit', ?, ?, ?, ?)`
-            ).run(agency.id, agencyProfit, `ربح من مزامنة - مستخدم ${memberUserId}`, cycleId, memberUserId);
+               VALUES ($1, 'profit', $2, $3, $4, $5)`,
+              [agency.id, agencyProfit, `ربح من مزامنة - مستخدم ${memberUserId}`, cycleId, memberUserId]
+            );
           }
         }
       }
 
       try {
-        await db.prepare(
+        await db.query(
           `INSERT INTO agency_sheet_mapping (sub_agency_id, cycle_id, sheet_name, spreadsheet_id)
-           VALUES (?, ?, ?, ?)
-           ON CONFLICT(sub_agency_id, cycle_id) DO UPDATE SET sheet_name = excluded.sheet_name, spreadsheet_id = excluded.spreadsheet_id`
-        ).run(agency.id, cycleId, sheetName, spreadsheetId);
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT(sub_agency_id, cycle_id) DO UPDATE SET sheet_name = excluded.sheet_name, spreadsheet_id = excluded.spreadsheet_id`,
+          [agency.id, cycleId, sheetName, spreadsheetId]
+        );
       } catch (_) {}
     }
 
-    await db.prepare(
-      'INSERT INTO agency_sync_log (cycle_id, synced_at, users_count, agencies_count) VALUES (?, CURRENT_TIMESTAMP, ?, ?)'
-    ).run(cycleId, totalUsers, agencySheetNames.length);
+    await db.query(
+      'INSERT INTO agency_sync_log (cycle_id, synced_at, users_count, agencies_count) VALUES ($1, CURRENT_TIMESTAMP, $2, $3)',
+      [cycleId, totalUsers, agencySheetNames.length]
+    );
 
     return { success: true, usersCount: totalUsers, agenciesCount: agencySheetNames.length };
   } catch (e) {
@@ -176,14 +180,12 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
  */
 async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = await db.prepare(
-    'SELECT management_spreadsheet_id, management_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
-  ).get(cycleId, userId);
+  const cycle = (await db.query('SELECT management_spreadsheet_id, management_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, userId])).rows[0];
   if (!cycle || !cycle.management_spreadsheet_id) return null;
 
   let sheets = sheetsApi;
   if (!sheets) {
-    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.token) return null;
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -206,7 +208,7 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const headerRows = rows.length > 0 && isHeaderRow(rows[0], 0) ? 1 : 0;
   const dataRows = rows.slice(headerRows);
 
-  const userLinks = await db.prepare('SELECT member_user_id, sub_agency_id FROM user_agency_link').all();
+  const userLinks = (await db.query('SELECT member_user_id, sub_agency_id FROM user_agency_link')).rows;
   const userToAgency = {};
   userLinks.forEach(r => { userToAgency[r.member_user_id] = r.sub_agency_id; });
 
@@ -219,7 +221,7 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
     const wNum = parseDecimal(row[COL_W]);
     const agencyId = memberUserId ? userToAgency[memberUserId] : null;
     if (agencyId) {
-      const agency = await db.prepare('SELECT company_percent, commission_percent FROM shipping_sub_agencies WHERE id = ?').get(agencyId);
+      const agency = (await db.query('SELECT company_percent, commission_percent FROM shipping_sub_agencies WHERE id = $1', [agencyId])).rows[0];
       const cp = (agency?.company_percent != null && !isNaN(agency.company_percent)) ? agency.company_percent : (100 - (agency?.commission_percent || 0));
       sourceFirstSheetW += wNum * (cp / 100);
       companyProfit += wNum * (cp / 100);
@@ -232,10 +234,11 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
   const cashBalance = sourceFirstSheetW + sourceYZ;
   const details = { sourceFirstSheetW, sourceYZ, companyProfit };
 
-  await db.prepare(
+  await db.query(
     `INSERT INTO cash_box_snapshot (cycle_id, snapshot_at, cash_balance, source_first_sheet_w, source_y_z, company_profit, details_json)
-     VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)`
-  ).run(cycleId, cashBalance, sourceFirstSheetW, sourceYZ, companyProfit, JSON.stringify(details));
+     VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5, $6)`,
+    [cycleId, cashBalance, sourceFirstSheetW, sourceYZ, companyProfit, JSON.stringify(details)]
+  );
 
   return { cashBalance, sourceFirstSheetW, sourceYZ, companyProfit };
 }
@@ -245,19 +248,18 @@ async function calculateCashBoxBalance(cycleId, userId, sheetsApi) {
  */
 async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = await db.prepare(
-    'SELECT agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = ? AND user_id = ?'
-  ).get(cycleId, userId);
+  const cycle = (await db.query('SELECT agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, userId])).rows[0];
   if (!cycle || !cycle.agent_spreadsheet_id) return [];
 
-  const audited = await db.prepare(
-    'SELECT member_user_id FROM payroll_user_audit_cache WHERE cycle_id = ? AND user_id = ? AND audit_status = ?'
-  ).all(cycleId, userId, 'مدقق');
+  const audited = (await db.query(
+    'SELECT member_user_id FROM payroll_user_audit_cache WHERE cycle_id = $1 AND user_id = $2 AND audit_status = $3',
+    [cycleId, userId, 'مدقق']
+  )).rows;
   const auditedSet = new Set((audited || []).map(r => String(r.member_user_id)));
 
   let sheets = sheetsApi;
   if (!sheets) {
-    const config = await db.prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.token) return [];
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
@@ -283,7 +285,7 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
   const dataRows = rows.slice(headerRows);
 
   const result = [];
-  await db.prepare('DELETE FROM deferred_balance_users WHERE cycle_id = ?').run(cycleId);
+  await db.query('DELETE FROM deferred_balance_users WHERE cycle_id = $1', [cycleId]);
 
   for (const row of dataRows) {
     const memberUserId = normalizeUserId(row[COL_A]);
@@ -293,9 +295,10 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
     const balanceD = parseDecimal(row[COL_D]);
 
     result.push({ member_user_id: memberUserId, extra_id_c: extraIdC, balance_d: balanceD });
-    await db.prepare(
-      'INSERT INTO deferred_balance_users (cycle_id, member_user_id, extra_id_c, balance_d, sheet_source, synced_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)'
-    ).run(cycleId, memberUserId, extraIdC, balanceD, sheetToUse);
+    await db.query(
+      'INSERT INTO deferred_balance_users (cycle_id, member_user_id, extra_id_c, balance_d, sheet_source, synced_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)',
+      [cycleId, memberUserId, extraIdC, balanceD, sheetToUse]
+    );
   }
 
   return result;

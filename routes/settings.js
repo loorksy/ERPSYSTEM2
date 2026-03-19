@@ -23,8 +23,8 @@ const CURRENCY_OPTIONS = [
 router.get('/', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const sheetsConfig = await db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
-    const currencyRow = await db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
+    const sheetsConfig = (await db.query('SELECT * FROM google_sheets_config WHERE id = 1')).rows[0];
+    const currencyRow = (await db.query('SELECT value FROM settings WHERE key = $1', ['currency'])).rows[0];
     const currency = currencyRow?.value || 'USD';
     res.render('dashboard', {
       title: 'الإعدادات',
@@ -43,7 +43,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/currency', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const row = await db.prepare('SELECT value FROM settings WHERE key = ?').get('currency');
+    const row = (await db.query('SELECT value FROM settings WHERE key = $1', ['currency'])).rows[0];
     const currency = row?.value || 'USD';
     const symbol = getCurrencySymbol(currency);
     res.json({ success: true, currency, symbol });
@@ -57,7 +57,7 @@ router.post('/currency', requireAuth, async (req, res) => {
     const { currency } = req.body || {};
     const code = CURRENCY_OPTIONS.some(c => c.code === currency) ? currency : 'USD';
     const db = getDb();
-    await db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)').run('currency', code);
+    await db.query('INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP', ['currency', code]);
     res.json({ success: true, message: 'تم حفظ العملة', currency: code, symbol: getCurrencySymbol(code) });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
@@ -77,13 +77,13 @@ router.post('/change-password', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
 
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+    const user = (await db.query('SELECT * FROM users WHERE id = $1', [req.session.userId])).rows[0];
     if (!bcrypt.compareSync(currentPassword, user.password)) {
       return res.json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    await db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashedPassword, req.session.userId);
+    await db.query('UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [hashedPassword, req.session.userId]);
 
     res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
   } catch (error) {
@@ -96,7 +96,7 @@ router.post('/update-profile', requireAuth, async (req, res) => {
     const { displayName } = req.body;
     const db = getDb();
 
-    await db.prepare('UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(displayName, req.session.userId);
+    await db.query('UPDATE users SET display_name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [displayName, req.session.userId]);
     req.session.user.displayName = displayName;
 
     res.json({ success: true, message: 'تم تحديث الملف الشخصي بنجاح' });
@@ -109,11 +109,11 @@ router.post('/reset-data', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const userId = req.session.userId;
-    await db.prepare('DELETE FROM payroll_user_audit_cache WHERE user_id = ?').run(userId);
-    await db.prepare('DELETE FROM payroll_cycle_cache WHERE user_id = ?').run(userId);
-    await db.prepare('DELETE FROM payroll_cycle_columns WHERE user_id = ?').run(userId);
-    await db.prepare('DELETE FROM payroll_settings WHERE user_id = ?').run(userId);
-    await db.prepare('DELETE FROM financial_cycles WHERE user_id = ?').run(userId);
+    await db.query('DELETE FROM payroll_user_audit_cache WHERE user_id = $1', [userId]);
+    await db.query('DELETE FROM payroll_cycle_cache WHERE user_id = $1', [userId]);
+    await db.query('DELETE FROM payroll_cycle_columns WHERE user_id = $1', [userId]);
+    await db.query('DELETE FROM payroll_settings WHERE user_id = $1', [userId]);
+    await db.query('DELETE FROM financial_cycles WHERE user_id = $1', [userId]);
     res.json({ success: true, message: 'تم حذف بيانات الدورات والتدقيق لهذه الحساب وإعادة التعيين.' });
   } catch (error) {
     res.json({ success: false, message: 'فشل حذف البيانات: ' + (error.message || '') });

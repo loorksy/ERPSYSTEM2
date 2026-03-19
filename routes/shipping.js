@@ -8,11 +8,11 @@ const { registerShippingForAgency } = require('./subAgencies');
 router.get('/balance', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db.prepare(`
+    const rows = (await db.query(`
       SELECT type, item_type, SUM(quantity) as sum_qty
       FROM shipping_transactions
       GROUP BY type, item_type
-    `).all();
+    `)).rows;
     let goldBalance = 0;
     let crystalBalance = 0;
     rows.forEach(r => {
@@ -35,7 +35,7 @@ router.get('/balance', requireAuth, async (req, res) => {
 router.get('/approved', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db.prepare('SELECT id, name FROM shipping_approved ORDER BY name').all();
+    const rows = (await db.query('SELECT id, name FROM shipping_approved ORDER BY name')).rows;
     res.json({ success: true, list: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب المعتمدين' });
@@ -46,7 +46,7 @@ router.get('/approved', requireAuth, async (req, res) => {
 router.get('/sub-agencies', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db.prepare('SELECT id, name FROM shipping_sub_agencies ORDER BY name').all();
+    const rows = (await db.query('SELECT id, name FROM shipping_sub_agencies ORDER BY name')).rows;
     res.json({ success: true, list: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الوكالات' });
@@ -57,7 +57,7 @@ router.get('/sub-agencies', requireAuth, async (req, res) => {
 router.get('/companies', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db.prepare('SELECT id, name FROM shipping_companies ORDER BY name').all();
+    const rows = (await db.query('SELECT id, name FROM shipping_companies ORDER BY name')).rows;
     res.json({ success: true, list: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الشركات' });
@@ -68,10 +68,10 @@ router.get('/companies', requireAuth, async (req, res) => {
 router.get('/users', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const cycles = await db.prepare('SELECT id FROM financial_cycles WHERE user_id = ?').all(req.session.userId);
+    const cycles = (await db.query('SELECT id FROM financial_cycles WHERE user_id = $1', [req.session.userId])).rows;
     const userIds = new Set();
     for (const c of cycles) {
-      const cache = await db.prepare('SELECT management_data, agent_data FROM payroll_cycle_cache WHERE user_id = ? AND cycle_id = ?').get(req.session.userId, c.id);
+      const cache = (await db.query('SELECT management_data, agent_data FROM payroll_cycle_cache WHERE user_id = $1 AND cycle_id = $2', [req.session.userId, c.id])).rows[0];
       if (cache) {
         const parse = (d) => d ? (JSON.parse(d) || []) : [];
         for (const row of [...parse(cache.management_data), ...parse(cache.agent_data)]) {
@@ -93,7 +93,7 @@ router.post('/approved', requireAuth, async (req, res) => {
     const { name } = req.body || {};
     if (!name || !String(name).trim()) return res.json({ success: false, message: 'الاسم مطلوب' });
     const db = getDb();
-    const r = await db.prepare('INSERT INTO shipping_approved (name) VALUES (?)').run(String(name).trim());
+    const r = await db.query('INSERT INTO shipping_approved (name) VALUES ($1)', [String(name).trim()]);
     res.json({ success: true, message: 'تم إضافة المعتمد', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -109,7 +109,7 @@ router.post('/sub-agencies', requireAuth, async (req, res) => {
     const pct = parseFloat(commissionPercent);
     const pctVal = (isNaN(pct) || pct < 0) ? 0 : Math.min(100, pct);
     const companyPct = 100 - pctVal;
-    const r = await db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
+    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), pctVal, companyPct]);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -122,7 +122,7 @@ router.post('/companies', requireAuth, async (req, res) => {
     const { name } = req.body || {};
     if (!name || !String(name).trim()) return res.json({ success: false, message: 'اسم الشركة مطلوب' });
     const db = getDb();
-    const r = await db.prepare('INSERT INTO shipping_companies (name) VALUES (?)').run(String(name).trim());
+    const r = await db.query('INSERT INTO shipping_companies (name) VALUES ($1)', [String(name).trim()]);
     res.json({ success: true, message: 'تم إضافة الشركة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -142,10 +142,10 @@ router.post('/sell', requireAuth, async (req, res) => {
     const total = qty * price;
     const status = paymentMethod === 'debt' ? 'debt' : 'completed';
     const db = getDb();
-    const r = await db.prepare(`
+    const r = await db.query(`
       INSERT INTO shipping_transactions (type, item_type, quantity, unit_price, total, payment_method, status, buyer_type, buyer_user_id, buyer_approved_id, buyer_sub_agency_id, salary_deduction_user_id, notes)
-      VALUES ('sell', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(itemType, qty, price, total, paymentMethod, status, buyerType, buyerType === 'user' ? (userNumber || null) : null, buyerType === 'approved' ? (approvedId || null) : null, buyerType === 'sub_agent' ? (subAgencyId || null) : null, paymentMethod === 'salary_deduction' ? (salaryDeductionUserId || null) : null, notes || null);
+      VALUES ('sell', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `, [itemType, qty, price, total, paymentMethod, status, buyerType, buyerType === 'user' ? (userNumber || null) : null, buyerType === 'approved' ? (approvedId || null) : null, buyerType === 'sub_agent' ? (subAgencyId || null) : null, paymentMethod === 'salary_deduction' ? (salaryDeductionUserId || null) : null, notes || null]);
     const txId = r.lastInsertRowid;
     const txRow = { id: txId, type: 'sell', buyer_type: buyerType, buyer_sub_agency_id: subAgencyId ? parseInt(subAgencyId, 10) : null, payment_method: paymentMethod, total };
     await registerShippingForAgency(db, txRow);
@@ -170,7 +170,7 @@ router.post('/buy', requireAuth, async (req, res) => {
     let finalCompanyId = null;
     if (purchaseSource === 'company') {
       if (companyId) {
-        const row = await db.prepare('SELECT id, name FROM shipping_companies WHERE id = ?').get(companyId);
+        const row = (await db.query('SELECT id, name FROM shipping_companies WHERE id = $1', [companyId])).rows[0];
         if (row) {
           finalCompanyId = row.id;
           finalCompanyName = row.name;
@@ -181,10 +181,10 @@ router.post('/buy', requireAuth, async (req, res) => {
     }
     const total = qty * price;
     const status = paymentMethod === 'debt' ? 'debt' : 'completed';
-    await db.prepare(`
+    await db.query(`
       INSERT INTO shipping_transactions (type, item_type, quantity, unit_price, total, payment_method, status, purchase_source, purchase_company_id, purchase_company_name, notes)
-      VALUES ('buy', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(itemType, qty, price, total, paymentMethod, status, purchaseSource, finalCompanyId, finalCompanyName, notes || null);
+      VALUES ('buy', $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `, [itemType, qty, price, total, paymentMethod, status, purchaseSource, finalCompanyId, finalCompanyName, notes || null]);
     res.json({ success: true, message: 'تم تسجيل عملية الشراء' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل تسجيل الشراء' });
@@ -198,18 +198,18 @@ router.get('/transactions', requireAuth, async (req, res) => {
     const db = getDb();
     let sql = 'SELECT * FROM shipping_transactions WHERE 1=1';
     const params = [];
-    if (type) { sql += ' AND type = ?'; params.push(type); }
-    if (buyerType) { sql += ' AND buyer_type = ?'; params.push(buyerType); }
+    if (type) { sql += ` AND type = $${params.length + 1}`; params.push(type); }
+    if (buyerType) { sql += ` AND buyer_type = $${params.length + 1}`; params.push(buyerType); }
     if (buyerId) {
-      if (buyerType === 'user') { sql += ' AND buyer_user_id = ?'; params.push(buyerId); }
-      else if (buyerType === 'approved') { sql += ' AND buyer_approved_id = ?'; params.push(buyerId); }
-      else if (buyerType === 'sub_agent') { sql += ' AND buyer_sub_agency_id = ?'; params.push(buyerId); }
+      if (buyerType === 'user') { sql += ` AND buyer_user_id = $${params.length + 1}`; params.push(buyerId); }
+      else if (buyerType === 'approved') { sql += ` AND buyer_approved_id = $${params.length + 1}`; params.push(buyerId); }
+      else if (buyerType === 'sub_agent') { sql += ` AND buyer_sub_agency_id = $${params.length + 1}`; params.push(buyerId); }
     }
-    if (fromDate) { sql += ' AND date(created_at) >= date(?)'; params.push(fromDate); }
-    if (toDate) { sql += ' AND date(created_at) <= date(?)'; params.push(toDate); }
-    if (status) { sql += ' AND status = ?'; params.push(status); }
+    if (fromDate) { sql += ` AND date(created_at) >= date($${params.length + 1})`; params.push(fromDate); }
+    if (toDate) { sql += ` AND date(created_at) <= date($${params.length + 1})`; params.push(toDate); }
+    if (status) { sql += ` AND status = $${params.length + 1}`; params.push(status); }
     sql += ' ORDER BY created_at DESC';
-    const rows = await db.prepare(sql).all(...params);
+    const rows = (await db.query(sql, params)).rows;
     res.json({ success: true, transactions: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب السجل' });

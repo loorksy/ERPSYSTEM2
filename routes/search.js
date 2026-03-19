@@ -46,11 +46,7 @@ function safeHexColor(input, fallback) {
 router.get('/cycles', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db
-      .prepare(
-        'SELECT id, name, created_at FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
-      )
-      .all(req.session.userId);
+    const rows = (await db.query('SELECT id, name, created_at FROM financial_cycles WHERE user_id = $1 ORDER BY created_at DESC', [req.session.userId])).rows;
     res.json({ success: true, cycles: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الدورات' });
@@ -69,11 +65,7 @@ router.get('/pending-cycles', requireAuth, async (req, res) => {
     }
 
     const db = getDb();
-    const cycles = await db
-      .prepare(
-        'SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
-      )
-      .all(req.session.userId);
+    const cycles = (await db.query('SELECT id, name FROM financial_cycles WHERE user_id = $1 ORDER BY created_at DESC', [req.session.userId])).rows;
 
     const pending = [];
     for (const cycle of cycles) {
@@ -126,18 +118,12 @@ router.get('/cycle-sheets', requireAuth, async (req, res) => {
     const cycleId = Number(req.query.cycleId);
     if (!cycleId) return res.json({ success: false, message: 'معرّف الدورة مطلوب' });
     const db = getDb();
-    const cycle = await db
-      .prepare(
-        'SELECT management_spreadsheet_id FROM financial_cycles WHERE id = ? AND user_id = ?'
-      )
-      .get(cycleId, req.session.userId);
+    const cycle = (await db.query('SELECT management_spreadsheet_id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, req.session.userId])).rows[0];
     if (!cycle || !cycle.management_spreadsheet_id) {
       return res.json({ success: false, message: 'هذه الدورة غير مرتبطة بجدول إدارة في Google' });
     }
 
-    const config = await db
-      .prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1')
-      .get();
+    const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.token) {
       return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     }
@@ -183,11 +169,7 @@ router.get('/user-across-cycles', requireAuth, async (req, res) => {
     }
 
     const db = getDb();
-    const cycles = await db
-      .prepare(
-        'SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC'
-      )
-      .all(req.session.userId);
+    const cycles = (await db.query('SELECT id, name FROM financial_cycles WHERE user_id = $1 ORDER BY created_at DESC', [req.session.userId])).rows;
 
     const results = [];
     let globalName = '';
@@ -301,11 +283,7 @@ router.get('/search-user', requireAuth, async (req, res) => {
     }
 
     const db = getDb();
-    const cycle = await db
-      .prepare(
-        'SELECT id, user_id, name FROM financial_cycles WHERE id = ? AND user_id = ?'
-      )
-      .get(cycleId, req.session.userId);
+    const cycle = (await db.query('SELECT id, user_id, name FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, req.session.userId])).rows[0];
     if (!cycle) {
       return res.json({ success: false, message: 'الدورة غير موجودة' });
     }
@@ -407,11 +385,7 @@ router.post('/execute-audit', requireAuth, async (req, res) => {
     }
 
     const db = getDb();
-    const cycle = await db
-      .prepare(
-        'SELECT id, user_id FROM financial_cycles WHERE id = ? AND user_id = ?'
-      )
-      .get(cycleIdNum, req.session.userId);
+    const cycle = (await db.query('SELECT id, user_id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleIdNum, req.session.userId])).rows[0];
     if (!cycle) {
       return res.json({ success: false, message: 'الدورة غير موجودة' });
     }
@@ -472,15 +446,14 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'اختر الدورة وأدخل رقم المستخدم أولاً' });
     }
     const db = getDb();
-    const cycle = await db
-      .prepare(
-        `SELECT id, user_id, name,
-                management_spreadsheet_id, management_sheet_name,
-                agent_spreadsheet_id, agent_sheet_name
-           FROM financial_cycles
-          WHERE id = ? AND user_id = ?`
-      )
-      .get(cycleIdNum, req.session.userId);
+    const cycle = (await db.query(
+      `SELECT id, user_id, name,
+              management_spreadsheet_id, management_sheet_name,
+              agent_spreadsheet_id, agent_sheet_name
+         FROM financial_cycles
+        WHERE id = $1 AND user_id = $2`,
+      [cycleIdNum, req.session.userId]
+    )).rows[0];
     if (!cycle || !cycle.management_spreadsheet_id) {
       return res.json({
         success: false,
@@ -542,9 +515,7 @@ router.post('/execute-audit-advanced', requireAuth, async (req, res) => {
       statusLabel = 'سحب ادارة';
     }
 
-    const config = await db
-      .prepare('SELECT token, credentials FROM google_sheets_config WHERE id = 1')
-      .get();
+    const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.token) {
       return res.json({ success: false, message: 'لم يتم تسجيل الدخول بـ Google' });
     }

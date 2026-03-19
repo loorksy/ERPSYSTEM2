@@ -124,20 +124,20 @@ async function syncSingleCycle(db, oauth2Client, cycleRow, ttlMinutes) {
 async function runCycleSyncOnce(ttlMinutes = 5) {
   try {
     const db = getDb();
-    const config = await db.prepare('SELECT token, credentials, sync_enabled FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT token, credentials, sync_enabled FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config || !config.token || !config.sync_enabled) return;
     const credentials = config.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
     if (!oauth2Client) return;
     oauth2Client.setCredentials(typeof config.token === 'string' ? JSON.parse(config.token) : config.token);
 
-    const cycles = await db.prepare(
+    const cycles = (await db.query(
       `SELECT id, user_id, management_spreadsheet_id, management_sheet_name,
               agent_spreadsheet_id, agent_sheet_name
          FROM financial_cycles
         WHERE management_spreadsheet_id IS NOT NULL
           AND agent_spreadsheet_id IS NOT NULL`
-    ).all();
+    )).rows;
 
     for (const c of cycles) {
       try {

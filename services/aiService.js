@@ -80,7 +80,7 @@ function mergeMarkdownTables(tables) {
 
 async function getProviderConfig(provider) {
   const db = getDb();
-  const row = await db.prepare('SELECT * FROM ai_config WHERE provider = ?').get(provider);
+  const row = (await db.query('SELECT * FROM ai_config WHERE provider = $1', [provider])).rows[0];
   if (!row) return null;
   return {
     ...row,
@@ -90,7 +90,7 @@ async function getProviderConfig(provider) {
 
 async function getActiveProvider() {
   const db = getDb();
-  const configs = await db.prepare('SELECT * FROM ai_config ORDER BY updated_at DESC').all();
+  const configs = (await db.query('SELECT * FROM ai_config ORDER BY updated_at DESC')).rows;
   for (const c of configs) {
     const key = decrypt(c.api_key_encrypted);
     if (key) return { ...c, apiKey: key };
@@ -100,7 +100,7 @@ async function getActiveProvider() {
 
 async async function getPreferredProvider() {
   const db = getDb();
-  const configs = await db.prepare('SELECT * FROM ai_config WHERE selected_model IS NOT NULL ORDER BY updated_at DESC').all();
+  const configs = (await db.query('SELECT * FROM ai_config WHERE selected_model IS NOT NULL ORDER BY updated_at DESC')).rows;
   for (const c of configs) {
     const key = decrypt(c.api_key_encrypted);
     if (key && c.selected_model) return { ...c, apiKey: key };
@@ -207,16 +207,16 @@ async function analyzeMessages(text, onProgress) {
 
   try {
     const db = getDb();
-    await db.prepare(`
+    await db.query(`
       INSERT INTO message_analyses (input_text, output_table, provider, model, chunks_count)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
+      VALUES ($1, $2, $3, $4, $5)
+    `, [
       text.substring(0, 5000),
       merged,
       config.provider,
       config.selected_model,
       chunks.length
-    );
+    ]);
   } catch {}
 
   return {
@@ -230,31 +230,27 @@ async function analyzeMessages(text, onProgress) {
 async function saveApiKey(provider, apiKey) {
   const db = getDb();
   const encrypted = encrypt(apiKey);
-  const existing = await db.prepare('SELECT id FROM ai_config WHERE provider = ?').get(provider);
+  const existing = (await db.query('SELECT id FROM ai_config WHERE provider = $1', [provider])).rows[0];
   if (existing) {
-    await db.prepare('UPDATE ai_config SET api_key_encrypted = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
-      .run(encrypted, provider);
+    await db.query('UPDATE ai_config SET api_key_encrypted = $1, updated_at = CURRENT_TIMESTAMP WHERE provider = $2', [encrypted, provider]);
   } else {
-    await db.prepare('INSERT INTO ai_config (provider, api_key_encrypted) VALUES (?, ?)')
-      .run(provider, encrypted);
+    await db.query('INSERT INTO ai_config (provider, api_key_encrypted) VALUES ($1, $2)', [provider, encrypted]);
   }
 }
 
 async function saveSelectedModel(provider, model) {
   const db = getDb();
-  await db.prepare('UPDATE ai_config SET selected_model = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
-    .run(model, provider);
+  await db.query('UPDATE ai_config SET selected_model = $1, updated_at = CURRENT_TIMESTAMP WHERE provider = $2', [model, provider]);
 }
 
 async function saveModelsCache(provider, models) {
   const db = getDb();
-  await db.prepare('UPDATE ai_config SET models_cache = ?, updated_at = CURRENT_TIMESTAMP WHERE provider = ?')
-    .run(JSON.stringify(models), provider);
+  await db.query('UPDATE ai_config SET models_cache = $1, updated_at = CURRENT_TIMESTAMP WHERE provider = $2', [JSON.stringify(models), provider]);
 }
 
 async function getAIStatus() {
   const db = getDb();
-  const configs = await db.prepare('SELECT provider, selected_model, models_cache, updated_at FROM ai_config').all();
+  const configs = (await db.query('SELECT provider, selected_model, models_cache, updated_at FROM ai_config')).rows;
   const result = {};
   for (const c of configs) {
     result[c.provider] = {

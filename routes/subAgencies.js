@@ -7,11 +7,11 @@ const { getDb } = require('../db/database');
 router.get('/list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const agencies = await db.prepare(`
+    const agencies = (await db.query(`
       SELECT id, name, commission_percent, created_at
       FROM shipping_sub_agencies
       ORDER BY name
-    `).all();
+    `)).rows;
     const balances = [];
     for (const a of agencies) {
       const bal = await calculateAgencyBalance(db, a.id);
@@ -25,12 +25,12 @@ router.get('/list', requireAuth, async (req, res) => {
 
 /** حساب رصيد الوكالة: أرباح + مكافآت - خصومات - مستحقات */
 async function calculateAgencyBalance(db, subAgencyId) {
-  const rows = await db.prepare(`
+  const rows = (await db.query(`
     SELECT type, SUM(amount) as total
     FROM sub_agency_transactions
-    WHERE sub_agency_id = ?
+    WHERE sub_agency_id = $1
     GROUP BY type
-  `).all(subAgencyId);
+  `, [subAgencyId])).rows;
   let balance = 0;
   rows.forEach(r => {
     const t = r.total || 0;
@@ -49,7 +49,7 @@ router.post('/add', requireAuth, async (req, res) => {
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
     const companyPct = 100 - pctVal;
-    const r = await db.prepare('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES (?, ?, ?)').run(String(name).trim(), pctVal, companyPct);
+    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), pctVal, companyPct]);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -66,7 +66,7 @@ router.post('/:id/update-percent', requireAuth, async (req, res) => {
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
     const companyPct = 100 - pctVal;
     const db = getDb();
-    await db.prepare('UPDATE shipping_sub_agencies SET commission_percent = ?, company_percent = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(pctVal, companyPct, id);
+    await db.query('UPDATE shipping_sub_agencies SET commission_percent = $1, company_percent = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3', [pctVal, companyPct, id]);
     res.json({ success: true, message: 'تم تحديث النسبة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل التحديث' });
@@ -79,7 +79,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const agency = await db.prepare('SELECT * FROM shipping_sub_agencies WHERE id = ?').get(id);
+    const agency = (await db.query('SELECT * FROM shipping_sub_agencies WHERE id = $1', [id])).rows[0];
     if (!agency) return res.json({ success: false, message: 'الوكالة غير موجودة' });
     const balance = await calculateAgencyBalance(db, id);
     res.json({ success: true, agency: { ...agency, balance } });
@@ -92,7 +92,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 router.get('/cycles/list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const rows = await db.prepare('SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC').all(req.session.userId);
+    const rows = (await db.query('SELECT id, name FROM financial_cycles WHERE user_id = $1 ORDER BY created_at DESC', [req.session.userId])).rows;
     res.json({ success: true, cycles: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الدورات', cycles: [] });
@@ -106,12 +106,12 @@ router.get('/:id/profit', requireAuth, async (req, res) => {
     const { cycleId } = req.query || {};
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const agency = await db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(id);
+    const agency = (await db.query('SELECT commission_percent FROM shipping_sub_agencies WHERE id = $1', [id])).rows[0];
     if (!agency) return res.json({ success: false, message: 'الوكالة غير موجودة' });
-    let sql = `SELECT SUM(amount) as total FROM sub_agency_transactions WHERE sub_agency_id = ? AND type IN ('profit', 'reward')`;
+    let sql = `SELECT SUM(amount) as total FROM sub_agency_transactions WHERE sub_agency_id = $1 AND type IN ('profit', 'reward')`;
     const params = [id];
-    if (cycleId) { sql += ' AND cycle_id = ?'; params.push(cycleId); }
-    const row = await db.prepare(sql).get(...params);
+    if (cycleId) { sql += ` AND cycle_id = $${params.length + 1}`; params.push(cycleId); }
+    const row = (await db.query(sql, params)).rows[0];
     const profit = row?.total || 0;
     res.json({ success: true, profit, commissionPercent: agency.commission_percent });
   } catch (e) {
@@ -128,10 +128,10 @@ router.post('/:id/reward', requireAuth, async (req, res) => {
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'المبلغ غير صالح' });
     const db = getDb();
-    await db.prepare(`
+    await db.query(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes)
-      VALUES (?, 'reward', ?, ?)
-    `).run(id, amt, notes || null);
+      VALUES ($1, 'reward', $2, $3)
+    `, [id, amt, notes || null]);
     res.json({ success: true, message: 'تم إضافة المكافأة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
@@ -145,13 +145,13 @@ router.get('/:id/transactions', requireAuth, async (req, res) => {
     const { fromDate, toDate, type } = req.query || {};
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    let sql = 'SELECT * FROM sub_agency_transactions WHERE sub_agency_id = ?';
+    let sql = 'SELECT * FROM sub_agency_transactions WHERE sub_agency_id = $1';
     const params = [id];
-    if (type) { sql += ' AND type = ?'; params.push(type); }
-    if (fromDate) { sql += ' AND date(created_at) >= date(?)'; params.push(fromDate); }
-    if (toDate) { sql += ' AND date(created_at) <= date(?)'; params.push(toDate); }
+    if (type) { sql += ` AND type = $${params.length + 1}`; params.push(type); }
+    if (fromDate) { sql += ` AND date(created_at) >= date($${params.length + 1})`; params.push(fromDate); }
+    if (toDate) { sql += ` AND date(created_at) <= date($${params.length + 1})`; params.push(toDate); }
     sql += ' ORDER BY created_at DESC';
-    const rows = await db.prepare(sql).all(...params);
+    const rows = (await db.query(sql, params)).rows;
     const typeLabels = { profit: 'ربح', reward: 'مكافأة', deduction: 'خصم', due: 'مستحقات' };
     const list = rows.map(r => ({ ...r, typeLabel: typeLabels[r.type] || r.type }));
     res.json({ success: true, transactions: list });
@@ -166,11 +166,11 @@ router.get('/:id/users', requireAuth, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const rows = await db.prepare(`
+    const rows = (await db.query(`
       SELECT DISTINCT buyer_user_id as user_id
       FROM shipping_transactions
-      WHERE buyer_type = 'sub_agent' AND buyer_sub_agency_id = ? AND buyer_user_id IS NOT NULL
-    `).all(id);
+      WHERE buyer_type = 'sub_agent' AND buyer_sub_agency_id = $1 AND buyer_user_id IS NOT NULL
+    `, [id])).rows;
     const users = rows.map(r => ({ id: r.user_id, name: r.user_id }));
     res.json({ success: true, users });
   } catch (e) {
@@ -181,20 +181,20 @@ router.get('/:id/users', requireAuth, async (req, res) => {
 /** ربط عمليات الشحن: عند البيع لوكيل فرعي نضيف ربح + خصم إن وجد */
 async function registerShippingForAgency(db, tx) {
   if (tx.type !== 'sell' || tx.buyer_type !== 'sub_agent' || !tx.buyer_sub_agency_id) return;
-  const agency = await db.prepare('SELECT commission_percent FROM shipping_sub_agencies WHERE id = ?').get(tx.buyer_sub_agency_id);
+  const agency = (await db.query('SELECT commission_percent FROM shipping_sub_agencies WHERE id = $1', [tx.buyer_sub_agency_id])).rows[0];
   if (!agency) return;
   const profit = (tx.total || 0) * (agency.commission_percent || 0) / 100;
   if (profit > 0) {
-    await db.prepare(`
+    await db.query(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, shipping_transaction_id)
-      VALUES (?, 'profit', ?, ?, ?)
-    `).run(tx.buyer_sub_agency_id, profit, 'ربح من بيع', tx.id);
+      VALUES ($1, 'profit', $2, $3, $4)
+    `, [tx.buyer_sub_agency_id, profit, 'ربح من بيع', tx.id]);
   }
   if (tx.payment_method === 'agency_deduction' && tx.total > 0) {
-    await db.prepare(`
+    await db.query(`
       INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, shipping_transaction_id)
-      VALUES (?, 'due', ?, ?, ?)
-    `).run(tx.buyer_sub_agency_id, tx.total, 'خصم من نسبة الوكالة', tx.id);
+      VALUES ($1, 'due', $2, $3, $4)
+    `, [tx.buyer_sub_agency_id, tx.total, 'خصم من نسبة الوكالة', tx.id]);
   }
 }
 

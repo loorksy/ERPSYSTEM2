@@ -8,52 +8,37 @@ function createRouter(io) {
 
   async function createJob(userId) {
     const db = getDb();
-    const result = await db.prepare(
-      'INSERT INTO analysis_jobs (user_id, status) VALUES (?, ?)'
-    ).run(userId, 'pending');
+    const result = await db.query('INSERT INTO analysis_jobs (user_id, status) VALUES ($1, $2)', [userId, 'pending']);
     return result && result.lastInsertRowid ? result.lastInsertRowid : null;
   }
 
   async function updateJobProgress(jobId, current, total) {
     const db = getDb();
-    await db.prepare(
-      'UPDATE analysis_jobs SET progress_current = ?, progress_total = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-    ).run(current, total, jobId);
+    await db.query('UPDATE analysis_jobs SET progress_current = $1, progress_total = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3', [current, total, jobId]);
   }
 
   async function completeJob(jobId, result) {
     const db = getDb();
-    await db.prepare(
-      `UPDATE analysis_jobs SET status = 'completed', progress_current = ?, progress_total = ?,
-       output_table = ?, provider = ?, model = ?, chunks_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-    ).run(
-      result.chunks,
-      result.chunks,
-      result.table,
-      result.provider,
-      result.model,
-      result.chunks,
-      jobId
+    await db.query(
+      `UPDATE analysis_jobs SET status = 'completed', progress_current = $1, progress_total = $2,
+       output_table = $3, provider = $4, model = $5, chunks_count = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7`,
+      [result.chunks, result.chunks, result.table, result.provider, result.model, result.chunks, jobId]
     );
   }
 
   async function failJob(jobId, errMessage) {
     const db = getDb();
-    await db.prepare(
-      "UPDATE analysis_jobs SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
-    ).run(errMessage || 'خطأ غير معروف', jobId);
+    await db.query("UPDATE analysis_jobs SET status = 'failed', error_message = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [errMessage || 'خطأ غير معروف', jobId]);
   }
 
   async function setJobRunning(jobId, total) {
     const db = getDb();
-    await db.prepare(
-      "UPDATE analysis_jobs SET status = 'running', progress_total = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
-    ).run(total, jobId);
+    await db.query("UPDATE analysis_jobs SET status = 'running', progress_total = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2", [total, jobId]);
   }
 
   async function getJob(jobId, userId) {
     const db = getDb();
-    const row = await db.prepare('SELECT * FROM analysis_jobs WHERE id = ? AND user_id = ?').get(jobId, userId);
+    const row = (await db.query('SELECT * FROM analysis_jobs WHERE id = $1 AND user_id = $2', [jobId, userId])).rows[0];
     return row;
   }
 
@@ -221,11 +206,10 @@ function createRouter(io) {
   router.get('/jobs', requireAuth, async (req, res) => {
     try {
       const db = getDb();
-      const rows = await db
-        .prepare(
-          'SELECT id, status, progress_current, progress_total, provider, model, chunks_count, exported_to_sheets, created_at, updated_at FROM analysis_jobs WHERE user_id = ? ORDER BY created_at DESC LIMIT 30'
-        )
-        .all(req.session.userId);
+      const rows = (await db.query(
+        'SELECT id, status, progress_current, progress_total, provider, model, chunks_count, exported_to_sheets, created_at, updated_at FROM analysis_jobs WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30',
+        [req.session.userId]
+      )).rows;
       res.json({ success: true, jobs: rows });
     } catch (err) {
       res.json({ success: false, message: err.message });
@@ -235,9 +219,7 @@ function createRouter(io) {
   router.get('/history', requireAuth, async (req, res) => {
     try {
       const db = getDb();
-      const rows = await db.prepare(
-        'SELECT id, provider, model, chunks_count, status, created_at FROM message_analyses ORDER BY created_at DESC LIMIT 20'
-      ).all();
+      const rows = (await db.query('SELECT id, provider, model, chunks_count, status, created_at FROM message_analyses ORDER BY created_at DESC LIMIT 20')).rows;
       res.json({ success: true, history: rows });
     } catch (err) {
       res.json({ success: false, message: err.message });

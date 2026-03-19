@@ -19,18 +19,18 @@ router.get('/stats', requireAuth, async (req, res) => {
     const db = getDb();
     const userId = req.session.userId;
 
-    let cycles = await db.prepare('SELECT id, name FROM financial_cycles WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+    let cycles = (await db.query('SELECT id, name FROM financial_cycles WHERE user_id = $1 ORDER BY created_at DESC', [userId])).rows;
     const defaultCycleId = cycleId ? parseInt(cycleId, 10) : (cycles[0]?.id || null);
 
     let cashBalance = 0;
     let deferredBalance = 0;
     let shippingBalance = 0;
 
-    const shipRows = await db.prepare(`
+    const shipRows = (await db.query(`
       SELECT type, item_type, SUM(quantity) as sum_qty
       FROM shipping_transactions
       GROUP BY type, item_type
-    `).all();
+    `)).rows;
     let goldBalance = 0;
     let crystalBalance = 0;
     shipRows.forEach(r => {
@@ -46,14 +46,14 @@ router.get('/stats', requireAuth, async (req, res) => {
     shippingBalance = goldBalance + crystalBalance;
 
     if (defaultCycleId) {
-      const cashSnapshot = await db.prepare(`
-        SELECT cash_balance FROM cash_box_snapshot WHERE cycle_id = ? ORDER BY snapshot_at DESC LIMIT 1
-      `).get(defaultCycleId);
+      const cashSnapshot = (await db.query(`
+        SELECT cash_balance FROM cash_box_snapshot WHERE cycle_id = $1 ORDER BY snapshot_at DESC LIMIT 1
+      `, [defaultCycleId])).rows[0];
       cashBalance = cashSnapshot?.cash_balance ?? 0;
 
-      const deferredRows = await db.prepare(`
-        SELECT SUM(balance_d) as total FROM deferred_balance_users WHERE cycle_id = ?
-      `).get(defaultCycleId);
+      const deferredRows = (await db.query(`
+        SELECT SUM(balance_d) as total FROM deferred_balance_users WHERE cycle_id = $1
+      `, [defaultCycleId])).rows[0];
       deferredBalance = deferredRows?.total ?? 0;
     }
 
@@ -79,7 +79,7 @@ router.post('/refresh-cash', requireAuth, async (req, res) => {
     const cid = parseInt(cycleId, 10);
     if (!cid) return res.json({ success: false, message: 'الدورة مطلوبة' });
     const db = getDb();
-    const cycle = await db.prepare('SELECT id FROM financial_cycles WHERE id = ? AND user_id = ?').get(cid, req.session.userId);
+    const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
     const result = await calculateCashBoxBalance(cid, req.session.userId);
     if (!result) return res.json({ success: false, message: 'فشل حساب رصيد الصندوق' });
@@ -96,7 +96,7 @@ router.post('/refresh-deferred', requireAuth, async (req, res) => {
     const cid = parseInt(cycleId, 10);
     if (!cid) return res.json({ success: false, message: 'الدورة مطلوبة' });
     const db = getDb();
-    const cycle = await db.prepare('SELECT id FROM financial_cycles WHERE id = ? AND user_id = ?').get(cid, req.session.userId);
+    const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
     const users = await fetchDeferredBalanceUsers(cid, req.session.userId);
     const total = users.reduce((s, u) => s + (u.balance_d || 0), 0);
@@ -113,9 +113,9 @@ router.get('/deferred-users', requireAuth, async (req, res) => {
     const cid = parseInt(cycleId, 10);
     if (!cid) return res.json({ success: false, message: 'الدورة مطلوبة', users: [] });
     const db = getDb();
-    const cycle = await db.prepare('SELECT id FROM financial_cycles WHERE id = ? AND user_id = ?').get(cid, req.session.userId);
+    const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة', users: [] });
-    const users = await db.prepare('SELECT member_user_id, extra_id_c, balance_d FROM deferred_balance_users WHERE cycle_id = ? ORDER BY member_user_id').all(cid);
+    const users = (await db.query('SELECT member_user_id, extra_id_c, balance_d FROM deferred_balance_users WHERE cycle_id = $1 ORDER BY member_user_id', [cid])).rows;
     res.json({ success: true, users });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل', users: [] });

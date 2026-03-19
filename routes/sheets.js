@@ -14,12 +14,12 @@ function getOAuth2Client(credentials) {
 }
 
 async function ensureConfigRow(db) {
-  const row = await db.prepare('SELECT id FROM google_sheets_config WHERE id = 1').get();
+  const row = (await db.query('SELECT id FROM google_sheets_config WHERE id = 1')).rows[0];
   if (!row) {
-    await db.prepare(`
+    await db.query(`
       INSERT INTO google_sheets_config (id, spreadsheet_id, credentials, token, sync_enabled, updated_at)
       VALUES (1, NULL, NULL, NULL, 0, CURRENT_TIMESTAMP)
-    `).run();
+    `);
   }
 }
 
@@ -32,7 +32,7 @@ router.get('/status', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     await ensureConfigRow(db);
-    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     const hasEnv = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
     const creds = config?.credentials ? JSON.parse(config.credentials) : null;
     const canAuth = hasEnv || (creds?.client_id && creds?.client_secret);
@@ -55,9 +55,9 @@ router.post('/configure', requireAuth, async (req, res) => {
     const db = getDb();
     await ensureConfigRow(db);
     const credentials = (client_id && client_secret) ? JSON.stringify({ client_id, client_secret }) : null;
-    await db.prepare(`
+    await db.query(`
       UPDATE google_sheets_config SET spreadsheet_id = ?, credentials = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
-    `).run(spreadsheet_id || null, credentials);
+    `, [spreadsheet_id || null, credentials]);
     res.json({ success: true, message: 'تم حفظ الإعدادات بنجاح' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ أثناء حفظ الإعدادات' });
@@ -70,7 +70,7 @@ router.post('/save-spreadsheet', requireAuth, async (req, res) => {
     const { spreadsheet_id } = req.body;
     const db = getDb();
     await ensureConfigRow(db);
-    await db.prepare('UPDATE google_sheets_config SET spreadsheet_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(spreadsheet_id || null);
+    await db.query('UPDATE google_sheets_config SET spreadsheet_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [spreadsheet_id || null]);
     res.json({ success: true, message: 'تم حفظ معرّف الجدول' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
@@ -80,12 +80,12 @@ router.post('/save-spreadsheet', requireAuth, async (req, res) => {
 router.post('/toggle-sync', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const config = await db.prepare('SELECT * FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT * FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config) {
       return res.json({ success: false, message: 'يرجى إعداد Google Sheets أولاً' });
     }
     const newState = config.sync_enabled ? 0 : 1;
-    await db.prepare('UPDATE google_sheets_config SET sync_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(newState);
+    await db.query('UPDATE google_sheets_config SET sync_enabled = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1', [newState]);
     res.json({ success: true, enabled: !!newState, message: newState ? 'تم تفعيل المزامنة' : 'تم إيقاف المزامنة' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
@@ -97,7 +97,7 @@ router.post('/disconnect', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     await ensureConfigRow(db);
-    await db.prepare('UPDATE google_sheets_config SET token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run();
+    await db.query('UPDATE google_sheets_config SET token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1');
     res.json({ success: true, message: 'تم قطع الاتصال. يمكنك تسجيل الدخول مرة أخرى.' });
   } catch (error) {
     res.json({ success: false, message: 'حدث خطأ' });
@@ -109,7 +109,7 @@ router.get('/auth', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     await ensureConfigRow(db);
-    const config = await db.prepare('SELECT credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
     if (!oauth2Client) {
@@ -132,14 +132,14 @@ router.get('/callback', requireAuth, async (req, res) => {
     if (!code) return res.redirect('/settings?sheets=callback_failed');
     const db = getDb();
     await ensureConfigRow(db);
-    const config = await db.prepare('SELECT credentials, spreadsheet_id FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT credentials, spreadsheet_id FROM google_sheets_config WHERE id = 1')).rows[0];
     const credentials = config?.credentials ? JSON.parse(config.credentials) : null;
     const oauth2Client = getOAuth2Client(credentials);
     if (!oauth2Client) return res.redirect('/settings?sheets=no_credentials');
     const { tokens } = await oauth2Client.getToken(code);
-    await db.prepare(`
+    await db.query(`
       UPDATE google_sheets_config SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
-    `).run(JSON.stringify(tokens));
+    `, [JSON.stringify(tokens)]);
     res.redirect('/settings?sheets=connected');
   } catch (error) {
     res.redirect('/settings?sheets=callback_failed');
@@ -150,7 +150,7 @@ router.get('/callback', requireAuth, async (req, res) => {
 router.get('/sheets-list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.spreadsheet_id || !config?.token) {
       return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول' });
     }
@@ -190,7 +190,7 @@ router.post('/export', requireAuth, async (req, res) => {
   try {
     const { tableMarkdown, rows: rawRows, sheetName, mode, targetSheetTitle, jobId } = req.body;
     const db = getDb();
-    const config = await db.prepare('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1').get();
+    const config = (await db.query('SELECT spreadsheet_id, token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
     if (!config?.spreadsheet_id || !config?.token) {
       return res.json({ success: false, message: 'لم يتم ربط جدول أو تسجيل الدخول. اربط من الإعدادات → Google Sheets.' });
     }
@@ -219,7 +219,7 @@ router.post('/export', requireAuth, async (req, res) => {
       });
       if (jobId != null && Number.isInteger(Number(jobId))) {
         const db2 = getDb();
-        await db2.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+        await db2.query('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2', [Number(jobId), req.session.userId]);
       }
       return res.json({ success: true, message: `تم إلحاق ${dataRows.length} صف بورقة "${targetSheetTitle}"` });
     }
@@ -243,7 +243,7 @@ router.post('/export', requireAuth, async (req, res) => {
     });
     if (jobId != null && Number.isInteger(Number(jobId))) {
       const db = getDb();
-      await db.prepare('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(Number(jobId), req.session.userId);
+      await db.query('UPDATE analysis_jobs SET exported_to_sheets = 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2', [Number(jobId), req.session.userId]);
     }
     res.json({ success: true, message: `تم إنشاء الورقة "${sheetTitle}" وتصدير ${dataRows.length} صف` });
   } catch (e) {

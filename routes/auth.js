@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const db = getDb();
-    const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    const user = (await db.query('SELECT * FROM users WHERE username = $1', [username])).rows[0];
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.render('login', { title: 'تسجيل الدخول', error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }

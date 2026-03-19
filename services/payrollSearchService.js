@@ -60,11 +60,7 @@ function computeSalaryWithDiscount(rawSalaries, discountRatePct) {
 
 async function getCycleColumns(userId, cycleId) {
   const db = getDb();
-  const row = await db
-    .prepare(
-      'SELECT mgmt_user_id_col, agent_user_id_col, agent_salary_col FROM payroll_cycle_columns WHERE user_id = ? AND cycle_id = ?'
-    )
-    .get(userId, cycleId);
+  const row = (await db.query('SELECT mgmt_user_id_col, agent_user_id_col, agent_salary_col FROM payroll_cycle_columns WHERE user_id = $1 AND cycle_id = $2', [userId, cycleId])).rows[0];
   if (row) return row;
   return {
     mgmt_user_id_col: 'A',
@@ -75,34 +71,28 @@ async function getCycleColumns(userId, cycleId) {
 
 async function saveCycleColumns(userId, cycleId, cols) {
   const db = getDb();
-  await db.prepare(
+  await db.query(
     `INSERT INTO payroll_cycle_columns (user_id, cycle_id, mgmt_user_id_col, agent_user_id_col, agent_salary_col, updated_at)
-     VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+     VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
      ON CONFLICT(user_id, cycle_id) DO UPDATE SET
        mgmt_user_id_col = excluded.mgmt_user_id_col,
        agent_user_id_col = excluded.agent_user_id_col,
        agent_salary_col = excluded.agent_salary_col,
-       updated_at = CURRENT_TIMESTAMP`
-  ).run(
-    userId,
-    cycleId,
-    cols.mgmt_user_id_col || 'A',
-    cols.agent_user_id_col || 'A',
-    cols.agent_salary_col || 'D'
+       updated_at = CURRENT_TIMESTAMP`,
+    [userId, cycleId, cols.mgmt_user_id_col || 'A', cols.agent_user_id_col || 'A', cols.agent_salary_col || 'D']
   );
 }
 
 async function getCycleCache(userId, cycleId) {
   const db = getDb();
-  const row = await db
-    .prepare(
-      `SELECT management_data, agent_data, management_sheet_name, agent_sheet_name,
-              audited_agent_ids, audited_mgmt_ids, found_in_target_sheet_ids,
-              synced_at, stale_after
-         FROM payroll_cycle_cache
-        WHERE user_id = ? AND cycle_id = ?`
-    )
-    .get(userId, cycleId);
+  const row = (await db.query(
+    `SELECT management_data, agent_data, management_sheet_name, agent_sheet_name,
+            audited_agent_ids, audited_mgmt_ids, found_in_target_sheet_ids,
+            synced_at, stale_after
+       FROM payroll_cycle_cache
+      WHERE user_id = $1 AND cycle_id = $2`,
+    [userId, cycleId]
+  )).rows[0];
   if (!row) return null;
   return {
     managementData: parseJsonSafe(row.management_data, []),
@@ -119,14 +109,14 @@ async function getCycleCache(userId, cycleId) {
 
 async function saveCycleCache(userId, cycleId, payload) {
   const db = getDb();
-  await db.prepare(
+  await db.query(
     `INSERT INTO payroll_cycle_cache (
        user_id, cycle_id,
        management_data, agent_data,
        management_sheet_name, agent_sheet_name,
        audited_agent_ids, audited_mgmt_ids, found_in_target_sheet_ids,
        synced_at, stale_after
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10)
      ON CONFLICT(user_id, cycle_id) DO UPDATE SET
        management_data = excluded.management_data,
        agent_data = excluded.agent_data,
@@ -136,50 +126,43 @@ async function saveCycleCache(userId, cycleId, payload) {
        audited_mgmt_ids = excluded.audited_mgmt_ids,
        found_in_target_sheet_ids = excluded.found_in_target_sheet_ids,
        synced_at = CURRENT_TIMESTAMP,
-       stale_after = excluded.stale_after`
-  ).run(
-    userId,
-    cycleId,
-    JSON.stringify(payload.managementData || []),
-    JSON.stringify(payload.agentData || []),
-    payload.managementSheetName || null,
-    payload.agentSheetName || null,
-    JSON.stringify(Array.from(payload.auditedAgentIds || [])),
-    JSON.stringify(Array.from(payload.auditedMgmtIds || [])),
-    JSON.stringify(Array.from(payload.foundInTargetSheetIds || [])),
-    payload.staleAfter || null
+       stale_after = excluded.stale_after`,
+    [
+      userId, cycleId,
+      JSON.stringify(payload.managementData || []),
+      JSON.stringify(payload.agentData || []),
+      payload.managementSheetName || null,
+      payload.agentSheetName || null,
+      JSON.stringify(Array.from(payload.auditedAgentIds || [])),
+      JSON.stringify(Array.from(payload.auditedMgmtIds || [])),
+      JSON.stringify(Array.from(payload.foundInTargetSheetIds || [])),
+      payload.staleAfter || null
+    ]
   );
 }
 
 async function saveUserAuditStatus(userId, cycleId, memberUserId, status, source, details) {
   const db = getDb();
-  await db.prepare(
+  await db.query(
     `INSERT INTO payroll_user_audit_cache (user_id, cycle_id, member_user_id, audit_status, audit_source, details_json, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+     VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
      ON CONFLICT(user_id, cycle_id, member_user_id) DO UPDATE SET
        audit_status = excluded.audit_status,
        audit_source = excluded.audit_source,
        details_json = excluded.details_json,
-       updated_at = CURRENT_TIMESTAMP`
-  ).run(
-    userId,
-    cycleId,
-    String(memberUserId),
-    status,
-    source || null,
-    details ? JSON.stringify(details) : null
+       updated_at = CURRENT_TIMESTAMP`,
+    [userId, cycleId, String(memberUserId), status, source || null, details ? JSON.stringify(details) : null]
   );
 }
 
 async function getUserAuditStatus(userId, cycleId, memberUserId) {
   const db = getDb();
-  const row = await db
-    .prepare(
-      `SELECT audit_status, audit_source, details_json
-         FROM payroll_user_audit_cache
-        WHERE user_id = ? AND cycle_id = ? AND member_user_id = ?`
-    )
-    .get(userId, cycleId, String(memberUserId));
+  const row = (await db.query(
+    `SELECT audit_status, audit_source, details_json
+       FROM payroll_user_audit_cache
+      WHERE user_id = $1 AND cycle_id = $2 AND member_user_id = $3`,
+    [userId, cycleId, String(memberUserId)]
+  )).rows[0];
   if (!row) return null;
   return {
     status: row.audit_status || 'غير مدقق',
