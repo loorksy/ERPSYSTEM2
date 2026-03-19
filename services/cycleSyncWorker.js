@@ -6,6 +6,7 @@ const {
   saveCycleCache,
   getCycleColumns
 } = require('./payrollSearchService');
+const { syncAgenciesFromManagementTable } = require('./agencySyncService');
 
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
 
@@ -119,6 +120,15 @@ async function syncSingleCycle(db, oauth2Client, cycleRow, ttlMinutes) {
     foundInTargetSheetIds,
     staleAfter
   });
+
+  try {
+    const syncResult = await syncAgenciesFromManagementTable(cycleRow.id, cycleRow.user_id, sheets);
+    if (!syncResult.success && syncResult.error) {
+      console.warn('[cycleSyncWorker] Agency sync:', syncResult.error);
+    }
+  } catch (agencyErr) {
+    console.warn('[cycleSyncWorker] Agency sync failed:', agencyErr.message);
+  }
 }
 
 async function runCycleSyncOnce(ttlMinutes = 5) {

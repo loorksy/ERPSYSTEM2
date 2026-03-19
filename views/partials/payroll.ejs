@@ -429,6 +429,11 @@ async function payrollExecute() {
       var msg = data.message || 'تم تنفيذ التدقيق';
       if (data.cycleSynced) msg = 'تمت مزامنة جداول الدورة من Google ثم ' + msg;
       var html = '<p class="font-semibold ' + (data.applied ? 'text-emerald-700' : 'text-amber-700') + ' mb-2">' + msg + '</p>';
+      if (data.agencySync && data.agencySync.success && data.agencySync.agenciesCount > 0) {
+        html += '<p class="text-slate-600 mb-2"><i class="fas fa-check text-emerald-600 ml-1"></i> مزامنة الوكلات الفرعية: ' + data.agencySync.usersCount + ' مستخدم من ' + data.agencySync.agenciesCount + ' وكالة</p>';
+      } else if (data.agencySync && !data.agencySync.success && data.agencySync.error) {
+        html += '<p class="text-amber-600 mb-2"><i class="fas fa-exclamation-triangle ml-1"></i> مزامنة الوكلات الفرعية: ' + (data.agencySync.error || 'فشل') + '</p>';
+      }
       html += '<ul class="space-y-1 text-slate-600 mb-3">';
       html += '<li>إجمالي الصفوف: <strong>' + (s.total || 0) + '</strong></li>';
       html += '<li>سحب وكالة: <strong>' + (s.agent || 0) + '</strong></li>';

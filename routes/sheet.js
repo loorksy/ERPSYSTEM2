@@ -580,14 +580,17 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     }
 
     /** مزامنة الوكالات الفرعية من جدول الإدارة (خطوة إضافية - لا تعطل التدقيق) */
+    let agencySync = null;
     if (mgmtSsId) {
       try {
         const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, sheets);
+        agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0, error: syncResult.error };
         if (!syncResult.success && syncResult.error) {
           console.error('[AgencySync]', syncResult.error);
         }
       } catch (agencySyncErr) {
         console.error('[AgencySync] Failed', agencySyncErr);
+        agencySync = { success: false, error: agencySyncErr.message };
       }
     }
 
@@ -1148,6 +1151,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       spreadsheetUrl,
       applied: appliedCount > 0,
       cycleSynced,
+      agencySync,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,

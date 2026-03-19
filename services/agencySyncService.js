@@ -63,13 +63,18 @@ function isHeaderRow(row, colIdx) {
  */
 async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
   const db = getDb();
-  const cycle = (await db.query('SELECT id, management_spreadsheet_id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cycleId, userId])).rows[0];
+  const cycle = (await db.query(
+    'SELECT id, management_spreadsheet_id, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
+    [cycleId, userId]
+  )).rows[0];
   if (!cycle || !cycle.management_spreadsheet_id) {
     return { success: false, error: 'الدورة غير موجودة أو غير مرتبطة بجدول الإدارة' };
   }
 
   const spreadsheetId = String(cycle.management_spreadsheet_id).trim();
   const sheets = sheetsApi || google.sheets({ version: 'v4', auth: null });
+  const sameFileAsAgent = cycle.agent_spreadsheet_id && String(cycle.agent_spreadsheet_id).trim() === spreadsheetId;
+  const agentSheetName = sameFileAsAgent && cycle.agent_sheet_name ? String(cycle.agent_sheet_name).trim() : null;
 
   try {
     const meta = await sheets.spreadsheets.get({ spreadsheetId });
@@ -79,7 +84,10 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
       return { success: true, usersCount: 0, agenciesCount: 0 };
     }
 
-    const agencySheetNames = titles.slice(1);
+    let agencySheetNames = titles.slice(1);
+    if (agentSheetName && agencySheetNames.includes(agentSheetName)) {
+      agencySheetNames = agencySheetNames.filter(n => n !== agentSheetName);
+    }
     const COL_A = 0;
     const COL_B = 1;
     const COL_W = columnLetterToIndex('W') ?? 22;
@@ -101,6 +109,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
       try {
         rows = await fetchSheetValuesBatched(sheets, spreadsheetId, sheetName);
       } catch (e) {
+        console.warn('[AgencySync] Failed to fetch sheet', sheetName, ':', e.message);
         continue;
       }
 
@@ -168,6 +177,9 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
       [cycleId, totalUsers, agencySheetNames.length]
     );
 
+    if (agencySheetNames.length > 0) {
+      console.log('[AgencySync] Synced', totalUsers, 'users from', agencySheetNames.length, 'agency sheets');
+    }
     return { success: true, usersCount: totalUsers, agenciesCount: agencySheetNames.length };
   } catch (e) {
     return { success: false, error: e.message || 'فشل المزامنة' };
