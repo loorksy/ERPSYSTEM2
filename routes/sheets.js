@@ -56,7 +56,7 @@ router.post('/configure', requireAuth, async (req, res) => {
     await ensureConfigRow(db);
     const credentials = (client_id && client_secret) ? JSON.stringify({ client_id, client_secret }) : null;
     await db.query(`
-      UPDATE google_sheets_config SET spreadsheet_id = ?, credentials = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
+      UPDATE google_sheets_config SET spreadsheet_id = $1, credentials = $2, updated_at = CURRENT_TIMESTAMP WHERE id = 1
     `, [spreadsheet_id || null, credentials]);
     res.json({ success: true, message: 'تم حفظ الإعدادات بنجاح' });
   } catch (error) {
@@ -138,7 +138,7 @@ router.get('/callback', requireAuth, async (req, res) => {
     if (!oauth2Client) return res.redirect('/settings?sheets=no_credentials');
     const { tokens } = await oauth2Client.getToken(code);
     await db.query(`
-      UPDATE google_sheets_config SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1
+      UPDATE google_sheets_config SET token = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1
     `, [JSON.stringify(tokens)]);
     res.redirect('/settings?sheets=connected');
   } catch (error) {

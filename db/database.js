@@ -50,12 +50,17 @@ async function ensurePgSchema() {
   const schemaPath = path.join(__dirname, 'schema.pg.sql');
   if (!fs.existsSync(schemaPath)) return;
   const sql = fs.readFileSync(schemaPath, 'utf8');
-  const statements = sql.split(';').map(s => s.trim()).filter(Boolean);
-  for (const stmt of statements) {
+  const raw = sql.split(';').map(s => s.trim()).filter(Boolean);
+  const statements = raw.filter(s => !/^--/.test(s) || s.includes('CREATE TABLE'));
+  for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
     try {
       await pgPool.query(stmt + ';');
     } catch (e) {
-      if (!e.message.includes('already exists')) console.error('[DB] Schema:', e.message);
+      if (!e.message.includes('already exists')) {
+        console.error('[DB] Schema error on statement', i + 1, ':', e.message);
+        console.error('[DB] Statement preview:', stmt.slice(0, 100).replace(/\s+/g, ' '));
+      }
     }
   }
 }
