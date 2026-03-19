@@ -37,9 +37,9 @@
 </div>
 
 <!-- Modal إنشاء/تعديل دورة مالية -->
-<div id="cycleModal" class="fixed inset-0 z-[1100] hidden items-start justify-center p-4 pt-4 max-lg:pt-4 max-lg:pb-[80px] bg-black/60 backdrop-blur-sm overflow-y-auto" style="display: none;" onclick="if(event.target===this)closeCycleModal()">
-  <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-2rem)] max-lg:max-h-[calc(100vh-80px)] overflow-hidden flex flex-col my-4 max-lg:my-2" onclick="event.stopPropagation()">
-    <div class="p-4 max-lg:p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+<div id="cycleModal" class="fixed inset-0 z-[1100] hidden items-center justify-center p-4 max-lg:p-0 max-lg:items-end max-lg:pb-[70px] bg-black/60 backdrop-blur-sm overflow-hidden" style="display: none;" onclick="if(event.target===this)closeCycleModal()">
+  <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] max-lg:max-h-[calc(100vh-70px)] max-lg:h-[calc(100vh-70px)] flex flex-col overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
       <h4 id="cycleModalTitle" class="text-xl font-bold text-slate-800 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
           <i class="fas fa-file-excel text-indigo-600"></i>
@@ -50,7 +50,7 @@
         <i class="fas fa-times text-lg"></i>
       </button>
     </div>
-    <div class="p-4 max-lg:p-4 overflow-y-auto flex-1 min-h-0 max-lg:pb-6">
+    <div class="p-4 overflow-y-auto flex-1 min-h-0 overscroll-contain">
       <input type="hidden" id="cycleEditId" value="">
       <div class="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4 max-lg:mb-4">
         <button type="button" id="tabGoogle" onclick="setCycleTab('google')" class="flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all bg-white text-indigo-600 shadow-sm">استيراد من Google</button>
@@ -126,20 +126,23 @@
         </button>
       </div>
 
-      <!-- معاينة + حفظ -->
-      <div id="panelSave" class="mt-4 pt-4 max-lg:mt-4 max-lg:pt-4 border-t border-slate-200 hidden max-lg:pb-24">
-        <div class="flex gap-4 max-lg:gap-3 mb-3 max-lg:mb-3 p-3 max-lg:p-3 bg-slate-50 rounded-xl">
+      <!-- معاينة + اسم الدورة (داخل المنطقة القابلة للتمرير) -->
+      <div id="panelSave" class="mt-4 pt-4 border-t border-slate-200 hidden">
+        <div class="flex gap-4 mb-3 p-3 bg-slate-50 rounded-xl">
           <span class="text-slate-600">الإدارة: <strong id="previewMgmtRows" class="text-indigo-600">0</strong> صف</span>
           <span class="text-slate-600">الوكيل: <strong id="previewAgentRows" class="text-indigo-600">0</strong> صف</span>
         </div>
-        <div class="mb-3 max-lg:mb-3">
+        <div class="mb-4">
           <label class="block mb-2 font-semibold text-sm text-slate-800">اسم الدورة المالية</label>
           <input type="text" id="cycleName" placeholder="مثال: دورة يناير 2025" class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
         </div>
-        <button type="button" id="btnSaveCycle" onclick="saveCycle()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-colors border-0 shadow-md">
-          <i class="fas fa-save"></i> حفظ الدورة
-        </button>
       </div>
+    </div>
+    <!-- زر الحفظ ثابت أسفل النافذة (دائماً ظاهر على الموبايل) -->
+    <div id="cycleModalFooter" class="hidden p-4 pt-0 border-t border-slate-200 bg-white shrink-0 max-lg:pb-[env(safe-area-inset-bottom,0)]">
+      <button type="button" id="btnSaveCycle" onclick="saveCycle()" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-colors border-0 shadow-md">
+        <i class="fas fa-save"></i> حفظ الدورة
+      </button>
     </div>
   </div>
 </div>
@@ -177,6 +180,8 @@
     document.getElementById('cycleEditId').value = editId || '';
     document.getElementById('cycleModalTitle').innerHTML = '<div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center"><i class="fas fa-file-excel text-indigo-600"></i></div>' + (editId ? 'تعديل الدورة المالية' : 'إنشاء دورة مالية');
     document.getElementById('panelSave').classList.add('hidden');
+    var footer = document.getElementById('cycleModalFooter');
+    if (footer) footer.classList.add('hidden');
     document.getElementById('cycleName').value = '';
     document.getElementById('fileManagement').value = '';
     document.getElementById('fileAgent').value = '';
@@ -187,6 +192,8 @@
     if (editId) {
       loadCycleForEdit(editId).then(function() {
         document.getElementById('panelSave').classList.remove('hidden');
+        var footer = document.getElementById('cycleModalFooter');
+        if (footer) footer.classList.remove('hidden');
         document.getElementById('previewMgmtRows').textContent = '—';
         document.getElementById('previewAgentRows').textContent = '—';
       });
@@ -314,6 +321,8 @@ function showSavePanel(managementRows, agentRows) {
   document.getElementById('previewMgmtRows').textContent = currentManagementRows.length;
   document.getElementById('previewAgentRows').textContent = currentAgentRows.length;
   document.getElementById('panelSave').classList.remove('hidden');
+  var footer = document.getElementById('cycleModalFooter');
+  if (footer) footer.classList.remove('hidden');
 }
 
 async function fetchFromGoogle() {
