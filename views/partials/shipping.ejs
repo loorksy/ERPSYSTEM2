@@ -1,3 +1,23 @@
+<style>
+  /* شبكة الأزرار: موبايل صفان (بيع|شراء ثم سجل بعرض كامل) — sm+: ثلاثة أعمدة (الكلاسات col-span-2 غير مُولَّدة في tailwind المُجمَّع) */
+  .shipping-actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .shipping-actions-row {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .shipping-actions-record {
+      grid-column: auto;
+    }
+  }
+  .shipping-actions-record {
+    grid-column: 1 / -1;
+  }
+</style>
 <div class="w-full max-w-5xl mx-auto" dir="rtl">
   <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col min-w-0" data-tabs-container="shipping">
     <!-- رأس: يتكيف مع العرض الضيق -->
@@ -79,23 +99,39 @@
           </div>
         </div>
 
-        <!-- أزرار متساوية: عمود واحد على الموبايل، ثلاثة أعمدة من sm فما فوق -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 touch-manipulation">
-          <!-- اللون على div وليس button: preflight يجعل خلفية الزر شفافة فتختفي bg-indigo -->
-          <div class="rounded-xl shadow-md overflow-hidden min-h-12 sm:min-h-[52px] flex transition-opacity hover:opacity-95 active:opacity-90" style="background-color:#4f46e5;">
-            <button type="button" onclick="shippingOpenSellModal()" class="flex flex-1 w-full min-h-12 sm:min-h-[52px] items-center justify-center gap-2 px-3 text-sm font-bold text-white border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-inset select-none" style="background:transparent;color:#fff;">
-              <i class="fas fa-hand-holding-usd shrink-0" aria-hidden="true"></i>
-              <span>بيع</span>
-            </button>
+        <!-- العمليات: موبايل بيع|شراء ثم السجل؛ من 640px الثلاثة في صف (CSS .shipping-actions-row) -->
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden touch-manipulation">
+          <div class="flex h-1 w-full" aria-hidden="true">
+            <div class="flex-1" style="background-color:#4f46e5;"></div>
+            <div class="flex-1" style="background-color:#0891b2;"></div>
+            <div class="flex-1 bg-slate-300"></div>
           </div>
-          <button type="button" onclick="shippingOpenBuyModal()" class="flex h-12 sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 px-3 text-sm font-bold text-white shadow-md hover:bg-cyan-700 active:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 transition-colors select-none">
-            <i class="fas fa-shopping-cart shrink-0"></i>
-            <span>شراء</span>
-          </button>
-          <button type="button" onclick="shippingOpenRecordModal()" class="flex h-12 sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 shadow-sm hover:border-indigo-200 hover:bg-indigo-50/60 active:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 transition-colors select-none">
-            <i class="fas fa-history shrink-0 text-slate-600"></i>
-            <span>السجل</span>
-          </button>
+          <div class="px-3 py-2 sm:px-4 sm:py-2.5 border-b border-slate-100">
+            <p class="text-xs sm:text-sm font-bold text-slate-800">العمليات السريعة</p>
+            <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5">بيع (نيلي) · شراء (تركواز) · السجل</p>
+          </div>
+          <div class="p-2.5 sm:p-3 shipping-actions-row">
+            <!-- بيع: #4f46e5 indigo-600 -->
+            <div class="min-w-0 rounded-xl shadow overflow-hidden min-h-[50px] sm:min-h-[52px] flex ring-1 ring-black/10" style="background-color:#4f46e5;">
+              <button type="button" onclick="shippingOpenSellModal()" aria-label="بيع" class="flex flex-1 w-full min-h-[50px] sm:min-h-[52px] items-center justify-center gap-1.5 px-2 sm:px-3 text-xs sm:text-sm font-bold border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-inset select-none" style="background:transparent;color:#ffffff;">
+                <i class="fas fa-hand-holding-usd shrink-0 text-sm sm:text-base" aria-hidden="true"></i>
+                <span class="truncate">بيع</span>
+              </button>
+            </div>
+            <!-- شراء: #0891b2 cyan-600 -->
+            <div class="min-w-0 rounded-xl shadow overflow-hidden min-h-[50px] sm:min-h-[52px] flex ring-1 ring-black/10" style="background-color:#0891b2;">
+              <button type="button" onclick="shippingOpenBuyModal()" aria-label="شراء" class="flex flex-1 w-full min-h-[50px] sm:min-h-[52px] items-center justify-center gap-1.5 px-2 sm:px-3 text-xs sm:text-sm font-bold border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-inset select-none" style="background:transparent;color:#ffffff;">
+                <i class="fas fa-shopping-cart shrink-0 text-sm sm:text-base" aria-hidden="true"></i>
+                <span class="truncate">شراء</span>
+              </button>
+            </div>
+            <div class="shipping-actions-record min-w-0 rounded-xl border-2 border-slate-200 bg-white min-h-[50px] sm:min-h-[52px] flex shadow-sm hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors">
+              <button type="button" onclick="shippingOpenRecordModal()" aria-label="السجل" class="flex flex-1 w-full min-h-[50px] sm:min-h-[52px] items-center justify-center gap-1.5 px-2 sm:px-3 text-xs sm:text-sm font-bold text-slate-800 border-0 cursor-pointer bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-inset select-none">
+                <i class="fas fa-history shrink-0 text-slate-600 text-sm sm:text-base" aria-hidden="true"></i>
+                <span class="truncate">السجل</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="rounded-xl border border-slate-200 bg-white p-3.5 sm:p-4 shadow-sm">
