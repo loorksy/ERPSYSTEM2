@@ -82,8 +82,8 @@
     });
   }
 
-  var SHIP_TAB_INACTIVE = 'shipping-tab-link flex flex-1 min-w-0 items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-semibold text-slate-600 bg-transparent hover:bg-white transition-all duration-200';
-  var SHIP_TAB_ACTIVE = 'shipping-tab-link flex flex-1 min-w-0 items-center justify-center gap-2 px-3 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-br from-indigo-600 to-indigo-700 shadow-[0_4px_16px_rgba(79,70,229,0.28)] transition-all duration-200';
+  var SHIP_TAB_INACTIVE = 'shipping-tab-link flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-sm font-semibold text-slate-600 bg-white shadow-sm ring-1 ring-slate-200/80 hover:bg-slate-50 transition-all duration-200';
+  var SHIP_TAB_ACTIVE = 'shipping-tab-link flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-transparent px-3 py-2.5 text-sm font-bold text-white bg-indigo-600 shadow-md ring-1 ring-indigo-600 transition-all duration-200';
 
   window.switchShippingTab = function(btn, tabId) {
     var card = document.querySelector('[data-tabs-container="shipping"]');
