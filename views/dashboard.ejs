@@ -211,25 +211,56 @@
   <!-- Toast -->
   <div class="fixed top-5 left-5 z-[9999] flex flex-col gap-2 max-md:left-3 max-md:right-3 max-md:top-[72px]" id="toastContainer"></div>
 
-  <!-- Mobile Bottom Nav (يُخفى عند فتح نافذة الدورة المالية) -->
-  <nav id="mobileBottomNav" class="hidden max-lg:flex fixed bottom-0 left-0 right-0 h-[65px] bg-white border-t border-slate-200 justify-around items-center z-[999] shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom,0)]">
-    <a href="/dashboard" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'home' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-home text-lg"></i>
-      <span>الرئيسية</span>
-    </a>
-    <a href="/sheet" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'sheet' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-file-excel text-lg"></i>
-      <span>Sheet</span>
-    </a>
-    <a href="/clients" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'clients' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-users text-lg"></i>
-      <span>العملاء</span>
-    </a>
-    <a href="/search" class="flex flex-col items-center gap-1 text-[0.65rem] font-medium py-2 px-1.5 rounded-lg transition-all duration-300 <%= page === 'search' ? 'text-indigo-600' : 'text-slate-400' %>">
-      <i class="fas fa-search text-lg"></i>
-      <span>البحث</span>
-    </a>
+  <!-- Mobile Bottom Nav + زر + في المنتصف -->
+  <nav id="mobileBottomNav" class="hidden max-lg:flex fixed bottom-0 left-0 right-0 min-h-[65px] bg-white border-t border-slate-200 items-end z-[999] shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom,0)] px-1 pt-1">
+    <div class="flex flex-1 justify-evenly items-end pb-2 min-w-0">
+      <a href="/dashboard" class="flex flex-col items-center gap-0.5 text-[0.65rem] font-medium py-1 px-1 rounded-lg transition-all duration-300 <%= page === 'home' ? 'text-indigo-600' : 'text-slate-400' %>">
+        <i class="fas fa-home text-lg"></i>
+        <span>الرئيسية</span>
+      </a>
+      <a href="/sheet" class="flex flex-col items-center gap-0.5 text-[0.65rem] font-medium py-1 px-1 rounded-lg transition-all duration-300 <%= page === 'sheet' ? 'text-indigo-600' : 'text-slate-400' %>">
+        <i class="fas fa-file-excel text-lg"></i>
+        <span>Sheet</span>
+      </a>
+    </div>
+    <div class="flex flex-col items-center justify-end shrink-0 w-[3.25rem] px-0.5 pb-1">
+      <button type="button" id="quickActionFabMobile" class="w-12 h-12 rounded-full bg-indigo-600 text-white shadow-lg border-4 border-white -mt-5 flex items-center justify-center active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2" aria-haspopup="true" aria-expanded="false" aria-label="إجراء سريع">
+        <i class="fas fa-plus text-xl"></i>
+      </button>
+    </div>
+    <div class="flex flex-1 justify-evenly items-end pb-2 min-w-0">
+      <a href="/clients" class="flex flex-col items-center gap-0.5 text-[0.65rem] font-medium py-1 px-1 rounded-lg transition-all duration-300 <%= page === 'clients' ? 'text-indigo-600' : 'text-slate-400' %>">
+        <i class="fas fa-users text-lg"></i>
+        <span>العملاء</span>
+      </a>
+      <a href="/search" class="flex flex-col items-center gap-0.5 text-[0.65rem] font-medium py-1 px-1 rounded-lg transition-all duration-300 <%= page === 'search' ? 'text-indigo-600' : 'text-slate-400' %>">
+        <i class="fas fa-search text-lg"></i>
+        <span>البحث</span>
+      </a>
+    </div>
   </nav>
+
+  <!-- زر + ثابت يمين الشاشة (لابتوب فقط) -->
+  <button type="button" id="quickActionFabDesktop" class="hidden lg:flex fixed bottom-8 right-8 z-[998] w-14 h-14 rounded-full bg-indigo-600 text-white shadow-xl border-4 border-white items-center justify-center active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2" aria-haspopup="true" aria-expanded="false" aria-label="إجراء سريع">
+    <i class="fas fa-plus text-2xl"></i>
+  </button>
+
+  <!-- خلفية + قائمة الإجراءات السريعة -->
+  <div id="quickActionBackdrop" class="hidden fixed inset-0 bg-slate-900/40 z-[1002] backdrop-blur-[1px]" aria-hidden="true"></div>
+  <div id="quickActionMenu" class="hidden fixed z-[1003] left-4 right-4 max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] lg:left-auto lg:right-8 lg:bottom-[7.5rem] lg:w-56 rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden" role="menu" aria-label="خيارات سريعة">
+    <button type="button" class="quick-action-item w-full flex items-center gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-800 hover:bg-slate-50 border-b border-slate-100 transition-colors" data-quick-type="صادر" role="menuitem">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600"><i class="fas fa-upload"></i></span>
+      صادر
+    </button>
+    <button type="button" class="quick-action-item w-full flex items-center gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-800 hover:bg-slate-50 border-b border-slate-100 transition-colors" data-quick-type="وارد" role="menuitem">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600"><i class="fas fa-download"></i></span>
+      وارد
+    </button>
+    <button type="button" class="quick-action-item w-full flex items-center gap-3 px-4 py-3.5 text-right text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors" data-quick-type="مرتجع" role="menuitem">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600"><i class="fas fa-rotate-left"></i></span>
+      مرتجع
+    </button>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script src="/js/app.js"></script>

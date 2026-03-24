@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDate();
   initHomeSheetsStatus();
   initHomeStats();
+  initQuickActionFab();
   fetch('/settings/currency', { credentials: 'same-origin' })
     .then(r => r.json())
     .then(d => { if (d.success && d.symbol) window.currencySymbol = d.symbol; })
@@ -255,6 +256,57 @@ function initSidebar() {
 function initDate() {
   const el = document.getElementById('currentDate');
   if (el) el.textContent = new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/** زر + (موبايل: وسط الشريط السفلي — لابتوب: يمين الشاشة) + قائمة صادر / وارد / مرتجع */
+function initQuickActionFab() {
+  var backdrop = document.getElementById('quickActionBackdrop');
+  var menu = document.getElementById('quickActionMenu');
+  var fabM = document.getElementById('quickActionFabMobile');
+  var fabD = document.getElementById('quickActionFabDesktop');
+  if (!menu || !backdrop) return;
+
+  function setOpen(open) {
+    if (open) {
+      backdrop.classList.remove('hidden');
+      menu.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    } else {
+      backdrop.classList.add('hidden');
+      menu.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    [fabM, fabD].forEach(function (el) {
+      if (el) el.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+
+  function toggle() {
+    var isOpen = !menu.classList.contains('hidden');
+    setOpen(!isOpen);
+  }
+
+  if (fabM) fabM.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+  if (fabD) fabD.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+  backdrop.addEventListener('click', function () { setOpen(false); });
+  menu.addEventListener('click', function (e) { e.stopPropagation(); });
+
+  menu.querySelectorAll('.quick-action-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var t = this.getAttribute('data-quick-type') || '';
+      if (typeof window.showToast === 'function') {
+        window.showToast('تم اختيار: ' + t + ' — يمكن ربطه لاحقاً بالصفحة المناسبة.', 'success');
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('quickAction', { detail: { type: t } }));
+      } catch (_) {}
+      setOpen(false);
+    });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && menu && !menu.classList.contains('hidden')) setOpen(false);
+  });
 }
 
 function switchTab(btn, tabId) {
