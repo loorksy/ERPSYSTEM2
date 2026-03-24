@@ -412,3 +412,19 @@ CREATE TABLE IF NOT EXISTS entity_payables (
 
 ALTER TABLE transfer_company_ledger ADD COLUMN IF NOT EXISTS ref_table TEXT;
 ALTER TABLE transfer_company_ledger ADD COLUMN IF NOT EXISTS ref_id INTEGER;
+
+-- فرق التصريف: مقارنة سعر التصريف الداخلي (مثلاً للرواتب) بسعر التسليم لشركة التحويل
+CREATE TABLE IF NOT EXISTS fx_spread_entries (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  cycle_id INTEGER REFERENCES financial_cycles(id) ON DELETE SET NULL,
+  currency TEXT NOT NULL,
+  amount_foreign REAL NOT NULL,
+  internal_rate REAL NOT NULL,
+  settlement_rate REAL NOT NULL,
+  spread_usd REAL NOT NULL,
+  entity_type TEXT,
+  entity_id INTEGER,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -22,6 +22,7 @@
           '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">شحن</p><p class="text-lg font-bold">' + fmt(d.shippingDebt) + '</p></div>' +
           '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">اعتمادات</p><p class="text-lg font-bold">' + fmt(d.accreditationDebtTotal) + '</p></div>' +
           '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">مسجّل يدوياً</p><p class="text-lg font-bold">' + fmt(d.payablesSumUsd) + '</p></div>' +
+          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">فرق تصريف</p><p class="text-lg font-bold">' + fmt(d.fxSpreadSumUsd) + '</p></div>' +
           '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">شركات (سالب)</p><p class="text-lg font-bold">' + fmt(d.companyDebtFromBalance) + '</p></div>' +
           '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">صناديع (سالب)</p><p class="text-lg font-bold">' + fmt(d.fundDebtFromBalance) + '</p></div>';
 

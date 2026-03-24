@@ -159,5 +159,25 @@
     });
   });
 
-  document.addEventListener('DOMContentLoaded', load);
+  function applyFabDeepLink() {
+    var fab = '';
+    try {
+      fab = new URLSearchParams(window.location.search).get('fab') || '';
+    } catch (_) {}
+    if (fab !== 'return') return;
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.delete('fab');
+      window.history.replaceState({}, '', u.pathname + (u.search || '') + u.hash);
+    } catch (_) {}
+    toast('افتح شركة من القائمة، ثم سجّل المرتجع من أسفل نافذة التفاصيل. للصناديع: من القائمة «الصناديع» ثم افتح الصندوق.', 'success');
+    var el = document.getElementById('tcCards');
+    if (el) setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    load();
+    applyFabDeepLink();
+  });
 })();
+

@@ -134,6 +134,7 @@ async function executeReset(client, userId, selected, wipeAll) {
   if (has('funds', s, wipeAll) || wipeAll) {
     await client.query('DELETE FROM financial_returns WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM entity_payables WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM fx_spread_entries WHERE user_id = $1', [userId]);
     await client.query(
       `DELETE FROM fund_transfers WHERE from_fund_id IN (SELECT id FROM funds WHERE user_id = $1)
        OR to_fund_id IN (SELECT id FROM funds WHERE user_id = $1)`,

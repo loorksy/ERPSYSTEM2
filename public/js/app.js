@@ -6,12 +6,33 @@ window.formatMoney = function(num) {
   return (sym && sym !== '') ? s + ' ' + sym : s;
 };
 
+/** صادر → بيع/شحن، وارد → شراء/شحن، مرتجع → شركات التحويل (تسجيل مرتجع من تفاصيل الشركة) */
+window.navigateQuickAction = function(type) {
+  var map = {
+    صادر: '/shipping?fab=out',
+    وارد: '/shipping?fab=in',
+    مرتجع: '/transfer-companies?fab=return',
+  };
+  var url = map[type];
+  if (url) {
+    window.location.href = url;
+    return;
+  }
+  if (typeof window.showToast === 'function') {
+    window.showToast('إجراء غير معروف: ' + type, 'error');
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
   initDate();
   initHomeSheetsStatus();
   initHomeStats();
   initQuickActionFab();
+  document.addEventListener('quickAction', function(ev) {
+    var t = ev.detail && ev.detail.type;
+    if (t && typeof window.navigateQuickAction === 'function') window.navigateQuickAction(t);
+  });
   fetch('/settings/currency', { credentials: 'same-origin' })
     .then(r => r.json())
     .then(d => { if (d.success && d.symbol) window.currencySymbol = d.symbol; })
@@ -308,9 +329,6 @@ function initQuickActionFab() {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       var t = this.getAttribute('data-quick-type') || '';
-      if (typeof window.showToast === 'function') {
-        window.showToast('تم اختيار: ' + t + ' — يمكن ربطه لاحقاً بالصفحة المناسبة.', 'success');
-      }
       try {
         window.dispatchEvent(new CustomEvent('quickAction', { detail: { type: t } }));
       } catch (_) {}

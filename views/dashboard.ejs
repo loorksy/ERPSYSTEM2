@@ -341,6 +341,12 @@
           </a>
         </li>
         <li>
+          <a href="/fx-spread" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'fx-spread' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
+            <i class="fas fa-chart-line w-5 text-center <%= page === 'fx-spread' ? 'text-indigo-400' : '' %>"></i>
+            <span>فرق التصريف</span>
+          </a>
+        </li>
+        <li>
           <a href="/shipping" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'shipping' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-truck w-5 text-center <%= page === 'shipping' ? 'text-indigo-400' : '' %>"></i>
             <span>الشحن</span>
@@ -415,6 +421,8 @@
         <%- include('partials/debt-company') %>
       <% } else if (page === 'debt-fund') { %>
         <%- include('partials/debt-fund') %>
+      <% } else if (page === 'fx-spread') { %>
+        <%- include('partials/fx-spread') %>
       <% } %>
     </div>
   </main>
@@ -493,6 +501,9 @@
   <% } %>
   <% if (page === 'debts' || page === 'debt-company' || page === 'debt-fund') { %>
     <script src="/js/debts.js"></script>
+  <% } %>
+  <% if (page === 'fx-spread') { %>
+    <script src="/js/fx-spread.js"></script>
   <% } %>
 </body>
 </html>

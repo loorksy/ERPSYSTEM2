@@ -153,6 +153,7 @@ const accreditationsRoutes = require('./routes/accreditations');
 const aiRoutes = require('./routes/ai');
 const returnsRoutes = require('./routes/returns');
 const debtsRoutes = require('./routes/debts');
+const fxSpreadRoutes = require('./routes/fxSpread');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -167,6 +168,7 @@ app.use('/api/transfer-companies', transferCompaniesRoutes);
 app.use('/api/accreditations', accreditationsRoutes);
 app.use('/api/returns', returnsRoutes);
 app.use('/api/debts', debtsRoutes);
+app.use('/api/fx-spread', fxSpreadRoutes);
 app.use('/ai', aiRoutes(io));
 app.use('/', pagesRoutes);
 

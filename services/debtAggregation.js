@@ -50,12 +50,24 @@ async function computeDebtBreakdown(db, userId) {
     fundDebtFromBalance += Math.abs(f.amount || 0);
   });
 
+  let fxSpreadSumUsd = 0;
+  try {
+    const fxRow = (await db.query(
+      `SELECT COALESCE(SUM(spread_usd), 0)::float AS t FROM fx_spread_entries WHERE user_id = $1`,
+      [userId]
+    )).rows[0];
+    fxSpreadSumUsd = fxRow?.t ?? 0;
+  } catch (_) {
+    fxSpreadSumUsd = 0;
+  }
+
   const totalDebts =
     shippingDebt +
     accreditationDebtTotal +
     payablesSumUsd +
     companyDebtFromBalance +
-    fundDebtFromBalance;
+    fundDebtFromBalance +
+    fxSpreadSumUsd;
 
   return {
     shippingDebt,
@@ -63,6 +75,7 @@ async function computeDebtBreakdown(db, userId) {
     payablesSumUsd,
     companyDebtFromBalance,
     fundDebtFromBalance,
+    fxSpreadSumUsd,
     totalDebts,
   };
 }

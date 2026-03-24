@@ -28,6 +28,10 @@ router.get('/debts', requireAuth, (req, res) => {
   res.render('dashboard', { title: 'الديون', page: 'debts', user: req.session.user });
 });
 
+router.get('/fx-spread', requireAuth, (req, res) => {
+  res.render('dashboard', { title: 'فرق التصريف', page: 'fx-spread', user: req.session.user });
+});
+
 const pages = [
   { path: '/sheet', page: 'sheet', title: 'Sheet' },
   { path: '/payroll', page: 'payroll', title: 'تدقيق الرواتب' },

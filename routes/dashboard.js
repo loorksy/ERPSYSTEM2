@@ -73,6 +73,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       payablesSumUsd: 0,
       companyDebtFromBalance: 0,
       fundDebtFromBalance: 0,
+      fxSpreadSumUsd: 0,
       totalDebts: 0,
     };
     try {
@@ -93,6 +94,7 @@ router.get('/stats', requireAuth, async (req, res) => {
         payablesSumUsd: 0,
         companyDebtFromBalance: 0,
         fundDebtFromBalance: 0,
+        fxSpreadSumUsd: 0,
         totalDebts: shippingDebt + accreditationDebtTotal,
       };
     }
@@ -142,6 +144,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       payablesSumUsd: debtBreakdown.payablesSumUsd,
       companyDebtFromBalance: debtBreakdown.companyDebtFromBalance,
       fundDebtFromBalance: debtBreakdown.fundDebtFromBalance,
+      fxSpreadSumUsd: debtBreakdown.fxSpreadSumUsd,
     });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الإحصائيات' });

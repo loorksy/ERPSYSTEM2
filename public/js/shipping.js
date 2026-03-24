@@ -302,9 +302,42 @@
     });
   });
 
+  function applyFabDeepLink() {
+    var fab = '';
+    try {
+      fab = new URLSearchParams(window.location.search).get('fab') || '';
+    } catch (_) {}
+    if (!fab) return;
+    function stripFabParam() {
+      try {
+        var u = new URL(window.location.href);
+        u.searchParams.delete('fab');
+        var q = u.search;
+        window.history.replaceState({}, '', u.pathname + (q || '') + u.hash);
+      } catch (_) {}
+    }
+    if (fab === 'out') {
+      setTimeout(function() {
+        var mainTab = document.querySelector('[onclick*="shipping-main"]');
+        if (mainTab) mainTab.click();
+        loadSellDropdowns();
+        if (window.shippingOpenSellModal) window.shippingOpenSellModal();
+        stripFabParam();
+      }, 120);
+    } else if (fab === 'in') {
+      setTimeout(function() {
+        var mainTab = document.querySelector('[onclick*="shipping-main"]');
+        if (mainTab) mainTab.click();
+        if (window.shippingOpenBuyModal) window.shippingOpenBuyModal();
+        stripFabParam();
+      }, 120);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     loadBalance();
     loadCarrierCards();
+    applyFabDeepLink();
     var sellForm = document.getElementById('shippingSellForm');
     if (sellForm) {
       sellForm.addEventListener('submit', function(e) {
