@@ -93,14 +93,14 @@
           <div class="p-4 rounded-xl border border-red-100 bg-red-50/60">
             <h4 class="text-base font-bold text-red-700 mb-2 flex items-center gap-2">
               <i class="fas fa-triangle-exclamation"></i>
-              إعادة تعيين بيانات الدورات والتدقيق
+              حذف البيانات من الخادم
             </h4>
             <p class="text-sm text-red-700 mb-3">
-              هذا الخيار يحذف جميع الدورات المالية وبيانات التدقيق المرتبطة بحسابك داخل النظام فقط (لا يحذف أي شيء من Google Sheets).
+              يمكنك اختيار أنواع البيانات المراد حذفها أو حذف كل شيء دون استثناء. يتم التنفيذ على قاعدة البيانات فقط؛ لن يُحذف شيء من ملفات Google إلا إذا اخترت مسح ربط Sheets محلياً.
             </p>
-            <button type="button" onclick="resetPayrollData()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-red-600 text-white hover:bg-red-700 active:scale-[0.97]">
+            <button type="button" onclick="openResetDataModal()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-red-600 text-white hover:bg-red-700 active:scale-[0.97]">
               <i class="fas fa-trash"></i>
-              حذف البيانات المحفوظة لهذا الحساب
+              فتح قائمة الحذف والتأكيد
             </button>
           </div>
         </div>
@@ -219,6 +219,45 @@
             <p class="text-sm text-indigo-700"><i class="fas fa-link ml-1"></i> بعد الربط واختيار جدول البيانات، ستظهر في صفحة <strong>ترتيب الرسائل</strong> زر «تصدير إلى Google Sheets» عند كل تحليل ناجح — يمكنك إنشاء ورقة جديدة باسم تختاره أو إلحاق النتائج بورقة موجودة.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: حذف البيانات -->
+  <div id="resetDataModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-labelledby="resetDataModalTitle">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+        <h3 id="resetDataModalTitle" class="text-lg font-bold text-slate-800">حذف البيانات من الخادم</h3>
+        <button type="button" onclick="closeResetDataModal()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100" aria-label="إغلاق">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="px-5 py-4 overflow-y-auto flex-1 space-y-4">
+        <label class="flex items-start gap-3 p-3 rounded-xl border-2 border-red-200 bg-red-50/80 cursor-pointer">
+          <input type="checkbox" id="resetWipeAll" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500" onchange="onResetWipeAllChange()">
+          <span>
+            <span class="font-bold text-red-800 block">حذف كل شيء بدون استثناء</span>
+            <span class="text-sm text-red-700">يشمل جميع الفئات أدناه دفعة واحدة.</span>
+          </span>
+        </label>
+        <div id="resetDataCategories" class="space-y-2 text-sm text-slate-700 border border-slate-200 rounded-xl p-3 bg-slate-50/80 max-h-[40vh] overflow-y-auto">
+          <p class="text-slate-500 text-xs mb-2">جاري التحميل…</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="resetSelectAllCats(true)" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">تحديد الكل</button>
+          <button type="button" onclick="resetSelectAllCats(false)" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">إلغاء التحديد</button>
+        </div>
+        <div>
+          <label for="resetConfirmPhrase" class="block text-sm font-semibold text-slate-800 mb-1">تأكيد نهائي</label>
+          <p class="text-xs text-slate-500 mb-2">اكتب بالضبط: <strong dir="ltr">حذف نهائي</strong> أو <strong dir="ltr">DELETE</strong></p>
+          <input type="text" id="resetConfirmPhrase" dir="ltr" autocomplete="off"
+            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/15"
+            placeholder="حذف نهائي">
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t border-slate-100 flex flex-wrap gap-2 justify-end bg-slate-50/80">
+        <button type="button" onclick="closeResetDataModal()" class="px-4 py-2.5 rounded-xl font-semibold text-sm bg-slate-200 text-slate-800 hover:bg-slate-300">إلغاء</button>
+        <button type="button" id="resetDataSubmitBtn" onclick="submitResetData()" class="px-4 py-2.5 rounded-xl font-semibold text-sm bg-red-600 text-white hover:bg-red-700">تنفيذ الحذف على الخادم</button>
       </div>
     </div>
   </div>
@@ -352,21 +391,121 @@ async function saveCurrency(e) {
   }
 }
 
-async function resetPayrollData() {
-  if (!confirm('سيتم حذف جميع الدورات وبيانات التدقيق المخزنة لهذا الحساب داخل النظام فقط. هل أنت متأكد؟')) return;
-  try {
-    const res = await fetch('/settings/reset-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const data = await res.json();
-    if (typeof showToast === 'function') {
-      showToast(data.message || (data.success ? 'تم حذف البيانات' : 'فشل حذف البيانات'), data.success ? 'success' : 'error');
-    } else {
-      alert(data.message || (data.success ? 'تم حذف البيانات' : 'فشل حذف البيانات'));
+var resetDataCategoriesCache = null;
+
+function renderResetCategories() {
+  var box = document.getElementById('resetDataCategories');
+  if (!box || !resetDataCategoriesCache) return;
+  var wipe = document.getElementById('resetWipeAll');
+  var wipeOn = wipe && wipe.checked;
+  box.innerHTML = '';
+  resetDataCategoriesCache.forEach(function (cat) {
+    var id = 'resetCat_' + cat.id;
+    var wrap = document.createElement('label');
+    wrap.className = 'flex items-start gap-3 p-2 rounded-lg hover:bg-white cursor-pointer border border-transparent hover:border-slate-200';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = id;
+    cb.setAttribute('data-reset-cat', cat.id);
+    cb.className = 'mt-0.5 rounded border-slate-300 text-indigo-600';
+    cb.disabled = wipeOn;
+    cb.checked = wipeOn;
+    var span = document.createElement('span');
+    var title = document.createElement('span');
+    title.className = 'font-semibold text-slate-800 block';
+    title.textContent = cat.label || '';
+    var desc = document.createElement('span');
+    desc.className = 'text-slate-600 text-xs block mt-0.5';
+    desc.textContent = cat.description || '';
+    span.appendChild(title);
+    span.appendChild(desc);
+    wrap.appendChild(cb);
+    wrap.appendChild(span);
+    box.appendChild(wrap);
+  });
+}
+
+function onResetWipeAllChange() {
+  renderResetCategories();
+}
+
+function resetSelectAllCats(val) {
+  var wipe = document.getElementById('resetWipeAll');
+  if (wipe && wipe.checked) return;
+  document.querySelectorAll('[data-reset-cat]').forEach(function (cb) {
+    cb.checked = !!val;
+  });
+}
+
+function closeResetDataModal() {
+  var modal = document.getElementById('resetDataModal');
+  if (modal) modal.classList.add('hidden');
+  var phrase = document.getElementById('resetConfirmPhrase');
+  if (phrase) phrase.value = '';
+}
+
+async function openResetDataModal() {
+  var modal = document.getElementById('resetDataModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  var box = document.getElementById('resetDataCategories');
+  if (box && !resetDataCategoriesCache) {
+    box.innerHTML = '<p class="text-slate-500 text-xs">جاري التحميل…</p>';
+    try {
+      var res = await fetch('/settings/reset-data-options', { credentials: 'same-origin' });
+      var data = await res.json();
+      if (data.success && data.categories) resetDataCategoriesCache = data.categories;
+      else box.innerHTML = '<p class="text-red-600 text-sm">تعذر تحميل القائمة.</p>';
+    } catch (e) {
+      if (box) box.innerHTML = '<p class="text-red-600 text-sm">خطأ في الاتصال.</p>';
+      return;
     }
+  }
+  renderResetCategories();
+}
+
+document.addEventListener('click', function (e) {
+  var modal = document.getElementById('resetDataModal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  if (e.target === modal) closeResetDataModal();
+});
+
+async function submitResetData() {
+  var wipeEl = document.getElementById('resetWipeAll');
+  var phraseEl = document.getElementById('resetConfirmPhrase');
+  var btn = document.getElementById('resetDataSubmitBtn');
+  var wipeAll = !!(wipeEl && wipeEl.checked);
+  var confirmPhrase = phraseEl ? phraseEl.value : '';
+  var categories = [];
+  if (!wipeAll) {
+    document.querySelectorAll('[data-reset-cat]:checked').forEach(function (cb) {
+      categories.push(cb.getAttribute('data-reset-cat'));
+    });
+  }
+  if (!wipeAll && categories.length === 0) {
+    if (typeof showToast === 'function') showToast('اختر فئة أو فعّل حذف كل شيء.', 'error');
+    else alert('اختر فئة أو فعّل حذف كل شيء.');
+    return;
+  }
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'جاري الحذف…'; }
+    var res = await fetch('/settings/reset-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ wipeAll: wipeAll, categories: categories, confirmPhrase: confirmPhrase })
+    });
+    var data = await res.json();
+    if (typeof showToast === 'function') {
+      showToast(data.message || (data.success ? 'تم' : 'فشل'), data.success ? 'success' : 'error');
+    } else {
+      alert(data.message || (data.success ? 'تم' : 'فشل'));
+    }
+    if (data.success) closeResetDataModal();
   } catch (e) {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'تنفيذ الحذف على الخادم'; }
   }
 }
 </script>

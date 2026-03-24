@@ -95,4 +95,23 @@ async function initDatabase() {
   throw new Error('DATABASE_URL (PostgreSQL) is required. Set DATABASE_URL=postgresql://... in environment.');
 }
 
-module.exports = { getDb, initDatabase, query, usePostgres: () => !!pgPool };
+/**
+ * تنفيذ عدة أوامر في معاملة واحدة (BEGIN / COMMIT / ROLLBACK).
+ * @param {(client: import('pg').PoolClient) => Promise<void>} callback
+ */
+async function runTransaction(callback) {
+  if (!pgPool) throw new Error('Database not initialized.');
+  const client = await pgPool.connect();
+  try {
+    await client.query('BEGIN');
+    await callback(client);
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { getDb, initDatabase, query, runTransaction, usePostgres: () => !!pgPool };

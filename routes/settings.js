@@ -105,17 +105,30 @@ router.post('/update-profile', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/reset-data-options', requireAuth, (req, res) => {
+  const { RESET_CATEGORIES } = require('../services/resetDataService');
+  res.json({ success: true, categories: RESET_CATEGORIES });
+});
+
 router.post('/reset-data', requireAuth, async (req, res) => {
   try {
-    const db = getDb();
-    const userId = req.session.userId;
-    await db.query('DELETE FROM payroll_user_audit_cache WHERE user_id = $1', [userId]);
-    await db.query('DELETE FROM payroll_cycle_cache WHERE user_id = $1', [userId]);
-    await db.query('DELETE FROM payroll_cycle_columns WHERE user_id = $1', [userId]);
-    await db.query('DELETE FROM payroll_settings WHERE user_id = $1', [userId]);
-    await db.query('DELETE FROM financial_cycles WHERE user_id = $1', [userId]);
-    res.json({ success: true, message: 'تم حذف بيانات الدورات والتدقيق لهذه الحساب وإعادة التعيين.' });
+    const { categories = [], wipeAll = false, confirmPhrase } = req.body || {};
+    const phrase = String(confirmPhrase || '').trim();
+    if (phrase !== 'حذف نهائي' && phrase !== 'DELETE') {
+      return res.json({ success: false, message: 'اكتب كلمة التأكيد بالضبط: حذف نهائي' });
+    }
+    const { RESET_CATEGORIES, executeReset } = require('../services/resetDataService');
+    const { runTransaction } = require('../db/database');
+    const validIds = new Set(RESET_CATEGORIES.map((c) => c.id));
+    const filtered = (Array.isArray(categories) ? categories : []).filter((c) => validIds.has(c));
+    const wipe = !!wipeAll;
+    if (!wipe && filtered.length === 0) {
+      return res.json({ success: false, message: 'فعّل «حذف كل شيء» أو اختر فئة واحدة على الأقل.' });
+    }
+    await runTransaction((client) => executeReset(client, req.session.userId, filtered, wipe));
+    res.json({ success: true, message: 'تم حذف البيانات المحددة من الخادم.' });
   } catch (error) {
+    console.error('[settings] reset-data:', error);
     res.json({ success: false, message: 'فشل حذف البيانات: ' + (error.message || '') });
   }
 });
