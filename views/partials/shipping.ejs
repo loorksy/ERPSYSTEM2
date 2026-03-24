@@ -1,3 +1,17 @@
+<style>
+  /* يتجاوز preflight (background: transparent على كل button) حتى يظهر زر البيع بلون صلب */
+  #shippingBtnSell {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #shippingBtnSell:hover {
+    background-color: #4338ca !important;
+  }
+  #shippingBtnSell:active {
+    background-color: #3730a3 !important;
+  }
+</style>
 <div class="w-full max-w-5xl mx-auto" dir="rtl">
   <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col min-w-0" data-tabs-container="shipping">
     <!-- رأس: يتكيف مع العرض الضيق -->
@@ -81,8 +95,8 @@
 
         <!-- أزرار متساوية: عمود واحد على الموبايل، ثلاثة أعمدة من sm فما فوق -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 touch-manipulation">
-          <button type="button" onclick="shippingOpenSellModal()" class="flex h-12 sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 text-sm font-bold text-white shadow-md hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 transition-colors select-none">
-            <i class="fas fa-hand-holding-usd shrink-0"></i>
+          <button type="button" id="shippingBtnSell" onclick="shippingOpenSellModal()" class="flex h-12 sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 transition-colors select-none">
+            <i class="fas fa-hand-holding-usd shrink-0" aria-hidden="true"></i>
             <span>بيع</span>
           </button>
           <button type="button" onclick="shippingOpenBuyModal()" class="flex h-12 sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 px-3 text-sm font-bold text-white shadow-md hover:bg-cyan-700 active:bg-cyan-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 transition-colors select-none">
