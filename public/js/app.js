@@ -258,7 +258,7 @@ function initDate() {
   if (el) el.textContent = new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-/** زر + (موبايل: وسط الشريط السفلي — لابتوب: يمين الشاشة) + قائمة صادر / وارد / مرتجع */
+/** زر + (موبايل: وسط الشريط — لابتوب: يسار الشاشة) + قائمة صادر / وارد / مرتجع */
 function initQuickActionFab() {
   var backdrop = document.getElementById('quickActionBackdrop');
   var menu = document.getElementById('quickActionMenu');
@@ -266,14 +266,46 @@ function initQuickActionFab() {
   var fabD = document.getElementById('quickActionFabDesktop');
   if (!menu || !backdrop) return;
 
+  var closeTimer = null;
+  var PANEL_MS = 260;
+
+  function triggerFabPress(btn) {
+    if (!btn || !btn.classList.contains('quick-action-fab')) return;
+    btn.classList.remove('quick-action-fab-pulse');
+    void btn.offsetWidth;
+    btn.classList.add('quick-action-fab-pulse');
+    function done() {
+      btn.removeEventListener('animationend', done);
+      btn.classList.remove('quick-action-fab-pulse');
+    }
+    btn.addEventListener('animationend', done, { once: true });
+  }
+
   function setOpen(open) {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     if (open) {
       backdrop.classList.remove('hidden');
       menu.classList.remove('hidden');
+      backdrop.classList.remove('quick-action-panel-open');
+      menu.classList.remove('quick-action-panel-open');
       document.body.style.overflow = 'hidden';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          backdrop.classList.add('quick-action-panel-open');
+          menu.classList.add('quick-action-panel-open');
+        });
+      });
     } else {
-      backdrop.classList.add('hidden');
-      menu.classList.add('hidden');
+      backdrop.classList.remove('quick-action-panel-open');
+      menu.classList.remove('quick-action-panel-open');
+      closeTimer = setTimeout(function () {
+        backdrop.classList.add('hidden');
+        menu.classList.add('hidden');
+        closeTimer = null;
+      }, PANEL_MS);
       document.body.style.overflow = '';
     }
     [fabM, fabD].forEach(function (el) {
@@ -281,13 +313,14 @@ function initQuickActionFab() {
     });
   }
 
-  function toggle() {
-    var isOpen = !menu.classList.contains('hidden');
+  function toggle(fromBtn) {
+    var isOpen = menu.classList.contains('quick-action-panel-open');
+    if (!isOpen && fromBtn) triggerFabPress(fromBtn);
     setOpen(!isOpen);
   }
 
-  if (fabM) fabM.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
-  if (fabD) fabD.addEventListener('click', function (e) { e.stopPropagation(); toggle(); });
+  if (fabM) fabM.addEventListener('click', function (e) { e.stopPropagation(); toggle(fabM); });
+  if (fabD) fabD.addEventListener('click', function (e) { e.stopPropagation(); toggle(fabD); });
   backdrop.addEventListener('click', function () { setOpen(false); });
   menu.addEventListener('click', function (e) { e.stopPropagation(); });
 
