@@ -44,6 +44,30 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => {});
 });
 
+window.homeDownloadReportPdf = function() {
+  var typeEl = document.getElementById('homeReportType');
+  var cycleSel = document.getElementById('homeCycleSelect');
+  var t = typeEl ? typeEl.value : 'comprehensive';
+  var cid = cycleSel && cycleSel.value ? cycleSel.value : '';
+  var path = '/api/reports/pdf/';
+  if (t === 'transfer-companies') {
+    path += 'transfer-companies';
+  } else if (t === 'comprehensive') {
+    path += 'comprehensive';
+  } else if (t === 'accreditations') {
+    path += 'accreditations';
+  } else if (t === 'movements') {
+    path += 'movements';
+  } else {
+    path += 'comprehensive';
+  }
+  var q = [];
+  if (cid && t !== 'transfer-companies') {
+    q.push('cycleId=' + encodeURIComponent(cid));
+  }
+  window.open(path + (q.length ? '?' + q.join('&') : ''), '_blank');
+};
+
 function initHomeStats() {
   var cycleSel = document.getElementById('homeCycleSelect');
   if (!cycleSel) return;

@@ -43,7 +43,9 @@
         const balLabel = bal >= 0 ? 'دائن' : 'مديون';
         const color = agencyCardColors[i % agencyCardColors.length];
         const textColor = bal >= 0 ? '#047857' : '#b91c1c';
-        return '<div class="agency-card" style="background:' + color + '; color:#1e293b;" onclick="subAgenciesOpenDashboard(' + a.id + ')">' +
+        return '<div class="agency-card relative" style="background:' + color + '; color:#1e293b;" onclick="subAgenciesOpenDashboard(' + a.id + ')">' +
+          '<button type="button" class="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-white/90 text-slate-700 text-xs font-bold shadow border border-slate-200 hover:bg-white" ' +
+          'onclick="event.stopPropagation(); subAgenciesDownloadPdf(' + a.id + ')" title="تنزيل PDF"><i class="fas fa-file-pdf text-red-600"></i></button>' +
           '<h5>' + (a.name || '') + '</h5>' +
           '<p class="agency-meta">نسبة الوكالة: ' + (a.commission_percent || 0) + '%</p>' +
           '<p class="agency-balance" style="color:' + textColor + '">رصيد: ' + (window.formatMoney ? window.formatMoney(bal) : bal.toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + ' (' + balLabel + ')</p>' +
@@ -51,6 +53,18 @@
       }).join('');
     });
   }
+
+  window.subAgenciesDownloadPdf = function(agencyId) {
+    var cs = document.getElementById('subAgencyCycleSelect');
+    var cycleId = cs && cs.value ? cs.value : '';
+    var q = 'subAgencyId=' + encodeURIComponent(agencyId) + (cycleId ? '&cycleId=' + encodeURIComponent(cycleId) : '');
+    window.open('/api/reports/pdf/sub-agency?' + q, '_blank');
+  };
+
+  window.subAgenciesDownloadPdfCurrent = function() {
+    if (!currentAgencyId) return;
+    subAgenciesDownloadPdf(currentAgencyId);
+  };
 
   window.subAgenciesOpenAddModal = function() {
     document.getElementById('subAgencyAddForm').reset();
