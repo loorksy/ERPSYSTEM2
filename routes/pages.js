@@ -32,6 +32,17 @@ router.get('/fx-spread', requireAuth, (req, res) => {
   res.render('dashboard', { title: 'فرق التصريف', page: 'fx-spread', user: req.session.user });
 });
 
+/** محرّر دورة الرواتب المحلية — صفحة مستقلة (جدولا إدارة ووكيل معاً) */
+router.get('/payroll/cycle/:id', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.redirect('/payroll');
+  res.render('payroll-cycle-standalone', {
+    title: 'محرّر الدورة',
+    cycleId: id,
+    user: req.session.user,
+  });
+});
+
 const pages = [
   { path: '/sheet', page: 'sheet', title: 'Sheet' },
   { path: '/payroll', page: 'payroll-native', title: 'تدقيق الرواتب' },
