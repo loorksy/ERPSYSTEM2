@@ -161,27 +161,35 @@
 
       <!-- تبديل راتب (تبويب مستقل) -->
       <div id="shipping-salary-swap" class="tab-content hidden space-y-4">
-        <div id="shippingSalarySwapBlock" class="rounded-xl border border-violet-200 bg-violet-50/80 p-4 md:p-5 shadow-sm scroll-mt-24">
-          <h4 class="text-sm font-bold text-violet-900 mb-2">تبديل راتب (شركة تحويل)</h4>
-          <p class="text-xs text-violet-800/90 leading-relaxed mb-3 p-3 rounded-lg bg-white/80 border border-violet-100">
-            <strong>المسار المحاسبي:</strong> المبلغ بعد الخصم يُسجَّل نقدياً في <strong>الصندوق الرئيسي</strong> (أو كدين على الشركة)، والخصم يُسجَّل <strong>مصروفاً</strong>.
+        <div id="shippingSalarySwapBlock" class="rounded-xl border border-indigo-200 bg-indigo-50/80 p-4 md:p-5 shadow-sm scroll-mt-24">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+              <i class="fas fa-exchange-alt"></i>
+            </span>
+            <div class="min-w-0">
+              <h4 class="text-sm font-bold text-slate-900">تبديل راتب (شركة تحويل)</h4>
+              <p class="text-xs text-slate-600 mt-1 leading-relaxed">نفس نمط الصندوق والقيود؛ بدون مخزون ذهب/كرستال.</p>
+            </div>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed mb-3 p-3 rounded-xl bg-white border border-indigo-100">
+            <strong class="text-slate-900">المسار المحاسبي:</strong> المبلغ بعد الخصم يُسجَّل نقدياً في <strong>الصندوق الرئيسي</strong> (أو كدين على الشركة)، والخصم يُسجَّل <strong>مصروفاً</strong>.
             لا يمر هذا النموذج بمخزون ذهب/كرستال؛ لبيع مخزون شحن استخدم تبويب «الشحن» → بيع.
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <select id="salarySwapCompany" class="px-3 py-2 rounded-lg border border-violet-200 bg-white"></select>
-            <input type="number" id="salarySwapGross" step="0.01" placeholder="المبلغ الإجمالي" class="px-3 py-2 rounded-lg border border-violet-200 bg-white">
-            <input type="number" id="salarySwapDisc" step="0.1" placeholder="نسبة الخصم %" class="px-3 py-2 rounded-lg border border-violet-200 bg-white">
-            <select id="salarySwapMode" class="px-3 py-2 rounded-lg border border-violet-200 bg-white">
+            <select id="salarySwapCompany" class="px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"></select>
+            <input type="number" id="salarySwapGross" step="0.01" placeholder="المبلغ الإجمالي" class="px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
+            <input type="number" id="salarySwapDisc" step="0.1" placeholder="نسبة الخصم %" class="px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
+            <select id="salarySwapMode" class="px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
               <option value="cash">كاش</option>
               <option value="installment">تقسيط</option>
               <option value="debt">دين</option>
             </select>
-            <input type="number" id="salarySwapFirst" step="0.01" placeholder="الدفعة الأولى (تقسيط)" class="px-3 py-2 rounded-lg border border-violet-200 bg-white sm:col-span-2 hidden">
+            <input type="number" id="salarySwapFirst" step="0.01" placeholder="الدفعة الأولى (تقسيط)" class="px-3 py-2.5 rounded-xl border border-slate-200 bg-white sm:col-span-2 hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
           </div>
-          <div id="salarySwapPreview" class="mt-3 p-3 rounded-xl bg-white border border-violet-100 text-sm space-y-1 text-slate-700 min-h-[4rem]">
+          <div id="salarySwapPreview" class="mt-3 p-3 rounded-xl bg-white border border-slate-200 text-sm space-y-1 text-slate-700 min-h-[4rem] shadow-inner">
             <p class="text-slate-500 text-xs">أدخل المبلغ والنسبة لعرض المعاينة.</p>
           </div>
-          <button type="button" onclick="shippingSalarySwapSubmit()" class="mt-3 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold">بيع</button>
+          <button type="button" onclick="shippingSalarySwapSubmit()" class="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold shadow-md hover:bg-indigo-700 active:scale-[0.99] transition">بيع</button>
         </div>
       </div>
 

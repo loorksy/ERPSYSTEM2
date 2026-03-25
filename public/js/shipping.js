@@ -437,7 +437,7 @@
     var netAfter = Math.round(gross * (1 - d / 100) * 100) / 100;
     var expenseDiscount = Math.round((gross - netAfter) * 100) / 100;
     var html = [];
-    html.push('<p><span class="font-semibold text-violet-900">بعد الخصم (صافي):</span> ' + fmtMoneyPreview(netAfter) + '</p>');
+    html.push('<p><span class="font-semibold text-indigo-900">بعد الخصم (صافي):</span> ' + fmtMoneyPreview(netAfter) + '</p>');
     if (expenseDiscount > 0) {
       html.push('<p class="text-amber-800 text-xs">يُسجَّل كمصروف (خصم): ' + fmtMoneyPreview(expenseDiscount) + '</p>');
     }

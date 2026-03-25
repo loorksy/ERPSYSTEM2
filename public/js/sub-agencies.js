@@ -168,7 +168,7 @@
         if (hint) {
           hint.classList.remove('hidden');
           if (owesUs) {
-            hint.className = 'text-sm rounded-lg p-3 mb-3 bg-amber-50 text-amber-900 border border-amber-200';
+            hint.className = 'text-sm rounded-lg p-3 mb-3 bg-indigo-50 text-indigo-900 border border-indigo-100';
             hint.innerHTML = 'رصيد الوكالة <strong>مديون</strong> لنا (رصيد سالب). يُفضَّل عدم خصم من الصندوق: تُسجَّل المكافأة كائتمان محاسبي فقط. يمكنك تفعيل الخصم من الصندوق يدوياً إذا دفعت نقداً.';
           } else {
             hint.className = 'text-sm rounded-lg p-3 mb-3 bg-slate-50 text-slate-600 border border-slate-100';

@@ -1,10 +1,10 @@
-<div class="sub-agencies-page" dir="rtl">
+<div class="sub-agencies-page w-full max-w-5xl mx-auto" dir="rtl">
   <!-- قائمة الوكالات -->
   <div id="subAgenciesList">
     <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
       <h2 class="text-2xl font-bold text-slate-800">الوكالات الفرعية</h2>
       <div class="flex gap-2 flex-wrap">
-        <button type="button" onclick="subAgenciesOpenDeliveryModal()" class="px-4 py-2 rounded-xl bg-teal-600 text-white text-sm font-semibold">
+        <button type="button" onclick="subAgenciesOpenDeliveryModal()" class="px-4 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold shadow-md hover:bg-teal-700 active:scale-[0.99] transition">
           تسليم
         </button>
         <button type="button" onclick="subAgenciesOpenAddModal()" class="btn-add">
@@ -130,7 +130,7 @@
         <textarea id="subAgencyRewardNotes" rows="2" placeholder="اختياري"></textarea>
       </div>
       <div class="form-actions">
-        <button type="submit" class="btn-submit btn-submit-green">إضافة</button>
+        <button type="submit" class="btn-submit">إضافة</button>
         <button type="button" onclick="subAgenciesCloseRewardModal()" class="btn-cancel">إلغاء</button>
       </div>
     </form>
@@ -168,7 +168,6 @@
 </div>
 
 <style>
-.sub-agencies-page { max-width: 56rem; }
 .agencies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
 .btn-add { padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; transition: all 0.2s; }
 .btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
@@ -185,18 +184,18 @@
 .dash-card-label { font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; opacity: 0.9; }
 .dash-card-value { font-size: 1.5rem; font-weight: 700; }
 .input-percent { width: 5rem; padding: 0.25rem 0.5rem; border-radius: 0.5rem; border: 1px solid #fcd34d; font-weight: 700; color: #b45309; }
-.btn-reward { padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; background: linear-gradient(135deg, #059669, #10b981); color: white; transition: all 0.2s; }
-.btn-reward:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4); }
+.btn-reward { padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; transition: all 0.2s; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+.btn-reward:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35); }
 .tx-section { padding-top: 1.5rem; border-top: 1px solid #e2e8f0; }
 .tx-section-title { font-size: 0.875rem; font-weight: 700; color: #334155; margin-bottom: 1rem; }
 .tx-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
 .input-filter { padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; font-size: 0.875rem; }
 .btn-filter { padding: 0.5rem 1rem; border-radius: 0.5rem; background: #4f46e5; color: white; font-size: 0.875rem; font-weight: 500; }
 .tx-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.modal-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; padding: 1rem; }
 .modal-overlay.hidden { display: none; }
 .modal-overlay:not(.hidden) { display: flex; }
-.modal-box { background: white; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-width: 28rem; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-box { background: white; border-radius: 1rem; border: 1px solid #f1f5f9; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); max-width: 28rem; width: 100%; max-height: 90vh; overflow-y: auto; }
 .modal-box-tall { max-height: 80vh; display: flex; flex-direction: column; }
 .modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
 .modal-header h4 { font-size: 1.125rem; font-weight: 700; color: #1e293b; }
@@ -208,8 +207,8 @@
 .form-group label { display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
 .form-group input, .form-group textarea { width: 100%; padding: 0.625rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; }
 .form-actions { display: flex; gap: 0.75rem; padding-top: 0.5rem; }
-.btn-submit { flex: 1; padding: 0.75rem; border-radius: 0.75rem; font-weight: 600; background: #4f46e5; color: white; }
-.btn-submit-green { background: #059669; }
+.btn-submit { flex: 1; padding: 0.75rem; border-radius: 0.75rem; font-weight: 600; background: #4f46e5; color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+.btn-submit:hover { background: #4338ca; }
 .btn-cancel { padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; background: #f1f5f9; color: #475569; }
 .agency-card { padding: 1.25rem; border-radius: 1rem; cursor: pointer; transition: all 0.2s; border: none; }
 .agency-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(0,0,0,0.15); }

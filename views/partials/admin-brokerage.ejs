@@ -1,12 +1,19 @@
-<div class="max-w-md mx-auto" dir="rtl">
-  <h2 class="text-2xl font-bold text-slate-800 mb-2">وساطة إدارية</h2>
-  <p class="text-sm text-slate-500 mb-6">نسبة الوساطة تُسجّل ربحاً، والباقي يُضاف للصندوق الرئيسي.</p>
+<div class="w-full max-w-md mx-auto" dir="rtl">
+  <header class="mb-6 flex items-center gap-3">
+    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
+      <i class="fas fa-percent text-xl"></i>
+    </div>
+    <div>
+      <h2 class="text-xl sm:text-2xl font-bold text-slate-900">وساطة إدارية</h2>
+      <p class="text-sm text-slate-500 mt-0.5">نسبة الوساطة تُسجّل ربحاً، والباقي يُضاف للصندوق الرئيسي.</p>
+    </div>
+  </header>
   <form id="abForm" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-    <select id="abCycle" name="cycleId" class="w-full px-4 py-2.5 rounded-xl border border-slate-200"><option value="">— دورة (اختياري) —</option></select>
-    <input type="number" name="amount" step="0.01" required placeholder="المبلغ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
-    <input type="number" name="brokeragePct" step="0.1" required placeholder="نسبة الوساطة %" class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
-    <textarea name="notes" placeholder="ملاحظات" class="w-full px-4 py-2.5 rounded-xl border border-slate-200" rows="2"></textarea>
-    <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold">تسجيل</button>
+    <select id="abCycle" name="cycleId" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"><option value="">— دورة (اختياري) —</option></select>
+    <input type="number" name="amount" step="0.01" required placeholder="المبلغ" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
+    <input type="number" name="brokeragePct" step="0.1" required placeholder="نسبة الوساطة %" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400">
+    <textarea name="notes" placeholder="ملاحظات" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" rows="2"></textarea>
+    <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 active:scale-[0.99] transition">تسجيل</button>
   </form>
   <p id="abMsg" class="mt-3 text-sm"></p>
 </div>
