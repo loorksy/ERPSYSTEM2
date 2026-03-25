@@ -4,6 +4,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { google } = require('googleapis');
@@ -19,6 +20,23 @@ const { runPayrollAuditCore } = require('../services/payrollAuditEngine');
 const { normalizeUserId } = require('../services/payrollSearchService');
 
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
+
+/** بصمة محتوى جدول معلومات المستخدمين (تجنّب إعادة تدقيق بلا تغيير) */
+function hashUserInfoRows(rows) {
+  if (!rows || !Array.isArray(rows)) return '';
+  const normalized = rows.map((row) =>
+    (Array.isArray(row) ? row : []).map((cell) => (cell == null ? '' : String(cell)))
+  );
+  return crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
+}
+
+/** من نطاق Google مثل 'ورقة'!A7:ZZ9 → فهرس الصف الأول بدءًا من 0 */
+function parseRangeStartRowIndex0(updatedRange) {
+  const s = String(updatedRange || '');
+  const m = s.match(/![A-Za-z]+(\d+)/);
+  if (!m) return 0;
+  return Math.max(0, parseInt(m[1], 10) - 1);
+}
 
 function getOAuth2Client(credentials) {
   const clientId = credentials?.client_id || process.env.GOOGLE_CLIENT_ID;
@@ -689,6 +707,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       cycleMgmtUserIdCol,
       cycleAgentUserIdCol,
       cycleAgentSalaryCol,
+      forcePayrollReaudit,
     } = req.body;
     if (!cycleId) {
       return res.json({ success: false, message: 'اختر الدورة المالية' });
@@ -700,7 +719,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
     const cycle = (await db.query(
       `SELECT name, management_data, agent_data, user_info_data,
               management_spreadsheet_id, agent_spreadsheet_id,
-              management_sheet_name, agent_sheet_name
+              management_sheet_name, agent_sheet_name, payroll_audit_user_info_hash
          FROM financial_cycles WHERE id = $1 AND user_id = $2`,
       [cycleId, req.session.userId]
     )).rows[0];
@@ -736,6 +755,15 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       return res.json({
         success: false,
         message: 'بيانات الإدارة أو الوكيل فارغة. زامن الدورة من Google أولاً.',
+      });
+    }
+
+    const userInfoHash = hashUserInfoRows(userInfoRows);
+    if (cycle.payroll_audit_user_info_hash && cycle.payroll_audit_user_info_hash === userInfoHash && !forcePayrollReaudit) {
+      return res.json({
+        success: false,
+        code: 'USER_INFO_UNCHANGED',
+        message: 'لم يتغيّر جدول معلومات المستخدمين (اللقطة المحفوظة) من آخر تدقيق. حدّث اللقطة أو أرسل forcePayrollReaudit: true.',
       });
     }
 
@@ -846,6 +874,15 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       console.error('[payroll-audit-local] failed to update search cache', cacheErr.message);
     }
 
+    try {
+      await db.query(
+        'UPDATE financial_cycles SET payroll_audit_user_info_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3',
+        [userInfoHash, cycleId, req.session.userId]
+      );
+    } catch (hashErr) {
+      console.error('[payroll-audit-local] failed to save user info hash', hashErr.message);
+    }
+
     res.json({
       success: true,
       message,
@@ -880,7 +917,8 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       userInfoStatusCol,
       cycleMgmtUserIdCol,
       cycleAgentUserIdCol,
-      cycleAgentSalaryCol
+      cycleAgentSalaryCol,
+      forcePayrollReaudit,
     } = req.body;
     if (!cycleId || !spreadsheetId) {
       return res.json({ success: false, message: 'اختر الدورة المالية وجدول البيانات' });
@@ -890,7 +928,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     const discountRatePct = Number(bodyDiscountRate) ?? Number(payrollSettingsRow?.discount_rate) ?? 0;
 
     const cycle = (await db.query(
-      'SELECT name, management_data, agent_data, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
+      'SELECT name, management_data, agent_data, payroll_audit_user_info_hash, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
       [cycleId, req.session.userId]
     )).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة المالية غير موجودة' });
@@ -929,6 +967,26 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       }
     }
 
+    /** قراءة جدول معلومات المستخدمين أولاً — منع إعادة تدقيق بلا تغيير فيه */
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const firstSheet = meta.data.sheets && meta.data.sheets[0];
+    const mainSheetTitle = (userInfoSheetName && String(userInfoSheetName).trim()) ? String(userInfoSheetName).trim() : (firstSheet ? firstSheet.properties.title : 'Sheet1');
+    const mainSheetId = firstSheet ? firstSheet.properties.sheetId : 0;
+    const mainData = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${mainSheetTitle}'!A:ZZ`
+    });
+    const allRows = (mainData.data.values || []);
+    const userInfoHash = hashUserInfoRows(allRows);
+    if (cycle.payroll_audit_user_info_hash && cycle.payroll_audit_user_info_hash === userInfoHash && !forcePayrollReaudit) {
+      return res.json({
+        success: false,
+        code: 'USER_INFO_UNCHANGED',
+        message: 'لم يتغيّر جدول معلومات المستخدمين من آخر تدقيق ناجح. عدّل الجدول ثم أعد المحاولة، أو أرسل forcePayrollReaudit: true لإجبار التنفيذ.',
+        spreadsheetUrl: meta.data.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
+      });
+    }
+
     /** مزامنة الوكالات الفرعية من جدول الإدارة (خطوة إضافية - لا تعطل التدقيق) */
     let agencySync = null;
     if (mgmtSsId) {
@@ -961,17 +1019,6 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
         console.error('[CashBox] Failed', cashErr);
       }
     }
-
-    const meta = await sheets.spreadsheets.get({ spreadsheetId });
-    const firstSheet = meta.data.sheets && meta.data.sheets[0];
-    const mainSheetTitle = (userInfoSheetName && String(userInfoSheetName).trim()) ? String(userInfoSheetName).trim() : (firstSheet ? firstSheet.properties.title : 'Sheet1');
-    const mainSheetId = firstSheet ? firstSheet.properties.sheetId : 0;
-
-    const mainData = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: `'${mainSheetTitle}'!A:ZZ`
-    });
-    const allRows = (mainData.data.values || []);
 
     const auditOut = runPayrollAuditCore({
       managementRows,
@@ -1153,10 +1200,11 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       if (itemsToPaste.length === 0) continue;
 
       const values = itemsToPaste.map(it => it.managementRow);
+      let appendResponse = null;
       try {
         if (sheetExisted) {
           /** ورقة موجودة: إلحاق الصفوف الجديدة فقط في نهاية الورقة */
-          await withSheetsRetry(() => sheets.spreadsheets.values.append({
+          appendResponse = await withSheetsRetry(() => sheets.spreadsheets.values.append({
             spreadsheetId: cycleMgmtSsId,
             range: `'${sheetName}'!A:ZZ`,
             valueInputOption: 'USER_ENTERED',
@@ -1176,10 +1224,13 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       }
       const sheetId = sheetIdByName[sheetName];
       if (sheetId != null) {
-        /** تلوين الصفوف الملصوقة فقط */
+        /** تلوين الصفوف الملصوقة فقط — صف البداية من استجابة append (أدق من إعادة القراءة) */
         let startRow = 0;
-        if (sheetExisted) {
+        if (sheetExisted && appendResponse && appendResponse.data && appendResponse.data.updates && appendResponse.data.updates.updatedRange) {
+          startRow = parseRangeStartRowIndex0(appendResponse.data.updates.updatedRange);
+        } else if (sheetExisted) {
           try {
+            await sleep(parseInt(process.env.SHEETS_APPEND_STABILIZE_MS || '400', 10) || 400);
             const curr = await withSheetsRetry(() => sheets.spreadsheets.values.get({
               spreadsheetId: cycleMgmtSsId,
               range: `'${sheetName}'!A:ZZ`
@@ -1396,6 +1447,14 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       });
     } catch (cacheErr) {
       console.error('[payroll-execute] failed to update search cache', cacheErr.message);
+    }
+    try {
+      await db.query(
+        'UPDATE financial_cycles SET payroll_audit_user_info_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3',
+        [userInfoHash, cycleId, req.session.userId]
+      );
+    } catch (hashErr) {
+      console.error('[payroll-execute] failed to save user info hash', hashErr.message);
     }
     res.json({
       success: true,

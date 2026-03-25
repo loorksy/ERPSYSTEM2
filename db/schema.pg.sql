@@ -560,5 +560,6 @@ CREATE TABLE IF NOT EXISTS salary_swap_entries (
 );
 
 ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS transfer_discount_pct REAL DEFAULT 0;
+ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS payroll_audit_user_info_hash TEXT;
 ALTER TABLE accreditation_entities ADD COLUMN IF NOT EXISTS is_primary INTEGER DEFAULT 0;
 ALTER TABLE entity_payables ADD COLUMN IF NOT EXISTS settlement_mode TEXT DEFAULT 'payable';

@@ -72,6 +72,7 @@ async function ensureFinancialCyclesUserInfoColumns() {
     'ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS user_info_data TEXT',
     'ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS user_info_sheet_name TEXT',
     'ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS user_info_spreadsheet_id TEXT',
+    'ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS payroll_audit_user_info_hash TEXT',
   ];
   for (const s of stmts) {
     try {
