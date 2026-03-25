@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
+const { insertLedgerEntry } = require('../services/ledgerService');
 
 /**
  * السعران: عدد وحدات العملة الأجنبية مقابل 1 دولار (مثال: 42 ليرة تركية = 1 USD).
@@ -90,7 +91,18 @@ router.post('/add', requireAuth, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
       [userId, cid, cur, amt, ir, sr, spread, et, eid, notes || null]
     );
-    res.json({ success: true, id: r.rows[0].id, spreadUsd: spread, message: 'تم تسجيل فرق التصريف' });
+    const entryId = r.rows[0].id;
+    await insertLedgerEntry(db, {
+      userId,
+      bucket: 'net_profit',
+      sourceType: 'fx_spread_profit',
+      amount: spread,
+      cycleId: cid || null,
+      refTable: 'fx_spread_entries',
+      refId: entryId,
+      notes: notes || 'ربح فرق تصريف',
+    });
+    res.json({ success: true, id: entryId, spreadUsd: spread, message: 'تم تسجيل فرق التصريف وإضافته لصافي الربح' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }

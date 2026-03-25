@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { insertLedgerEntry, sumLedgerBucket } = require('../services/ledgerService');
+const { adjustFundBalance, getMainFundId } = require('../services/fundService');
 
 router.get('/total', requireAuth, async (req, res) => {
   try {
@@ -16,17 +17,23 @@ router.get('/total', requireAuth, async (req, res) => {
 
 router.post('/add', requireAuth, async (req, res) => {
   try {
-    const { amount, category, notes } = req.body || {};
+    const { amount, category, notes, debitMainFund } = req.body || {};
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'مبلغ غير صالح' });
     const db = getDb();
+    const userId = req.session.userId;
+    if (debitMainFund) {
+      const mainId = await getMainFundId(db, userId);
+      if (!mainId) return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً أولاً' });
+      await adjustFundBalance(db, mainId, 'USD', -amt, 'manual_expense', notes || 'مصروف — خصم من الرئيسي', 'expense_entries', null);
+    }
     const r = await db.query(
       `INSERT INTO expense_entries (user_id, amount, currency, category, notes) VALUES ($1, $2, 'USD', $3, $4) RETURNING id`,
-      [req.session.userId, amt, category || 'manual', notes || null]
+      [userId, amt, category || 'manual', notes || null]
     );
     const id = r.rows[0].id;
     await insertLedgerEntry(db, {
-      userId: req.session.userId,
+      userId,
       bucket: 'expense',
       sourceType: 'manual_expense',
       amount: amt,

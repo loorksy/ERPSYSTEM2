@@ -6,7 +6,7 @@ window.formatMoney = function(num) {
   return (sym && sym !== '') ? s + ' ' + sym : s;
 };
 
-/** صادر → بيع/شحن، وارد → شراء/شحن، مرتجع → شركات التحويل (تسجيل مرتجع من تفاصيل الشركة) */
+/** روابط قديمة أو برمجية؛ الإجراء السريع الحقيقي عبر زرّي صادر/وارد (+) وملف quick-actions.js */
 window.navigateQuickAction = function(type) {
   var map = {
     صادر: '/shipping?fab=out',
@@ -336,6 +336,10 @@ function initQuickActionFab() {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       var t = this.getAttribute('data-quick-type') || '';
+      if (typeof window.handleQuickActionSub === 'function' && window.handleQuickActionSub(t)) {
+        setOpen(false);
+        return;
+      }
       try {
         window.dispatchEvent(new CustomEvent('quickAction', { detail: { type: t } }));
       } catch (_) {}

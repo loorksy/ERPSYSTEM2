@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
-const { adjustFundBalance } = require('../services/fundService');
+const { adjustFundBalance, getMainFundId, getMainFundUsdBalance } = require('../services/fundService');
 
 router.get('/transfer-companies/list', requireAuth, async (req, res) => {
   try {
@@ -112,6 +112,47 @@ router.post('/:id/set-main', requireAuth, async (req, res) => {
     await db.query('UPDATE funds SET is_main = 0 WHERE user_id = $1', [req.session.userId]);
     await db.query('UPDATE funds SET is_main = 1 WHERE id = $1', [id]);
     res.json({ success: true, message: 'تم تعيين الصندوق الرئيسي' });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل' });
+  }
+});
+
+/** إيداع من الصندوق الرئيسي إلى هذا الصندوق (صرف للصندوق) أو تسجيل دين علينا */
+router.post('/:id/receive-from-main', requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { amount, notes, mode } = req.body || {};
+    const amt = parseFloat(amount);
+    if (!id || isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'مبلغ غير صالح' });
+    const db = getDb();
+    const uid = req.session.userId;
+    const fund = (await db.query('SELECT id, is_main FROM funds WHERE id = $1 AND user_id = $2', [id, uid])).rows[0];
+    if (!fund) return res.json({ success: false, message: 'صندوق غير موجود' });
+    if (fund.is_main) return res.json({ success: false, message: 'اختر صندوقاً غير الرئيسي' });
+
+    if (mode === 'payable') {
+      await db.query(
+        `INSERT INTO entity_payables (user_id, entity_type, entity_id, amount, currency, notes, settlement_mode)
+         VALUES ($1, 'fund', $2, $3, 'USD', $4, 'payable')`,
+        [uid, id, amt, notes || 'إجراء سريع — دين علينا']
+      );
+      return res.json({ success: true, message: 'تم تسجيل التزام (دين علينا) على الصندوق' });
+    }
+
+    const mainId = await getMainFundId(db, uid);
+    if (!mainId) return res.json({ success: false, message: 'لا صندوق رئيسي' });
+    const { usd: mainUsd } = await getMainFundUsdBalance(db, uid);
+    if ((mainUsd || 0) < amt) {
+      return res.json({
+        success: false,
+        code: 'INSUFFICIENT_MAIN',
+        message: 'رصيد الصندوق الرئيسي غير كافٍ. اختر «تسجيل كدين علينا» أو خفّض المبلغ.',
+      });
+    }
+
+    await adjustFundBalance(db, mainId, 'USD', -amt, 'fund_allocation', notes || 'تحويل لصندوق', 'funds', id);
+    await adjustFundBalance(db, id, 'USD', amt, 'fund_receive_from_main', notes || 'وارد من الصندوق الرئيسي', 'funds', mainId);
+    res.json({ success: true, message: 'تم التحويل إلى الصندوق' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }

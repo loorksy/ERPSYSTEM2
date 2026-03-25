@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
+const { adjustFundBalance, getMainFundId, getMainFundUsdBalance } = require('../services/fundService');
 
 const DEFAULT_TYPES = ['شام كاش', 'هرم', 'فؤاد', 'USDT', 'سرياتيل كاش', 'العالمية'];
 
@@ -46,6 +47,56 @@ router.post('/add', requireAuth, async (req, res) => {
       );
     }
     res.json({ success: true, message: 'تمت الإضافة', id });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل' });
+  }
+});
+
+/** صرف من الصندوق الرئيسي إلى شركة (زيادة رصيد الشركة) أو تسجيل دين علينا */
+router.post('/:id/payout-from-main', requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { amount, notes, mode } = req.body || {};
+    const amt = parseFloat(amount);
+    if (!id || isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'مبلغ غير صالح' });
+    const db = getDb();
+    const uid = req.session.userId;
+    const company = (await db.query(
+      'SELECT id FROM transfer_companies WHERE id = $1 AND user_id = $2',
+      [id, uid]
+    )).rows[0];
+    if (!company) return res.json({ success: false, message: 'شركة غير موجودة' });
+
+    if (mode === 'payable') {
+      await db.query(
+        `INSERT INTO entity_payables (user_id, entity_type, entity_id, amount, currency, notes, settlement_mode)
+         VALUES ($1, 'transfer_company', $2, $3, 'USD', $4, 'payable')`,
+        [uid, id, amt, notes || 'إجراء سريع — دين علينا']
+      );
+      return res.json({ success: true, message: 'تم تسجيل التزام (دين علينا) على الشركة' });
+    }
+
+    const mainId = await getMainFundId(db, uid);
+    if (!mainId) return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً أولاً' });
+    const { usd: mainUsd } = await getMainFundUsdBalance(db, uid);
+    if ((mainUsd || 0) < amt) {
+      return res.json({
+        success: false,
+        code: 'INSUFFICIENT_MAIN',
+        message: 'رصيد الصندوق الرئيسي غير كافٍ. اختر «تسجيل كدين علينا» أو خفّض المبلغ.',
+      });
+    }
+
+    await adjustFundBalance(db, mainId, 'USD', -amt, 'company_payout', notes || 'صرف لشركة تحويل', 'transfer_companies', id);
+    await db.query(
+      `INSERT INTO transfer_company_ledger (company_id, amount, currency, notes) VALUES ($1, $2, 'USD', $3)`,
+      [id, amt, notes || 'صرف من الصندوق الرئيسي']
+    );
+    await db.query(
+      'UPDATE transfer_companies SET balance_amount = balance_amount + $1 WHERE id = $2 AND user_id = $3',
+      [amt, id, uid]
+    );
+    res.json({ success: true, message: 'تم الصرف من الصندوق الرئيسي' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }

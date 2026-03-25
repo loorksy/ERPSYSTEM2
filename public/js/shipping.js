@@ -312,6 +312,7 @@
       try {
         var u = new URL(window.location.href);
         u.searchParams.delete('fab');
+        u.searchParams.delete('qaFocus');
         var q = u.search;
         window.history.replaceState({}, '', u.pathname + (q || '') + u.hash);
       } catch (_) {}
@@ -324,11 +325,19 @@
         if (window.shippingOpenSellModal) window.shippingOpenSellModal();
         stripFabParam();
       }, 120);
-    } else if (fab === 'in') {
+    } else     if (fab === 'in') {
       setTimeout(function() {
         var mainTab = document.querySelector('[onclick*="shipping-main"]');
         if (mainTab) mainTab.click();
         if (window.shippingOpenBuyModal) window.shippingOpenBuyModal();
+        var focusSwap = '';
+        try { focusSwap = new URLSearchParams(window.location.search).get('qaFocus') || ''; } catch (_) {}
+        if (focusSwap === 'swap') {
+          setTimeout(function() {
+            var el = document.getElementById('shippingSalarySwapBlock');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 280);
+        }
         stripFabParam();
       }, 120);
     }

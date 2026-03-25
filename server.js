@@ -159,6 +159,7 @@ const localAuditRoutes = require('./routes/localAudit');
 const expensesRoutes = require('./routes/expenses');
 const adminBrokerageRoutes = require('./routes/adminBrokerage');
 const payablesRoutes = require('./routes/payables');
+const quickActionRoutes = require('./routes/quickAction');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -179,6 +180,7 @@ app.use('/api/local-audit', localAuditRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/admin-brokerage', adminBrokerageRoutes);
 app.use('/api/payables', payablesRoutes);
+app.use('/api/quick-action', quickActionRoutes);
 app.use('/ai', aiRoutes(io));
 app.use('/', pagesRoutes);
 
