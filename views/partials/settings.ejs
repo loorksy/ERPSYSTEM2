@@ -449,7 +449,8 @@ async function openResetDataModal() {
   if (!modal) return;
   modal.classList.remove('hidden');
   var box = document.getElementById('resetDataCategories');
-  if (box && !resetDataCategoriesCache) {
+  resetDataCategoriesCache = null;
+  if (box) {
     box.innerHTML = '<p class="text-slate-500 text-xs">جاري التحميل…</p>';
     try {
       var res = await fetch('/settings/reset-data-options', { credentials: 'same-origin' });

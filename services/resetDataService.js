@@ -28,7 +28,8 @@ const RESET_CATEGORIES = [
   {
     id: 'funds',
     label: 'الصناديع',
-    description: 'الصناديع، الأرصدة، السجلات، التحويلات، ترحيل الأرباح',
+    description:
+      'الصناديع، الأرصدة، السجلات، التحويلات، ترحيل الأرباح، وديون «علينا» المسجّلة للصناديع. يُمسح معها تلقائياً الدفتر الموحّد والمصاريف وتبديل الراتب المرتبطة بنفس المستخدم.',
   },
   {
     id: 'transfer_companies',
@@ -39,6 +40,12 @@ const RESET_CATEGORIES = [
     id: 'accreditations',
     label: 'الاعتمادات',
     description: 'المعتمدون (الاسم والكود) وسجل العمليات',
+  },
+  {
+    id: 'accounting_ledger',
+    label: 'الدفتر المحاسبي والمصاريف وتبديل الراتب',
+    description:
+      'قيود الدفتر الموحّد (ledger_entries)، المصاريف اليدوية، سجلات تبديل الراتب، الوساطة الإدارية، وديون entity_payables عند الحاجة. يُنفَّذ تلقائياً أيضاً عند اختيار «الصناديع»؛ استخدمه منفرداً لمسح القيود دون حذف الصناديع.',
   },
   {
     id: 'ai',
@@ -147,6 +154,21 @@ async function executeReset(client, userId, selected, wipeAll) {
     await client.query('DELETE FROM fund_ledger WHERE fund_id IN (SELECT id FROM funds WHERE user_id = $1)', [userId]);
     await client.query('DELETE FROM fund_balances WHERE fund_id IN (SELECT id FROM funds WHERE user_id = $1)', [userId]);
     await client.query('DELETE FROM funds WHERE user_id = $1', [userId]);
+  }
+
+  /**
+   * دفتر موحّد، مصاريف، تبديل راتب (قبل حذف شركات التحويل)، وساطة إدارية.
+   * يُشغَّل عند: الدفتر صراحةً، أو الصناديع، أو حذف كل شيء — لربط القيود بالبيانات المحذوفة.
+   */
+  if (has('accounting_ledger', s, wipeAll) || has('funds', s, wipeAll) || wipeAll) {
+    await client.query('DELETE FROM salary_swap_entries WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM ledger_entries WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM expense_entries WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM admin_brokerage_entries WHERE user_id = $1', [userId]);
+  }
+  /* ديون مسجّلة (تبديل راتب/تقسيط…) إذا لم تُمسَح مع الصناديع */
+  if (has('accounting_ledger', s, wipeAll) || wipeAll) {
+    await client.query('DELETE FROM entity_payables WHERE user_id = $1', [userId]);
   }
 
   if (has('transfer_companies', s, wipeAll) || wipeAll) {
