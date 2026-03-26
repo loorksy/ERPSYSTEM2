@@ -18,8 +18,14 @@ async function replaceDeferredLinesForCycle(db, userId, cycleId, lineRows) {
   );
   for (const r of lineRows) {
     await db.query(
-      `INSERT INTO deferred_salary_lines (user_id, cycle_id, member_user_id, extra_id_c, balance_d, salary_before_discount, sheet_source)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      `INSERT INTO deferred_salary_lines (user_id, cycle_id, member_user_id, extra_id_c, balance_d, salary_before_discount, sheet_source, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id, cycle_id, member_user_id) DO UPDATE SET
+         extra_id_c = EXCLUDED.extra_id_c,
+         balance_d = deferred_salary_lines.balance_d + EXCLUDED.balance_d,
+         salary_before_discount = COALESCE(EXCLUDED.salary_before_discount, deferred_salary_lines.salary_before_discount),
+         sheet_source = EXCLUDED.sheet_source,
+         updated_at = CURRENT_TIMESTAMP`,
       [
         userId,
         cycleId,
