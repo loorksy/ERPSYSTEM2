@@ -385,7 +385,8 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
 
   if (transferDiscountProfit > 0) {
     const dup = (await db.query(
-      `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = 'transfer_discount_profit' LIMIT 1`,
+      `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2
+       AND source_type IN ('transfer_discount_profit', 'cycle_creation_discount_profit') LIMIT 1`,
       [userId, cycleId]
     )).rows[0];
     if (!dup) {

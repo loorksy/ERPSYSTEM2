@@ -571,6 +571,12 @@ router.post('/cycles', requireAuth, async (req, res) => {
       } catch (e) {
         console.error('[LorkERP] Primary accreditation hook:', e.message);
       }
+      try {
+        const dr = await rebuildDeferredFromLocalAgentData(req.session.userId, id);
+        if (!dr.success) console.warn('[cycles] rebuildDeferred:', dr.message);
+      } catch (e) {
+        console.error('[cycles] rebuildDeferred:', e.message);
+      }
     }
     res.json({ success: true, id, message: 'تم حفظ الدورة المالية' });
   } catch (e) {

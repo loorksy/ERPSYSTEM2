@@ -40,6 +40,26 @@ async function insertLedgerEntry(db, p) {
 
 /** إجمالي دلو معيّن */
 async function sumLedgerBucket(db, userId, bucket, currency = 'USD') {
+  if (bucket === 'net_profit') {
+    const row = (await db.query(
+      `SELECT COALESCE(SUM(le.amount * le.direction), 0)::float AS t
+       FROM ledger_entries le
+       WHERE le.user_id = $1 AND le.bucket = $2 AND le.currency = $3
+       AND NOT (
+         le.source_type = 'cycle_creation_discount_profit'
+         AND le.cycle_id IS NOT NULL
+         AND EXISTS (
+           SELECT 1 FROM ledger_entries l2
+           WHERE l2.user_id = le.user_id
+           AND l2.cycle_id = le.cycle_id
+           AND l2.source_type = 'transfer_discount_profit'
+           AND l2.bucket = 'net_profit'
+         )
+       )`,
+      [userId, bucket, currency]
+    )).rows[0];
+    return row?.t ?? 0;
+  }
   const row = (await db.query(
     `SELECT COALESCE(SUM(amount * direction), 0)::float AS t
      FROM ledger_entries WHERE user_id = $1 AND bucket = $2 AND currency = $3`,
@@ -59,11 +79,22 @@ async function sumExpenseEntries(db, userId, currency = 'USD') {
 /** تجميع صافي الربح حسب نوع المصدر (دفتر bucket = net_profit) */
 async function aggregateNetProfitBySource(db, userId, currency = 'USD') {
   const rows = (await db.query(
-    `SELECT source_type, COALESCE(SUM(amount * direction), 0)::float AS total
-     FROM ledger_entries
-     WHERE user_id = $1 AND bucket = 'net_profit' AND currency = $2
-     GROUP BY source_type
-     ORDER BY ABS(COALESCE(SUM(amount * direction), 0)) DESC`,
+    `SELECT le.source_type, COALESCE(SUM(le.amount * le.direction), 0)::float AS total
+     FROM ledger_entries le
+     WHERE le.user_id = $1 AND le.bucket = 'net_profit' AND le.currency = $2
+     AND NOT (
+       le.source_type = 'cycle_creation_discount_profit'
+       AND le.cycle_id IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM ledger_entries l2
+         WHERE l2.user_id = le.user_id
+         AND l2.cycle_id = le.cycle_id
+         AND l2.source_type = 'transfer_discount_profit'
+         AND l2.bucket = 'net_profit'
+       )
+     )
+     GROUP BY le.source_type
+     ORDER BY ABS(COALESCE(SUM(le.amount * le.direction), 0)) DESC`,
     [userId, currency]
   )).rows;
   return rows;

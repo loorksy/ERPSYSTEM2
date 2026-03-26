@@ -132,22 +132,7 @@ async function ensurePrimaryAccreditationAfterCycleCreate(db, userId, cycleId, a
     }
   }
 
-  if (discountProfit > 0) {
-    const dupDiscount = (await db.query(
-      `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = 'cycle_creation_discount_profit' LIMIT 1`,
-      [userId, cycleId]
-    )).rows[0];
-    if (!dupDiscount) {
-      await insertLedgerEntry(db, {
-        userId,
-        bucket: 'net_profit',
-        sourceType: 'cycle_creation_discount_profit',
-        amount: discountProfit,
-        cycleId,
-        notes: `ربح خصم التحويل عند إنشاء الدورة (${discountPct}%)`,
-      });
-    }
-  }
+  /** ربح خصم التحويل يُسجَّل مرة واحدة عبر transfer_discount_profit في rebuildDeferredFromLocalAgentData (بعد إنشاء الدورة) — لا نكرّر هنا */
 
   return { skipped: false, id: accId, total: netTotal, discountProfit, totalBeforeDiscount };
 }
