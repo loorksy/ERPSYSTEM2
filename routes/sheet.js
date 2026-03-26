@@ -416,6 +416,16 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       );
     }
 
+    /** مزامنة الوكالات الفرعية من أوراق جدول الإدارة */
+    let agencySync = null;
+    try {
+      const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, sheets);
+      agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0 };
+    } catch (agencySyncErr) {
+      console.error('[CycleSync][AgencySync]', agencySyncErr.message);
+      agencySync = { success: false, error: agencySyncErr.message };
+    }
+
     let detail = 'الإدارة: ' + managementRows.length + ' صف';
     if (mgmtResult.sheetTitleUsed) detail += " (ورقة \"" + mgmtResult.sheetTitleUsed + "\")";
     detail += '، الوكيل: ' + agentRows.length + ' صف';
@@ -424,12 +434,15 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       detail += '، معلومات المستخدمين: ' + userInfoRowsCount + ' صف';
       if (userInfoSheetUsed) detail += " (ورقة \"" + userInfoSheetUsed + "\")";
     }
+    if (agencySync && agencySync.success && agencySync.agenciesCount > 0) {
+      detail += '، وكالات فرعية: ' + agencySync.agenciesCount + ' وكالة (' + agencySync.usersCount + ' مستخدم)';
+    }
 
     res.json({
       success: true,
       message: userInfoSynced
-        ? 'تمت مزامنة جداول الدورة ومعلومات المستخدمين من Google (قراءة فقط)'
-        : 'تمت مزامنة جداول الدورة من Google',
+        ? 'تمت مزامنة جداول الدورة ومعلومات المستخدمين والوكالات الفرعية من Google'
+        : 'تمت مزامنة جداول الدورة والوكالات الفرعية من Google',
       managementRows: managementRows.length,
       agentRows: agentRows.length,
       managementSheetUsed: mgmtResult.sheetTitleUsed,
@@ -437,6 +450,7 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       userInfoSynced,
       userInfoRows: userInfoRowsCount,
       userInfoSheetUsed,
+      agencySync,
       detail,
     });
   } catch (e) {
