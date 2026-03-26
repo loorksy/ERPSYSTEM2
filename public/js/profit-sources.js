@@ -13,6 +13,7 @@
     admin_brokerage: 'وساطة إدارية',
     shipping_sale_profit: 'ربح بيع شحن',
     sub_agency_share: 'حصة وكالة فرعية',
+    sub_agency_company_profit: 'ربح الشركة من نسبة الوكالات',
     manual_expense: 'مصروف يدوي',
     sub_agency_reward: 'مكافأة وكالة فرعية',
     agent_table_primary_seed: 'جدول الوكيل (رأس مال)',

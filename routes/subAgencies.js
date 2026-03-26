@@ -91,7 +91,10 @@ router.post('/add', requireAuth, async (req, res) => {
   }
 });
 
-/** حفظ نسبة الوكالة للدورة المالية + إعادة احتساب أرباح المزامنة من عمود W */
+/** حفظ نسبة الوكالة للدورة المالية + إعادة احتساب أرباح المزامنة من عمود W
+ * نسبة الوكالة (commissionPercent) = نسبة ربح الشركة من W
+ * مثال: 10% → الشركة تأخذ 10% والوكالة تأخذ 90%
+ */
 router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -100,7 +103,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
     if (!id || !cid) return res.json({ success: false, message: 'الوكالة والدورة مطلوبان' });
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const companyPct = 100 - pctVal;
+    const companyPct = pctVal;
     const db = getDb();
     const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -113,7 +116,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
          saved_at = CURRENT_TIMESTAMP`,
       [cid, id, pctVal, companyPct]
     );
-    await recalculateSyncProfitsForCycle(db, cid);
+    await recalculateSyncProfitsForCycle(db, cid, req.session.userId);
     res.json({ success: true, message: 'تم حفظ النسبة وإعادة احتساب أرباح المزامنة لهذه الدورة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الحفظ' });
