@@ -166,7 +166,11 @@ router.post('/:id/receive-from-main', requireAuth, async (req, res) => {
 
     await adjustFundBalance(db, mainId, 'USD', -amt, 'fund_allocation', notes || 'تحويل لصندوق', 'funds', id);
     if (creditPortion > 0) {
-      await adjustFundBalance(db, id, 'USD', creditPortion, 'fund_receive_from_main', (notes || 'وارد من الصندوق الرئيسي') + (payablesSettled > 0 ? ` (بعد تسوية دين ${payablesSettled.toFixed(2)} $)` : ''), 'funds', mainId);
+      await db.query(
+        `INSERT INTO fund_ledger (fund_id, type, amount, currency, notes, ref_table, ref_id)
+         VALUES ($1, 'fund_receive_from_main', $2, 'USD', $3, 'funds', $4)`,
+        [id, creditPortion, (notes || 'وارد من الصندوق الرئيسي') + (payablesSettled > 0 ? ` (بعد تسوية دين ${payablesSettled.toFixed(2)} $)` : ''), mainId]
+      );
     }
     res.json({
       success: true,

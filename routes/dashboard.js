@@ -75,7 +75,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       ledgerNetProfit = 0;
       totalExpensesLedger = 0;
     }
-    netProfit = shippingProfit + ledgerNetProfit - totalExpensesLedger;
+    netProfit = shippingProfit + ledgerNetProfit;
     capitalRecovered = sellAgg?.capital_sum ?? 0;
     let shippingDebt = sellAgg?.debt_sell ?? 0;
 

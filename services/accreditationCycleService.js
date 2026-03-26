@@ -27,18 +27,10 @@ function sumAgentSalaryColumn(agentData, salaryColLetter) {
 }
 
 /**
- * عند إنشاء أول دورة مالية: إنشاء معتمد رئيسي وإدراج مجموع جدول الوكيل.
+ * عند إنشاء دورة مالية: إنشاء/تحديث المعتمد الرئيسي وإدراج مجموع جدول الوكيل في الصندوق الرئيسي.
+ * يُطبَّق خصم نسبة التحويل: المبلغ الصافي يذهب للصندوق، ونسبة الخصم تُسجل ربحاً صافياً.
  */
 async function ensurePrimaryAccreditationAfterCycleCreate(db, userId, cycleId, agentDataJson) {
-  const cnt = (await db.query('SELECT COUNT(*)::int AS c FROM financial_cycles WHERE user_id = $1', [userId])).rows[0].c;
-  if (cnt !== 1) return { skipped: true, reason: 'not_first_cycle' };
-
-  const existing = (await db.query(
-    'SELECT id FROM accreditation_entities WHERE user_id = $1 AND is_primary = 1 LIMIT 1',
-    [userId]
-  )).rows[0];
-  if (existing) return { skipped: true, reason: 'primary_exists', id: existing.id };
-
   let agentData = [];
   try {
     agentData = typeof agentDataJson === 'string' ? JSON.parse(agentDataJson) : agentDataJson;
@@ -50,54 +42,114 @@ async function ensurePrimaryAccreditationAfterCycleCreate(db, userId, cycleId, a
   }
 
   const cols = await getCycleColumns(userId, cycleId);
-  const total = sumAgentSalaryColumn(agentData, cols.agent_salary_col);
-  if (total <= 0) {
-    const r = await db.query(
-      `INSERT INTO accreditation_entities (user_id, name, code, balance_amount, is_primary)
-       VALUES ($1, $2, $3, 0, 1) RETURNING id`,
-      [userId, 'معتمد رئيسي', 'PRIMARY']
-    );
-    return { skipped: false, id: r.rows[0].id, total: 0 };
+  const totalBeforeDiscount = sumAgentSalaryColumn(agentData, cols.agent_salary_col);
+  if (totalBeforeDiscount <= 0) {
+    const existing = (await db.query(
+      'SELECT id FROM accreditation_entities WHERE user_id = $1 AND is_primary = 1 LIMIT 1',
+      [userId]
+    )).rows[0];
+    if (!existing) {
+      const r = await db.query(
+        `INSERT INTO accreditation_entities (user_id, name, code, balance_amount, is_primary)
+         VALUES ($1, $2, $3, 0, 1) RETURNING id`,
+        [userId, 'معتمد رئيسي', 'PRIMARY']
+      );
+      return { skipped: false, id: r.rows[0].id, total: 0 };
+    }
+    return { skipped: true, reason: 'no_salary_total', id: existing.id };
   }
 
-  const ins = await db.query(
-    `INSERT INTO accreditation_entities (user_id, name, code, balance_amount, is_primary)
-     VALUES ($1, $2, $3, $4, 1) RETURNING id`,
-    [userId, 'معتمد رئيسي', 'PRIMARY', total]
-  );
-  const accId = ins.rows[0].id;
+  const cycle = (await db.query(
+    'SELECT transfer_discount_pct FROM financial_cycles WHERE id = $1 AND user_id = $2',
+    [cycleId, userId]
+  )).rows[0];
+  const discountPct = (cycle?.transfer_discount_pct != null && !isNaN(cycle.transfer_discount_pct))
+    ? Number(cycle.transfer_discount_pct) : 0;
+  const discountProfit = Math.round(totalBeforeDiscount * (discountPct / 100) * 100) / 100;
+  const netTotal = Math.round((totalBeforeDiscount - discountProfit) * 100) / 100;
 
-  await db.query(
-    `INSERT INTO accreditation_ledger (accreditation_id, entry_type, amount, currency, direction, cycle_id, notes)
-     VALUES ($1, 'salary', $2, 'USD', 'to_us', $3, $4)`,
-    [accId, total, cycleId, 'رصيد افتتاحي — مجموع جدول الوكيل (أول دورة)']
-  );
+  let existing = (await db.query(
+    'SELECT id FROM accreditation_entities WHERE user_id = $1 AND is_primary = 1 LIMIT 1',
+    [userId]
+  )).rows[0];
+
+  let accId;
+  if (!existing) {
+    const ins = await db.query(
+      `INSERT INTO accreditation_entities (user_id, name, code, balance_amount, is_primary)
+       VALUES ($1, $2, $3, $4, 1) RETURNING id`,
+      [userId, 'معتمد رئيسي', 'PRIMARY', netTotal]
+    );
+    accId = ins.rows[0].id;
+  } else {
+    accId = existing.id;
+    await db.query(
+      'UPDATE accreditation_entities SET balance_amount = balance_amount + $1 WHERE id = $2',
+      [netTotal, accId]
+    );
+  }
+
+  const dupLedger = (await db.query(
+    `SELECT id FROM accreditation_ledger WHERE accreditation_id = $1 AND cycle_id = $2 AND entry_type = 'salary' LIMIT 1`,
+    [accId, cycleId]
+  )).rows[0];
+  if (!dupLedger) {
+    await db.query(
+      `INSERT INTO accreditation_ledger (accreditation_id, entry_type, amount, currency, direction, cycle_id, notes)
+       VALUES ($1, 'salary', $2, 'USD', 'to_us', $3, $4)`,
+      [accId, netTotal, cycleId, 'مجموع جدول الوكيل — دورة مالية' + (discountPct > 0 ? ` (بعد خصم ${discountPct}%)` : '')]
+    );
+  }
 
   const mainFundId = await getMainFundId(db, userId);
   if (mainFundId) {
-    await adjustFundBalance(
-      db,
-      mainFundId,
-      'USD',
-      total,
-      'primary_agent_seed',
-      'مجموع جدول الوكيل — أول دورة',
-      'accreditation_entities',
-      accId
-    );
-    await insertLedgerEntry(db, {
-      userId,
-      bucket: 'main_cash',
-      sourceType: 'agent_table_primary_seed',
-      amount: total,
-      cycleId,
-      refTable: 'accreditation_entities',
-      refId: accId,
-      notes: 'أول دورة — جدول الوكيل',
-    });
+    const dupFund = (await db.query(
+      `SELECT id FROM fund_ledger WHERE fund_id = $1 AND ref_table = 'accreditation_entities' AND ref_id = $2
+       AND type = 'primary_agent_seed' AND notes LIKE $3 LIMIT 1`,
+      [mainFundId, accId, `%دورة ${cycleId}%`]
+    )).rows[0];
+    if (!dupFund) {
+      await adjustFundBalance(
+        db,
+        mainFundId,
+        'USD',
+        netTotal,
+        'primary_agent_seed',
+        `مجموع جدول الوكيل — دورة ${cycleId}` + (discountPct > 0 ? ` (بعد خصم ${discountPct}%)` : ''),
+        'accreditation_entities',
+        accId
+      );
+      await insertLedgerEntry(db, {
+        userId,
+        bucket: 'main_cash',
+        sourceType: 'agent_table_primary_seed',
+        amount: netTotal,
+        cycleId,
+        refTable: 'accreditation_entities',
+        refId: accId,
+        notes: `جدول الوكيل — دورة ${cycleId}`,
+      });
+    }
   }
 
-  return { skipped: false, id: accId, total };
+  if (discountProfit > 0) {
+    const dupDiscount = (await db.query(
+      `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = 'cycle_creation_discount_profit' LIMIT 1`,
+      [userId, cycleId]
+    )).rows[0];
+    if (!dupDiscount) {
+      await insertLedgerEntry(db, {
+        userId,
+        bucket: 'net_profit',
+        sourceType: 'cycle_creation_discount_profit',
+        amount: discountProfit,
+        cycleId,
+        notes: `ربح خصم التحويل عند إنشاء الدورة (${discountPct}%)`,
+      });
+    }
+  }
+
+  return { skipped: false, id: accId, total: netTotal, discountProfit, totalBeforeDiscount };
 }
 
 module.exports = {

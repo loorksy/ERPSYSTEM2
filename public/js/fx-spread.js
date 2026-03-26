@@ -18,17 +18,21 @@
   }
 
   function preview() {
-    var amt = parseFloat(document.getElementById('fxAmountForeign').value);
-    var a = parseFloat(document.getElementById('fxInternal').value);
-    var b = parseFloat(document.getElementById('fxSettlement').value);
+    var amtUsd = parseFloat(document.getElementById('fxAmountUsd').value);
+    var fixedRate = parseFloat(document.getElementById('fxInternal').value);
+    var purchaseRate = parseFloat(document.getElementById('fxSettlement').value);
     var el = document.getElementById('fxPreview');
     if (!el) return;
-    if (!(amt > 0) || !(a > 0) || !(b > 0)) {
+    if (!(amtUsd > 0) || !(fixedRate > 0) || !(purchaseRate > 0)) {
       el.textContent = '';
       return;
     }
-    var usd = Math.abs(amt / a - amt / b);
-    el.textContent = 'فرق التصريف التقديري: ≈ ' + fmt(usd) + ' USD';
+    var amountForeign = amtUsd * fixedRate;
+    var profitUsd = amtUsd * Math.abs(purchaseRate - fixedRate) / purchaseRate;
+    var sign = purchaseRate > fixedRate ? '+' : (purchaseRate < fixedRate ? '-' : '');
+    el.innerHTML = 'المبلغ بالعملة الأجنبية: ' + fmt(amountForeign) +
+      ' · ربح التصريف التقديري: <strong class="' + (profitUsd > 0 ? 'text-emerald-600' : 'text-red-600') + '">' +
+      sign + fmt(profitUsd) + ' USD</strong>';
   }
 
   function loadList() {
@@ -49,11 +53,11 @@
       box.innerHTML = d.entries.map(function(e) {
         return '<div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">' +
           '<div><span class="font-semibold">' + (e.currency || '') + '</span> ' + fmt(e.amount_foreign) +
-          ' · داخلي ' + e.internal_rate + ' / تسليم ' + e.settlement_rate +
+          ' · مثبت ' + e.internal_rate + ' / شراء ' + e.settlement_rate +
           (e.cycle_name ? ' · ' + e.cycle_name : '') +
           (e.notes ? '<br><span class="text-xs text-slate-500">' + e.notes + '</span>' : '') + '</div>' +
           '<div class="flex items-center gap-2">' +
-          '<span class="font-bold text-red-600">' + fmt(e.spread_usd) + ' USD</span>' +
+          '<span class="font-bold text-emerald-600">' + fmt(e.spread_usd) + ' USD</span>' +
           '<button type="button" class="text-xs text-red-500 hover:underline" data-fx-del="' + e.id + '">حذف</button></div></div>';
       }).join('');
       box.querySelectorAll('[data-fx-del]').forEach(function(btn) {
@@ -70,17 +74,25 @@
   }
 
   document.addEventListener('DOMContentLoaded', function() {
-    ['fxAmountForeign', 'fxInternal', 'fxSettlement'].forEach(function(id) {
+    ['fxAmountUsd', 'fxInternal', 'fxSettlement'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener('input', preview);
     });
     document.getElementById('fxSubmit')?.addEventListener('click', function() {
+      var amtUsd = parseFloat(document.getElementById('fxAmountUsd').value);
+      var fixedRate = parseFloat(document.getElementById('fxInternal').value);
+      var purchaseRate = parseFloat(document.getElementById('fxSettlement').value);
+      if (!(amtUsd > 0) || !(fixedRate > 0) || !(purchaseRate > 0)) {
+        toast('أدخل المبلغ والسعرين', 'error');
+        return;
+      }
+      var amountForeign = amtUsd * fixedRate;
       var body = {
         cycleId: document.getElementById('fxCycleId').value || null,
         currency: document.getElementById('fxCurrency').value,
-        amountForeign: document.getElementById('fxAmountForeign').value,
-        internalRate: document.getElementById('fxInternal').value,
-        settlementRate: document.getElementById('fxSettlement').value,
+        amountForeign: amountForeign,
+        internalRate: fixedRate,
+        settlementRate: purchaseRate,
         notes: document.getElementById('fxNotes').value || null,
       };
       var et = document.getElementById('fxEntityType').value;
@@ -91,7 +103,7 @@
       apiCall('/api/fx-spread/add', { method: 'POST', body: JSON.stringify(body) }).then(function(r) {
         toast(r.message || '', r.success ? 'success' : 'error');
         if (r.success) {
-          document.getElementById('fxAmountForeign').value = '';
+          document.getElementById('fxAmountUsd').value = '';
           preview();
           loadList();
         }

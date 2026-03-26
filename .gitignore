@@ -8,3 +8,5 @@ sessions/
 .server.lock
 whatsapp-session/
 .wwebjs_auth/
+.wwebjs_cache/
+touch.tmp

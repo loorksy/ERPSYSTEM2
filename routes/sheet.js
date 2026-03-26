@@ -767,6 +767,27 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       });
     }
 
+    /** مزامنة الوكالات الفرعية من جدول الإدارة (لقطات محلية) */
+    let agencySync = null;
+    if (mgmtSsId) {
+      try {
+        const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
+        if (config?.token) {
+          const credentials = config.credentials ? JSON.parse(config.credentials) : null;
+          const lOAuth = getOAuth2Client(credentials);
+          if (lOAuth) {
+            lOAuth.setCredentials(typeof config.token === 'string' ? JSON.parse(config.token) : config.token);
+            const lSheets = google.sheets({ version: 'v4', auth: lOAuth });
+            const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, lSheets);
+            agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0, error: syncResult.error };
+          }
+        }
+      } catch (agencySyncErr) {
+        console.error('[payroll-audit-local][AgencySync]', agencySyncErr.message);
+        agencySync = { success: false, error: agencySyncErr.message };
+      }
+    }
+
     const auditOut = runPayrollAuditCore({
       managementRows,
       agentRows,
@@ -889,6 +910,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       summary,
       localOnly: true,
       applied: appliedCount > 0,
+      agencySync,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,

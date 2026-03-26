@@ -107,10 +107,6 @@ router.post('/:id/payout-from-main', requireAuth, async (req, res) => {
         `INSERT INTO transfer_company_ledger (company_id, amount, currency, notes) VALUES ($1, $2, 'USD', $3)`,
         [id, cashPortion, (notes || 'صرف من الصندوق الرئيسي') + (payablesSettled > 0 ? ` (بعد تسوية دين ${payablesSettled.toFixed(2)} $)` : '')]
       );
-      await db.query(
-        'UPDATE transfer_companies SET balance_amount = balance_amount + $1 WHERE id = $2 AND user_id = $3',
-        [cashPortion, id, uid]
-      );
     }
     res.json({
       success: true,

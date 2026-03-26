@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { insertLedgerEntry } = require('../services/ledgerService');
+const { adjustFundBalance, getMainFundId } = require('../services/fundService');
 
 /**
  * السعران: عدد وحدات العملة الأجنبية مقابل 1 دولار (مثال: 42 ليرة تركية = 1 USD).
@@ -102,6 +103,25 @@ router.post('/add', requireAuth, async (req, res) => {
       refId: entryId,
       notes: notes || 'ربح فرق تصريف',
     });
+
+    if (et === 'fund' && eid) {
+      const mainId = await getMainFundId(db, userId);
+      if (mainId) {
+        const usdAmount = amt / ir;
+        await adjustFundBalance(db, mainId, 'USD', -usdAmount, 'fx_spread_disbursement',
+          `تصريف لصندوق #${eid}` + (notes ? ` — ${notes}` : ''), 'fx_spread_entries', entryId);
+        await adjustFundBalance(db, eid, 'USD', usdAmount, 'fx_spread_receive',
+          `وارد من تصريف` + (notes ? ` — ${notes}` : ''), 'fx_spread_entries', entryId);
+      }
+    } else if (et === 'transfer_company' && eid) {
+      const mainId = await getMainFundId(db, userId);
+      if (mainId) {
+        const usdAmount = amt / ir;
+        await adjustFundBalance(db, mainId, 'USD', -usdAmount, 'fx_spread_disbursement',
+          `تصريف لشركة تحويل #${eid}` + (notes ? ` — ${notes}` : ''), 'fx_spread_entries', entryId);
+      }
+    }
+
     res.json({ success: true, id: entryId, spreadUsd: spread, message: 'تم تسجيل فرق التصريف وإضافته لصافي الربح' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
