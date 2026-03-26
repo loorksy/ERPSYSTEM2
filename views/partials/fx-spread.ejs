@@ -2,14 +2,15 @@
   <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
     <div>
       <h2 class="text-2xl font-bold text-slate-800">فرق التصريف</h2>
-      <p class="text-sm text-slate-500 mt-1">سعر التصريف الداخلي (مثلاً للرواتب) مقابل سعر التسليم لشركة التحويل — يُضاف الفرق إلى إجمالي الديون.</p>
+      <p class="text-sm text-slate-500 mt-1">سجّل عمليات التصريف واحسب الربح من فرق السعر تلقائياً.</p>
     </div>
     <a href="/debts" class="text-sm text-indigo-600 font-semibold hover:underline">← الديون</a>
   </div>
 
   <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-6 text-sm text-indigo-900">
     <p class="font-semibold mb-1">طريقة الحساب</p>
-    <p>يُعرّف السعران كعدد وحدات العملة الأجنبية مقابل <strong>1 دولار</strong> (مثال: 42 ليرة تركية لكل دولار). القيمة بالدولار = المبلغ بالعملة ÷ السعر. فرق التصريف بالدولار = |قيمة السعر الداخلي − قيمة سعر التسليم|.</p>
+    <p>أدخل <strong>المبلغ المراد تصريفه (بالدولار)</strong>، ثم <strong>السعر المثبت</strong> (السعر الذي تحاسب عليه)، ثم <strong>سعر الشراء</strong> (السعر الذي صرفت به فعلياً). الربح = المبلغ × (سعر الشراء − السعر المثبت) ÷ سعر الشراء.</p>
+    <p class="mt-1 text-xs">مثال: 1000$ × (46 − 45) ÷ 46 ≈ 21.74$ ربح</p>
   </div>
 
   <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8">
@@ -31,16 +32,16 @@
         </select>
       </div>
       <div>
-        <label class="text-sm font-semibold text-slate-700">المبلغ بالعملة الأجنبية</label>
-        <input type="number" id="fxAmountForeign" step="0.01" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="0">
+        <label class="text-sm font-semibold text-slate-700">المبلغ المراد تصريفه (بالدولار)</label>
+        <input type="number" id="fxAmountUsd" step="0.01" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="1000">
       </div>
       <div>
-        <label class="text-sm font-semibold text-slate-700">سعر التصريف الداخلي (وحدة/USD)</label>
-        <input type="number" id="fxInternal" step="0.0001" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="42">
+        <label class="text-sm font-semibold text-slate-700">السعر المثبت (وحدة/USD)</label>
+        <input type="number" id="fxInternal" step="0.0001" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="45">
       </div>
       <div>
-        <label class="text-sm font-semibold text-slate-700">سعر التسليم لشركة التحويل (وحدة/USD)</label>
-        <input type="number" id="fxSettlement" step="0.0001" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="43">
+        <label class="text-sm font-semibold text-slate-700">سعر الشراء الفعلي (وحدة/USD)</label>
+        <input type="number" id="fxSettlement" step="0.0001" min="0" class="w-full mt-1 px-4 py-2.5 rounded-xl border border-slate-200" placeholder="46">
       </div>
       <div>
         <label class="text-sm font-semibold text-slate-700">الجهة (اختياري)</label>

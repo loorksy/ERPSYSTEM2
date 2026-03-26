@@ -140,9 +140,11 @@ function runPayrollAuditCore({
 
     if ((type.startsWith('سحب وكالة') || type === 'سحب إدارة') && mgmtRow) {
       if (!byTitle[title]) byTitle[title] = [];
+      const rowColor = type.startsWith('سحب وكالة') ? agentColorVal : mgmtColorVal;
       byTitle[title].push({
         managementRow: mgmtRow,
-        color: type.startsWith('سحب وكالة') ? agentColorVal : mgmtColorVal,
+        color: rowColor,
+        type,
       });
     }
   }
