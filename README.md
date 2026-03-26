@@ -14,6 +14,7 @@
 
 - Node.js 18+
 - npm
+- PostgreSQL 14+
 
 ## التثبيت
 
@@ -34,7 +35,7 @@ npm start
 npm run dev
 ```
 
-التطبيق سيعمل على: `http://localhost:3000`
+التطبيق سيعمل على: `http://localhost:3020`
 
 ## بيانات الدخول الافتراضية
 
@@ -50,30 +51,47 @@ LorkERP/
 ├── server.js              # الخادم الرئيسي
 ├── package.json
 ├── .env                   # متغيرات البيئة
+├── ecosystem.config.cjs   # إعدادات PM2
+├── postcss.config.js      # إعدادات Tailwind/PostCSS
 ├── db/
-│   └── database.js        # إعداد قاعدة البيانات SQLite
+│   ├── database.js        # إعداد قاعدة البيانات PostgreSQL
+│   └── schema.pg.sql      # مخطط قاعدة البيانات
 ├── middleware/
 │   └── auth.js            # وسيط المصادقة
-├── routes/
+├── routes/                # مسارات التطبيق (22 ملف)
 │   ├── auth.js            # مسارات تسجيل الدخول
 │   ├── dashboard.js       # لوحة التحكم
 │   ├── sheets.js          # مزامنة Google Sheets
-│   └── settings.js        # الإعدادات
+│   ├── settings.js        # الإعدادات
+│   ├── shipping.js        # الشحنات
+│   ├── funds.js           # الصناديق
+│   ├── debts.js           # الديون
+│   ├── expenses.js        # المصاريف
+│   ├── reports.js         # التقارير
+│   └── ...                # مسارات أخرى
+├── services/              # طبقة المنطق التجاري
+│   ├── payrollAuditEngine.js
+│   ├── fundService.js
+│   ├── ledgerService.js
+│   └── ...                # خدمات أخرى
 ├── views/
 │   ├── login.ejs          # صفحة تسجيل الدخول
 │   ├── dashboard.ejs      # قالب الداشبورد
 │   ├── 404.ejs
 │   ├── error.ejs
-│   └── partials/
+│   └── partials/          # أجزاء الصفحات (18+ ملف)
 │       ├── home.ejs       # الصفحة الرئيسية
-│       ├── sheets.ejs     # صفحة Google Sheets
-│       └── settings.ejs   # صفحة الإعدادات
-└── public/
-    ├── css/
-    │   └── style.css      # الأنماط الرئيسية
-    └── js/
-        ├── app.js         # السكريبت الرئيسي
-        └── sheets.js      # سكريبت Google Sheets
+│       ├── settings.ejs   # صفحة الإعدادات
+│       └── ...            # صفحات أخرى
+├── public/
+│   ├── css/
+│   │   ├── tailwind.css   # أنماط Tailwind المبنية
+│   │   └── style.css      # الأنماط الإضافية
+│   └── js/
+│       ├── app.js         # السكريبت الرئيسي
+│       └── sheets.js      # سكريبت Google Sheets
+└── src/
+    └── input.css          # ملف إدخال Tailwind CSS
 ```
 
 ## النشر على VPS
