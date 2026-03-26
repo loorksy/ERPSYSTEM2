@@ -54,7 +54,7 @@ function isHeaderRow(row, colIdx) {
 async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
   const db = getDb();
   const cycle = (await db.query(
-    'SELECT id, management_spreadsheet_id, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
+    'SELECT id, management_spreadsheet_id, management_sheet_name, agent_spreadsheet_id, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
     [cycleId, userId]
   )).rows[0];
   if (!cycle || !cycle.management_spreadsheet_id) {
@@ -70,13 +70,30 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
     const meta = await withSheetsRetry(() => sheets.spreadsheets.get({ spreadsheetId }));
     const sheetList = meta.data.sheets || [];
     const titles = sheetList.map(s => (s.properties && s.properties.title) || '').filter(Boolean);
-    if (titles.length < 2) {
+    if (!titles.length) {
       return { success: true, usersCount: 0, agenciesCount: 0 };
     }
 
-    let agencySheetNames = titles.slice(1);
-    if (agentSheetName && agencySheetNames.includes(agentSheetName)) {
-      agencySheetNames = agencySheetNames.filter(n => n !== agentSheetName);
+    /**
+     * أوراق الوكالات الفرعية = كل أوراق ملف الإدارة ما عدا:
+     * - ورقة الإدارة (management_sheet_name إن وُجدت وطابقت اسماً، وإلا نفترض أن الورقة الأولى هي الإدارة كسلوك قديم)
+     * - ورقة الوكيل إن كان نفس الملف (لا تُعد وكالة فرعية)
+     */
+    const mgmtStored = (cycle.management_sheet_name && String(cycle.management_sheet_name).trim()) || null;
+    let agencySheetNames;
+    if (mgmtStored && titles.some((t) => String(t).trim() === mgmtStored)) {
+      agencySheetNames = titles.filter((t) => String(t).trim() !== mgmtStored);
+    } else if (titles.length > 1) {
+      agencySheetNames = titles.slice(1);
+    } else {
+      agencySheetNames = [];
+    }
+    if (agentSheetName && agencySheetNames.some((n) => String(n).trim() === agentSheetName)) {
+      agencySheetNames = agencySheetNames.filter((n) => String(n).trim() !== agentSheetName);
+    }
+
+    if (agencySheetNames.length === 0) {
+      return { success: true, usersCount: 0, agenciesCount: 0 };
     }
     const COL_A = 0;
     const COL_B = 1;

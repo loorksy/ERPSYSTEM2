@@ -113,18 +113,11 @@ function initHomeStats() {
         setEl('capitalRecovery', data.capitalRecovered);
         var sub = document.getElementById('cashBalanceSub');
         if (sub) {
-          var mf = data.mainFund;
           var parts = [];
           if (data.snapshotCash != null && data.snapshotCash !== 0) {
-            parts.push('من الجداول: ' + formatMoney(data.snapshotCash));
+            parts.push('مرجع لقطة الجداول (W+Y+Z) للدورة: ' + formatMoney(data.snapshotCash));
           }
-          if (mf && mf.name) {
-            parts.push('الصندوق الرئيسي: ' + mf.name + (data.mainFundUsd != null ? ' (' + formatMoney(data.mainFundUsd) + ')' : ''));
-          }
-          if (data.sheetOverlapDedupUsd != null && data.sheetOverlapDedupUsd > 0) {
-            parts.push('لا تكرار أرباح التدقيق: −' + formatMoney(data.sheetOverlapDedupUsd));
-          }
-          sub.textContent = parts.join(' | ');
+          sub.textContent = parts.join(' ');
         }
         var link = document.getElementById('deferredBalanceLink');
         if (link) link.href = '/deferred-balance';

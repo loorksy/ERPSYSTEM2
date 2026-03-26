@@ -13,6 +13,15 @@
         </button>
       </div>
     </div>
+    <div class="mb-6 flex flex-wrap items-end gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <div class="min-w-[200px]">
+        <label class="block text-xs text-slate-500 mb-1">مزامنة من ملف الإدارة (كل ورقة بعد ورقة الإدارة = وكالة)</label>
+        <select id="subAgencySyncCycleSelect" class="input-select w-full max-w-xs"></select>
+      </div>
+      <button type="button" onclick="subAgenciesRunManagementSync()" class="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">
+        مزامنة من Google
+      </button>
+    </div>
     <div id="subAgenciesCards" class="agencies-grid">
       <p class="text-slate-400 col-span-full text-center py-12">جاري التحميل...</p>
     </div>

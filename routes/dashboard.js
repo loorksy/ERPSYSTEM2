@@ -7,7 +7,6 @@ const {
   getFundTotalsByCurrency,
   getMainFundSummary,
   getMainFundUsdBalance,
-  sumMainFundAuditProfitCreditsForCycle,
   transferProfitToFund,
 } = require('../services/fundService');
 const { computeDebtBreakdown } = require('../services/debtAggregation');
@@ -138,18 +137,16 @@ router.get('/stats', requireAuth, async (req, res) => {
     /** إجمالي المؤجل عبر كل الدورات (أرصدة غير مدققة متراكمة) */
     deferredBalance = await sumDeferredTotalAllCycles(db, userId);
 
-    /** لقطة الجداول (W+Y+Z) + رصيد الصندوق الرئيسي؛ أرباح التدقيق تُرحَّل للصندوق فلا تُجمع مع اللقطة مرتين */
-    let sheetOverlapDedupUsd = 0;
-    if (defaultCycleId) {
-      sheetOverlapDedupUsd = await sumMainFundAuditProfitCreditsForCycle(db, userId, defaultCycleId);
-    }
-    cashBalance = (mainFundUsd || 0) + snapshotCash - sheetOverlapDedupUsd;
+    /**
+     * بطاقة «رصيد الصندوق» = رصيد الصندوق الرئيسي المحاسبي فقط (fund_balances).
+     * لقطة الجداول مرجع منفصل (لا تُجمع مع الرصيد لأن أرباح التدقيق تُسجَّل في الصندوق عند التدقيق).
+     */
+    cashBalance = mainFundUsd || 0;
 
     res.json({
       success: true,
       cashBalance,
       snapshotCash,
-      sheetOverlapDedupUsd,
       fundTotals,
       mainFund,
       deferredBalance,

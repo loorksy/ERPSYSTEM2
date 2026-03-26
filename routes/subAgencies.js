@@ -1,10 +1,19 @@
 const express = require('express');
+const { google } = require('googleapis');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
-const { recalculateSyncProfitsForCycle } = require('../services/agencySyncService');
+const { recalculateSyncProfitsForCycle, syncAgenciesFromManagementTable } = require('../services/agencySyncService');
 const { adjustFundBalance, getMainFundId } = require('../services/fundService');
 const { insertLedgerEntry } = require('../services/ledgerService');
+
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
+function getOAuth2Client(credentials) {
+  const clientId = credentials?.client_id || process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = credentials?.client_secret || process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  return new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
+}
 
 /** قائمة الوكالات مع الرصيد */
 router.get('/list', requireAuth, async (req, res) => {
@@ -163,6 +172,45 @@ router.get('/cycles/list', requireAuth, async (req, res) => {
     res.json({ success: true, cycles: rows });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الدورات', cycles: [] });
+  }
+});
+
+/** مزامنة أوراق الوكالات الفرعية من ملف جدول الإدارة (كل ورقة ما عدا إدارة/وكيل) */
+router.post('/sync-from-management', requireAuth, async (req, res) => {
+  try {
+    const cycleId = parseInt(req.body?.cycleId, 10);
+    if (!cycleId) return res.json({ success: false, message: 'اختر الدورة المالية' });
+    const db = getDb();
+    const row = (await db.query(
+      'SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2',
+      [cycleId, req.session.userId]
+    )).rows[0];
+    if (!row) return res.json({ success: false, message: 'الدورة غير موجودة' });
+
+    const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];
+    if (!config?.token) return res.json({ success: false, message: 'لم يتم ربط Google Sheets من الإعدادات' });
+    const credentials = config.credentials ? JSON.parse(config.credentials) : null;
+    const oauth2Client = getOAuth2Client(credentials);
+    if (!oauth2Client) return res.json({ success: false, message: 'بيانات اعتماد Google غير مكتملة' });
+    oauth2Client.setCredentials(typeof config.token === 'string' ? JSON.parse(config.token) : config.token);
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+
+    const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, sheets);
+    if (!syncResult.success) {
+      return res.json({ success: false, message: syncResult.error || 'فشل المزامنة' });
+    }
+    const n = syncResult.agenciesCount ?? 0;
+    const u = syncResult.usersCount ?? 0;
+    res.json({
+      success: true,
+      message: n > 0
+        ? `تمت المزامنة: ${n} ورقة وكالة، ${u} مستخدماً`
+        : 'لا توجد أوراق وكالات فرعية في ملف الإدارة (أضف تبويبات بعد ورقة الإدارة، أو تأكد من اسم ورقة الإدارة في الدورة)',
+      agenciesCount: n,
+      usersCount: u,
+    });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل المزامنة' });
   }
 });
 

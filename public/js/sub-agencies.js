@@ -331,7 +331,36 @@
     });
   };
 
+  function fillSubAgencySyncCycleSelect() {
+    var sel = document.getElementById('subAgencySyncCycleSelect');
+    if (!sel) return;
+    apiCall('/api/sub-agencies/cycles/list').then(function(res) {
+      sel.innerHTML = '<option value="">— اختر الدورة —</option>';
+      (res.cycles || []).forEach(function(c) {
+        sel.innerHTML += '<option value="' + c.id + '">' + (c.name || c.id) + '</option>';
+      });
+    });
+  }
+
+  window.subAgenciesRunManagementSync = function() {
+    var sel = document.getElementById('subAgencySyncCycleSelect');
+    var cycleId = sel && sel.value ? sel.value : '';
+    if (!cycleId) {
+      showToast('اختر الدورة المالية أولاً', 'error');
+      return;
+    }
+    apiCall('/api/sub-agencies/sync-from-management', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cycleId: parseInt(cycleId, 10) })
+    }).then(function(res) {
+      showToast(res.message || (res.success ? 'تم' : 'فشل'), res.success ? 'success' : 'error');
+      if (res.success) loadAgencies();
+    });
+  };
+
   document.addEventListener('DOMContentLoaded', function() {
+    fillSubAgencySyncCycleSelect();
     loadAgencies();
   });
 })();
