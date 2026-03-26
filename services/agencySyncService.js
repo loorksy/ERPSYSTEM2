@@ -4,6 +4,7 @@ const { normalizeUserId, computeSalaryWithDiscount } = require('./payrollSearchS
 const { insertLedgerEntry } = require('./ledgerService');
 const { replaceDeferredLinesForCycle } = require('./deferredSalaryService');
 const { parseDecimal } = require('../utils/numbers');
+const { getMainFundId, adjustFundBalance } = require('./fundService');
 const {
   withSheetsRetry,
   fetchSheetValuesBatched,
@@ -117,12 +118,11 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
         [cycleId, agency.id]
       )).rows[0];
 
-      let agencyPercent = 0;
+      let companyPercent = 0;
       if (cycleSettings) {
-        const cp = (cycleSettings.company_percent != null && !isNaN(cycleSettings.company_percent))
-          ? cycleSettings.company_percent
-          : (100 - (cycleSettings.commission_percent || 0));
-        agencyPercent = 100 - cp;
+        companyPercent = (cycleSettings.company_percent != null && !isNaN(cycleSettings.company_percent))
+          ? Number(cycleSettings.company_percent)
+          : Number(cycleSettings.commission_percent || 0);
       }
 
       let rows = [];
@@ -173,13 +173,13 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
           totalUsers++;
         }
 
-        if (cycleSettings && agencyPercent > 0) {
-          const agencyProfit = baseProfitW * (agencyPercent / 100);
-          if (agencyProfit > 0) {
+        if (cycleSettings && companyPercent > 0) {
+          const agencyShare = baseProfitW * ((100 - companyPercent) / 100);
+          if (agencyShare > 0) {
             await db.query(
               `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, cycle_id, member_user_id)
                VALUES ($1, 'profit', $2, $3, $4, $5)`,
-              [agency.id, agencyProfit, `ربح من مزامنة - مستخدم ${memberUserId}`, cycleId, memberUserId]
+              [agency.id, agencyShare, `ربح من مزامنة - مستخدم ${memberUserId}`, cycleId, memberUserId]
             );
           }
         }
@@ -382,11 +382,23 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
 /**
  * إعادة احتساب أرباح المزامنة من عمود W لدورة معيّنة بعد حفظ نسبة الوكالة للدورة.
  */
-async function recalculateSyncProfitsForCycle(db, cycleId) {
+/**
+ * إعادة احتساب أرباح المزامنة: الوكالة تأخذ (100 - نسبة_الشركة)% والشركة تأخذ نسبة_الشركة%
+ * ربح الشركة يُضاف للربح الصافي والصندوق الرئيسي
+ */
+async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
   const agencies = (await db.query(
     `SELECT DISTINCT sub_agency_id FROM agency_cycle_users WHERE cycle_id = $1`,
     [cycleId]
   )).rows;
+
+  await db.query(
+    `DELETE FROM ledger_entries WHERE cycle_id = $1 AND source_type = 'sub_agency_company_profit'`,
+    [cycleId]
+  );
+
+  let totalCompanyProfit = 0;
+
   for (const { sub_agency_id } of agencies) {
     await db.query(
       `DELETE FROM sub_agency_transactions WHERE cycle_id = $1 AND sub_agency_id = $2 AND notes LIKE 'ربح من مزامنة%'`,
@@ -397,24 +409,50 @@ async function recalculateSyncProfitsForCycle(db, cycleId) {
       [cycleId, sub_agency_id]
     )).rows[0];
     if (!settings) continue;
-    const cp = (settings.company_percent != null && !isNaN(settings.company_percent))
-      ? settings.company_percent
-      : (100 - (settings.commission_percent || 0));
-    const agencyPercent = 100 - cp;
-    if (agencyPercent <= 0) continue;
+    const companyPct = (settings.company_percent != null && !isNaN(settings.company_percent))
+      ? Number(settings.company_percent)
+      : Number(settings.commission_percent || 0);
+    if (companyPct <= 0) continue;
+    const agencyPct = 100 - companyPct;
     const users = (await db.query(
       `SELECT member_user_id, base_profit_w FROM agency_cycle_users WHERE cycle_id = $1 AND sub_agency_id = $2`,
       [cycleId, sub_agency_id]
     )).rows;
     for (const u of users) {
       const baseProfitW = parseDecimal(u.base_profit_w);
-      const agencyProfit = baseProfitW * (agencyPercent / 100);
-      if (agencyProfit > 0) {
+      if (baseProfitW <= 0) continue;
+      const agencyShare = Math.round(baseProfitW * (agencyPct / 100) * 100) / 100;
+      const companyShare = Math.round(baseProfitW * (companyPct / 100) * 100) / 100;
+      totalCompanyProfit += companyShare;
+      if (agencyShare > 0) {
         await db.query(
           `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes, cycle_id, member_user_id)
            VALUES ($1, 'profit', $2, $3, $4, $5)`,
-          [sub_agency_id, agencyProfit, `ربح من مزامنة - مستخدم ${u.member_user_id}`, cycleId, u.member_user_id]
+          [sub_agency_id, agencyShare, `ربح من مزامنة - مستخدم ${u.member_user_id}`, cycleId, u.member_user_id]
         );
+      }
+    }
+  }
+
+  if (totalCompanyProfit > 0 && userId) {
+    await insertLedgerEntry(db, {
+      userId,
+      bucket: 'net_profit',
+      sourceType: 'sub_agency_company_profit',
+      amount: totalCompanyProfit,
+      cycleId,
+      notes: `ربح الشركة من نسبة الوكالات — دورة ${cycleId}`,
+    });
+
+    const mainFundId = await getMainFundId(db, userId);
+    if (mainFundId) {
+      const dupFund = (await db.query(
+        `SELECT id FROM fund_ledger WHERE fund_id = $1 AND type = 'agency_company_profit' AND notes LIKE $2 LIMIT 1`,
+        [mainFundId, `%دورة ${cycleId}%`]
+      )).rows[0];
+      if (!dupFund) {
+        await adjustFundBalance(db, mainFundId, 'USD', totalCompanyProfit, 'agency_company_profit',
+          `ربح الشركة من الوكالات — دورة ${cycleId}`, 'sub_agency_cycle_settings', cycleId);
       }
     }
   }

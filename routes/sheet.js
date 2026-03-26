@@ -10,6 +10,7 @@ const { getDb } = require('../db/database');
 const { google } = require('googleapis');
 const { syncAgenciesFromManagementTable, fetchDeferredBalanceUsers, calculateCashBoxBalance } = require('../services/agencySyncService');
 const { ensurePrimaryAccreditationAfterCycleCreate } = require('../services/accreditationCycleService');
+const { applyCycleAuditProfitsToLedger } = require('../services/cycleAccountingService');
 const {
   fetchSheetValuesBatched,
   withSheetsRetry,
@@ -415,6 +416,16 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       );
     }
 
+    /** مزامنة الوكالات الفرعية من أوراق جدول الإدارة */
+    let agencySync = null;
+    try {
+      const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, sheets);
+      agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0 };
+    } catch (agencySyncErr) {
+      console.error('[CycleSync][AgencySync]', agencySyncErr.message);
+      agencySync = { success: false, error: agencySyncErr.message };
+    }
+
     let detail = 'الإدارة: ' + managementRows.length + ' صف';
     if (mgmtResult.sheetTitleUsed) detail += " (ورقة \"" + mgmtResult.sheetTitleUsed + "\")";
     detail += '، الوكيل: ' + agentRows.length + ' صف';
@@ -423,12 +434,15 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       detail += '، معلومات المستخدمين: ' + userInfoRowsCount + ' صف';
       if (userInfoSheetUsed) detail += " (ورقة \"" + userInfoSheetUsed + "\")";
     }
+    if (agencySync && agencySync.success && agencySync.agenciesCount > 0) {
+      detail += '، وكالات فرعية: ' + agencySync.agenciesCount + ' وكالة (' + agencySync.usersCount + ' مستخدم)';
+    }
 
     res.json({
       success: true,
       message: userInfoSynced
-        ? 'تمت مزامنة جداول الدورة ومعلومات المستخدمين من Google (قراءة فقط)'
-        : 'تمت مزامنة جداول الدورة من Google',
+        ? 'تمت مزامنة جداول الدورة ومعلومات المستخدمين والوكالات الفرعية من Google'
+        : 'تمت مزامنة جداول الدورة والوكالات الفرعية من Google',
       managementRows: managementRows.length,
       agentRows: agentRows.length,
       managementSheetUsed: mgmtResult.sheetTitleUsed,
@@ -436,6 +450,7 @@ router.post('/cycles/:id/sync', requireAuth, async (req, res) => {
       userInfoSynced,
       userInfoRows: userInfoRowsCount,
       userInfoSheetUsed,
+      agencySync,
       detail,
     });
   } catch (e) {
@@ -781,15 +796,19 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       }
     } catch (_) {}
 
-    /** مزامنة الوكالات الفرعية من جدول الإدارة */
+    /** مزامنة الوكالات الفرعية من جدول الإدارة (يتطلب اتصال Google) */
     let agencySync = null;
-    if (mgmtSsId && localSheets) {
-      try {
-        const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, localSheets);
-        agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0, error: syncResult.error };
-      } catch (agencySyncErr) {
-        console.error('[payroll-audit-local][AgencySync]', agencySyncErr.message);
-        agencySync = { success: false, error: agencySyncErr.message };
+    if (mgmtSsId) {
+      if (localSheets) {
+        try {
+          const syncResult = await syncAgenciesFromManagementTable(cycleId, req.session.userId, localSheets);
+          agencySync = { success: syncResult.success, usersCount: syncResult.usersCount ?? 0, agenciesCount: syncResult.agenciesCount ?? 0, error: syncResult.error };
+        } catch (agencySyncErr) {
+          console.error('[payroll-audit-local][AgencySync]', agencySyncErr.message);
+          agencySync = { success: false, error: agencySyncErr.message };
+        }
+      } else {
+        agencySync = { success: false, error: 'اتصال Google غير متوفر — استخدم «تطبيق على Google» لمزامنة الوكالات، أو تأكد من ربط حساب Google من الإعدادات.' };
       }
     }
 
@@ -927,6 +946,14 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       console.error('[payroll-audit-local] failed to save user info hash', hashErr.message);
     }
 
+    /** تسجيل أرباح W+Y+Z في الصندوق الرئيسي تلقائياً */
+    let auditProfits = null;
+    try {
+      auditProfits = await applyCycleAuditProfitsToLedger(req.session.userId, cycleId);
+    } catch (profitErr) {
+      console.error('[payroll-audit-local] audit profits error:', profitErr.message);
+    }
+
     res.json({
       success: true,
       message,
@@ -934,6 +961,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       localOnly: true,
       applied: appliedCount > 0,
       agencySync,
+      auditProfits,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,
@@ -1458,6 +1486,15 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     } catch (hashErr) {
       console.error('[payroll-execute] failed to save user info hash', hashErr.message);
     }
+
+    /** تسجيل أرباح W+Y+Z في الصندوق الرئيسي تلقائياً */
+    let auditProfits = null;
+    try {
+      auditProfits = await applyCycleAuditProfitsToLedger(req.session.userId, cycleId);
+    } catch (profitErr) {
+      console.error('[payroll-execute] audit profits error:', profitErr.message);
+    }
+
     res.json({
       success: true,
       message,
@@ -1466,6 +1503,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       applied: appliedCount > 0,
       cycleSynced,
       agencySync,
+      auditProfits,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,

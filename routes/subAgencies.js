@@ -91,7 +91,10 @@ router.post('/add', requireAuth, async (req, res) => {
   }
 });
 
-/** حفظ نسبة الوكالة للدورة المالية + إعادة احتساب أرباح المزامنة من عمود W */
+/** حفظ نسبة الوكالة للدورة المالية + إعادة احتساب أرباح المزامنة من عمود W
+ * نسبة الوكالة (commissionPercent) = نسبة ربح الشركة من W
+ * مثال: 10% → الشركة تأخذ 10% والوكالة تأخذ 90%
+ */
 router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -100,7 +103,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
     if (!id || !cid) return res.json({ success: false, message: 'الوكالة والدورة مطلوبان' });
     const pct = parseFloat(commissionPercent);
     const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const companyPct = 100 - pctVal;
+    const companyPct = pctVal;
     const db = getDb();
     const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -113,7 +116,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
          saved_at = CURRENT_TIMESTAMP`,
       [cid, id, pctVal, companyPct]
     );
-    await recalculateSyncProfitsForCycle(db, cid);
+    await recalculateSyncProfitsForCycle(db, cid, req.session.userId);
     res.json({ success: true, message: 'تم حفظ النسبة وإعادة احتساب أرباح المزامنة لهذه الدورة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الحفظ' });
@@ -291,19 +294,42 @@ router.get('/:id/transactions', requireAuth, async (req, res) => {
   }
 });
 
-/** المستخدمين التابعين للوكالة (من الشحن) */
+/** المستخدمين التابعين للوكالة (من المزامنة + الشحن) */
 router.get('/:id/users', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const rows = (await db.query(`
-      SELECT DISTINCT buyer_user_id as user_id
-      FROM shipping_transactions
-      WHERE buyer_type = 'sub_agent' AND buyer_sub_agency_id = $1 AND buyer_user_id IS NOT NULL
-    `, [id])).rows;
-    const users = rows.map(r => ({ id: r.user_id, name: r.user_id }));
-    res.json({ success: true, users });
+    const cycleId = req.query.cycleId ? parseInt(req.query.cycleId, 10) : null;
+
+    let syncedUsers = [];
+    try {
+      syncedUsers = (await db.query(
+        cycleId
+          ? `SELECT member_user_id AS user_id, user_name AS name, base_profit_w FROM agency_cycle_users WHERE sub_agency_id = $1 AND cycle_id = $2 ORDER BY member_user_id`
+          : `SELECT member_user_id AS user_id, user_name AS name, base_profit_w FROM agency_cycle_users WHERE sub_agency_id = $1 ORDER BY synced_at DESC`,
+        cycleId ? [id, cycleId] : [id]
+      )).rows;
+    } catch (_) {
+      syncedUsers = [];
+    }
+
+    if (syncedUsers.length > 0) {
+      return res.json({ success: true, users: syncedUsers, source: 'sync' });
+    }
+
+    let shippingUsers = [];
+    try {
+      shippingUsers = (await db.query(`
+        SELECT DISTINCT buyer_user_id as user_id
+        FROM shipping_transactions
+        WHERE buyer_type = 'sub_agent' AND buyer_sub_agency_id = $1 AND buyer_user_id IS NOT NULL
+      `, [id])).rows;
+    } catch (_) {
+      shippingUsers = [];
+    }
+    const users = shippingUsers.map(r => ({ id: r.user_id, name: r.user_id }));
+    res.json({ success: true, users, source: 'shipping' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب المستخدمين', users: [] });
   }
