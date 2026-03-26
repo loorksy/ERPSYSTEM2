@@ -10,6 +10,7 @@ const { getDb } = require('../db/database');
 const { google } = require('googleapis');
 const { syncAgenciesFromManagementTable, fetchDeferredBalanceUsers, calculateCashBoxBalance } = require('../services/agencySyncService');
 const { ensurePrimaryAccreditationAfterCycleCreate } = require('../services/accreditationCycleService');
+const { applyCycleAuditProfitsToLedger } = require('../services/cycleAccountingService');
 const {
   fetchSheetValuesBatched,
   withSheetsRetry,
@@ -927,6 +928,16 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       console.error('[payroll-audit-local] failed to save user info hash', hashErr.message);
     }
 
+    /** تسجيل أرباح W+Y+Z في الصندوق الرئيسي تلقائياً */
+    let auditProfits = null;
+    if (appliedCount > 0) {
+      try {
+        auditProfits = await applyCycleAuditProfitsToLedger(req.session.userId, cycleId);
+      } catch (profitErr) {
+        console.error('[payroll-audit-local] audit profits error:', profitErr.message);
+      }
+    }
+
     res.json({
       success: true,
       message,
@@ -934,6 +945,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       localOnly: true,
       applied: appliedCount > 0,
       agencySync,
+      auditProfits,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,
@@ -1458,6 +1470,17 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     } catch (hashErr) {
       console.error('[payroll-execute] failed to save user info hash', hashErr.message);
     }
+
+    /** تسجيل أرباح W+Y+Z في الصندوق الرئيسي تلقائياً */
+    let auditProfits = null;
+    if (appliedCount > 0) {
+      try {
+        auditProfits = await applyCycleAuditProfitsToLedger(req.session.userId, cycleId);
+      } catch (profitErr) {
+        console.error('[payroll-execute] audit profits error:', profitErr.message);
+      }
+    }
+
     res.json({
       success: true,
       message,
@@ -1466,6 +1489,7 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       applied: appliedCount > 0,
       cycleSynced,
       agencySync,
+      auditProfits,
       results: results.map(r => ({ userId: r.userId, title: r.title, type: r.type })),
       sampleUserIds: sampleUserIds.length ? sampleUserIds : undefined,
       sampleMgmtIds: sampleMgmtIds.length ? sampleMgmtIds : undefined,
