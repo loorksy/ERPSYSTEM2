@@ -7,9 +7,10 @@ const {
   getFundTotalsByCurrency,
   getMainFundSummary,
   getMainFundUsdBalance,
+  getProfitFundUsdBalance,
   transferProfitToFund,
 } = require('../services/fundService');
-const { computeDebtBreakdown } = require('../services/debtAggregation');
+const { computeDebtBreakdown, computeReceivablesToUs } = require('../services/debtAggregation');
 const { sumLedgerBucket } = require('../services/ledgerService');
 const { sumDeferredTotalAllCycles, mergeMemberDeferredIntoCycle } = require('../services/deferredSalaryService');
 
@@ -84,6 +85,14 @@ router.get('/stats', requireAuth, async (req, res) => {
     capitalRecovered = sellAgg?.capital_sum ?? 0;
     let shippingDebt = sellAgg?.debt_sell ?? 0;
 
+    let receivablesToUsTotal = null;
+    try {
+      const recv = await computeReceivablesToUs(db, userId);
+      receivablesToUsTotal = recv.totalUsd;
+    } catch (_) {
+      receivablesToUsTotal = null;
+    }
+
     let debtBreakdown = {
       shippingDebt: 0,
       accreditationDebtTotal: 0,
@@ -126,6 +135,7 @@ router.get('/stats', requireAuth, async (req, res) => {
     });
     const mainFund = await getMainFundSummary(db, userId);
     const { usd: mainFundUsd } = await getMainFundUsdBalance(db, userId);
+    const { usd: profitFundUsd, profitFundId } = await getProfitFundUsdBalance(db, userId);
 
     if (defaultCycleId) {
       const cashSnapshot = (await db.query(`
@@ -139,7 +149,8 @@ router.get('/stats', requireAuth, async (req, res) => {
 
     /**
      * بطاقة «رصيد الصندوق» = رصيد الصندوق الرئيسي المحاسبي فقط (fund_balances).
-     * لقطة الجداول مرجع منفصل (لا تُجمع مع الرصيد لأن أرباح التدقيق تُسجَّل في الصندوق عند التدقيق).
+     * صندوق الربح منفصل ولا يُجمع في fundTotals ولا في هذه البطاقة.
+     * الربح الصافي المعروض = شحن + دفتر صافي الربح (لا يُضاف رصيد صندوق الربح لتفادي الازدواج مع القيود).
      */
     cashBalance = mainFundUsd || 0;
 
@@ -149,6 +160,8 @@ router.get('/stats', requireAuth, async (req, res) => {
       snapshotCash,
       fundTotals,
       mainFund,
+      profitFundUsd,
+      profitFundId,
       deferredBalance,
       shippingBalance,
       goldBalance,
@@ -159,6 +172,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       netProfit,
       capitalRecovered,
       totalDebts,
+      receivablesToUsTotal,
       shippingDebt,
       accreditationDebtTotal,
       payablesSumUsd: debtBreakdown.payablesSumUsd,
@@ -216,12 +230,15 @@ router.get('/fund-sources', requireAuth, async (req, res) => {
     const db = getDb();
     const userId = req.session.userId;
     const funds = (await db.query(
-      `SELECT id, name, fund_number, country, region_syria, is_main, transfer_company_id
+      `SELECT id, name, fund_number, country, region_syria, is_main, transfer_company_id,
+              COALESCE(exclude_from_dashboard, 0) AS exclude_from_dashboard
        FROM funds WHERE user_id = $1 ORDER BY is_main DESC, name`,
       [userId]
     )).rows;
+    const { usd: profitPoolUsd, profitFundId: profitPoolFundId } = await getProfitFundUsdBalance(db, userId);
     const out = [];
     for (const f of funds) {
+      if (f.exclude_from_dashboard) continue;
       const bals = (await db.query(
         'SELECT currency, amount FROM fund_balances WHERE fund_id = $1',
         [f.id]
@@ -237,9 +254,26 @@ router.get('/fund-sources', requireAuth, async (req, res) => {
        WHERE c.user_id = $1 ORDER BY c.created_at DESC LIMIT 5`,
       [userId]
     )).rows;
-    res.json({ success: true, funds: out, recentSnapshots: snap });
+    res.json({
+      success: true,
+      funds: out,
+      recentSnapshots: snap,
+      profitPoolUsd,
+      profitPoolFundId,
+    });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل', funds: [] });
+  }
+});
+
+/** «ديين لنا»: أرصدة موجبة لنا عبر الكيانات */
+router.get('/receivables-to-us', requireAuth, async (req, res) => {
+  try {
+    const db = getDb();
+    const data = await computeReceivablesToUs(db, req.session.userId);
+    res.json({ success: true, ...data });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل' });
   }
 });
 

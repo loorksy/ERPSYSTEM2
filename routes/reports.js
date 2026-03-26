@@ -23,13 +23,13 @@ const {
 
 function sendPdf(res, filename, buffer) {
   const displayName = (filename && String(filename).trim()) || 'report.pdf';
-  /** قيمة filename= يجب أن تكون ASCII فقط وإلا Node يرمي ERR_INVALID_CHAR */
-  let asciiFallback = displayName.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_').trim();
-  if (!asciiFallback || /^_+$/.test(asciiFallback)) asciiFallback = 'report.pdf';
-  if (!/\.pdf$/i.test(asciiFallback)) asciiFallback += '.pdf';
-  const utf8 = encodeFilenameRfc5987(displayName);
+  /** الاسم العربي فقط في filename* (RFC 5987) — ترميز UTF-8 كنسب مئوية ASCII؛ لا نضع أحرف غير ASCII في filename= */
+  const star = encodeFilenameRfc5987(displayName);
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8}`);
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="report.pdf"; filename*=UTF-8''${star}`
+  );
   res.send(buffer);
 }
 

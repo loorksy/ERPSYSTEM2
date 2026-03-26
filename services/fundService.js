@@ -12,7 +12,7 @@ async function ensureDefaultMainFund(db, userId) {
   const existing = (await db.query('SELECT id FROM funds WHERE user_id = $1 AND is_main = 1 LIMIT 1', [userId])).rows[0];
   if (existing) return existing.id;
   const r = await db.query(
-    `INSERT INTO funds (user_id, name, fund_number, is_main) VALUES ($1, 'الصندوق الرئيسي', 'MAIN-001', 1) RETURNING id`,
+    `INSERT INTO funds (user_id, name, fund_number, is_main, exclude_from_dashboard) VALUES ($1, 'الصندوق الرئيسي', 'MAIN-001', 1, 0) RETURNING id`,
     [userId]
   );
   const fundId = r.rows[0].id;
@@ -21,6 +21,30 @@ async function ensureDefaultMainFund(db, userId) {
     [fundId]
   );
   return fundId;
+}
+
+/** صندوق ربح تفويضي: لا يُجمع في بطاقة رصيد الصندوق باللوحة */
+async function ensureDefaultProfitFund(db, userId) {
+  const existing = (await db.query(
+    `SELECT id FROM funds WHERE user_id = $1 AND name = 'صندوق الربح' LIMIT 1`,
+    [userId]
+  )).rows[0];
+  if (existing) return existing.id;
+  const r = await db.query(
+    `INSERT INTO funds (user_id, name, fund_number, is_main, exclude_from_dashboard)
+     VALUES ($1, 'صندوق الربح', 'PROFIT-001', 0, 1) RETURNING id`,
+    [userId]
+  );
+  const fundId = r.rows[0].id;
+  await db.query(
+    `INSERT INTO fund_balances (fund_id, currency, amount) VALUES ($1, 'USD', 0) ON CONFLICT (fund_id, currency) DO NOTHING`,
+    [fundId]
+  );
+  return fundId;
+}
+
+async function getProfitFundId(db, userId) {
+  return ensureDefaultProfitFund(db, userId);
 }
 
 async function adjustFundBalance(db, fundId, currency, delta, type, notes, refTable, refId) {
@@ -78,12 +102,16 @@ async function debitShippingCashBuy(db, userId, lineTotal, notes, shippingTxId) 
   );
 }
 
-async function getFundTotalsByCurrency(db, userId) {
+async function getFundTotalsByCurrency(db, userId, { includeProfitPool = false } = {}) {
+  let where = 'f.user_id = $1';
+  if (!includeProfitPool) {
+    where += ' AND COALESCE(f.exclude_from_dashboard, 0) = 0';
+  }
   const rows = (await db.query(
     `SELECT fb.currency, SUM(fb.amount)::float AS total
      FROM fund_balances fb
      JOIN funds f ON f.id = fb.fund_id
-     WHERE f.user_id = $1
+     WHERE ${where}
      GROUP BY fb.currency`,
     [userId]
   )).rows;
@@ -108,6 +136,16 @@ async function getMainFundUsdBalance(db, userId) {
   return { mainFundId: mainId, usd: row?.amount ?? 0 };
 }
 
+async function getProfitFundUsdBalance(db, userId) {
+  const pid = await getProfitFundId(db, userId);
+  if (!pid) return { profitFundId: null, usd: 0 };
+  const row = (await db.query(
+    'SELECT amount FROM fund_balances WHERE fund_id = $1 AND currency = $2',
+    [pid, 'USD']
+  )).rows[0];
+  return { profitFundId: pid, usd: row?.amount ?? 0 };
+}
+
 /**
  * ترحيل أرباح إلى صندوق (دفعة واحدة).
  */
@@ -123,6 +161,8 @@ async function transferProfitToFund(db, userId, fundId, amount, currency, cycleI
 module.exports = {
   getMainFundId,
   ensureDefaultMainFund,
+  ensureDefaultProfitFund,
+  getProfitFundId,
   creditFundBalance,
   adjustFundBalance,
   debitFundBalance,
@@ -131,5 +171,6 @@ module.exports = {
   getFundTotalsByCurrency,
   getMainFundSummary,
   getMainFundUsdBalance,
+  getProfitFundUsdBalance,
   transferProfitToFund,
 };

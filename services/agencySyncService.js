@@ -4,7 +4,13 @@ const { normalizeUserId, computeSalaryWithDiscount } = require('./payrollSearchS
 const { insertLedgerEntry } = require('./ledgerService');
 const { replaceDeferredLinesForCycle } = require('./deferredSalaryService');
 const { parseDecimal } = require('../utils/numbers');
-const { getMainFundId, adjustFundBalance } = require('./fundService');
+const {
+  getMainFundId,
+  getProfitFundId,
+  adjustFundBalance,
+  debitFundBalance,
+  creditFundBalance,
+} = require('./fundService');
 const {
   withSheetsRetry,
   fetchSheetValuesBatched,
@@ -405,12 +411,72 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
 }
 
 /**
- * إعادة احتساب أرباح المزامنة من عمود W لدورة معيّنة بعد حفظ نسبة الوكالة للدورة.
+ * إعادة احتساب أرباح المزامنة: الوكالة تأخذ (100 - نسبة_الشركة)% والشركة تأخذ نسبة_الشركة%.
+ * ربح الشركة يُسجَّل في دفتر صافي الربح؛ يُخصم من الصندوق الرئيسي ويُودَع في صندوق الربح (لا إيداع إضافي على الرئيسي).
  */
-/**
- * إعادة احتساب أرباح المزامنة: الوكالة تأخذ (100 - نسبة_الشركة)% والشركة تأخذ نسبة_الشركة%
- * ربح الشركة يُضاف للربح الصافي والصندوق الرئيسي
- */
+async function reverseCycleAgencyCompanyFundMoves(db, cycleId, userId) {
+  const mainFundId = await getMainFundId(db, userId);
+  const profitFundId = await getProfitFundId(db, userId);
+  const refTable = 'sub_agency_cycle_settings';
+
+  if (mainFundId) {
+    let row = (await db.query(
+      `SELECT COALESCE(SUM(amount), 0)::float AS s FROM fund_ledger
+       WHERE fund_id = $1 AND type = 'agency_company_profit' AND ref_id = $2 AND ref_table = $3`,
+      [mainFundId, cycleId, refTable]
+    )).rows[0];
+    let s = row?.s || 0;
+    if (s <= 0) {
+      row = (await db.query(
+        `SELECT COALESCE(SUM(amount), 0)::float AS s FROM fund_ledger
+         WHERE fund_id = $1 AND type = 'agency_company_profit' AND ref_id = $2`,
+        [mainFundId, cycleId]
+      )).rows[0];
+      s = row?.s || 0;
+    }
+    if (s <= 0) {
+      row = (await db.query(
+        `SELECT COALESCE(SUM(amount), 0)::float AS s FROM fund_ledger
+         WHERE fund_id = $1 AND type = 'agency_company_profit' AND notes LIKE $2`,
+        [mainFundId, `%دورة ${cycleId}%`]
+      )).rows[0];
+      s = row?.s || 0;
+    }
+    if (s > 0) {
+      await adjustFundBalance(
+        db,
+        mainFundId,
+        'USD',
+        -s,
+        'agency_company_undo',
+        `تراجع إيداع قديم لربح الوكالات — دورة ${cycleId}`,
+        refTable,
+        cycleId
+      );
+    }
+  }
+  if (profitFundId) {
+    const row = (await db.query(
+      `SELECT COALESCE(SUM(amount), 0)::float AS s FROM fund_ledger
+       WHERE fund_id = $1 AND type = 'agency_company_to_profit_pool' AND ref_id = $2 AND ref_table = $3`,
+      [profitFundId, cycleId, refTable]
+    )).rows[0];
+    const s = row?.s || 0;
+    if (s > 0) {
+      await adjustFundBalance(
+        db,
+        profitFundId,
+        'USD',
+        -s,
+        'agency_company_undo_pool',
+        `تراجع تحويل قديم لصندوق الربح — دورة ${cycleId}`,
+        refTable,
+        cycleId
+      );
+    }
+  }
+}
+
 async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
   const agencies = (await db.query(
     `SELECT DISTINCT sub_agency_id FROM agency_cycle_users WHERE cycle_id = $1`,
@@ -459,6 +525,10 @@ async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
     }
   }
 
+  if (userId) {
+    await reverseCycleAgencyCompanyFundMoves(db, cycleId, userId);
+  }
+
   if (totalCompanyProfit > 0 && userId) {
     await insertLedgerEntry(db, {
       userId,
@@ -470,15 +540,29 @@ async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
     });
 
     const mainFundId = await getMainFundId(db, userId);
-    if (mainFundId) {
-      const dupFund = (await db.query(
-        `SELECT id FROM fund_ledger WHERE fund_id = $1 AND type = 'agency_company_profit' AND notes LIKE $2 LIMIT 1`,
-        [mainFundId, `%دورة ${cycleId}%`]
-      )).rows[0];
-      if (!dupFund) {
-        await adjustFundBalance(db, mainFundId, 'USD', totalCompanyProfit, 'agency_company_profit',
-          `ربح الشركة من الوكالات — دورة ${cycleId}`, 'sub_agency_cycle_settings', cycleId);
-      }
+    const profitFundId = await getProfitFundId(db, userId);
+    const refTable = 'sub_agency_cycle_settings';
+    if (mainFundId && profitFundId) {
+      await debitFundBalance(
+        db,
+        mainFundId,
+        'USD',
+        totalCompanyProfit,
+        'agency_company_from_main',
+        `حصة الشركة من الوكالات — خصم من الصندوق الرئيسي — دورة ${cycleId}`,
+        refTable,
+        cycleId
+      );
+      await creditFundBalance(
+        db,
+        profitFundId,
+        'USD',
+        totalCompanyProfit,
+        'agency_company_to_profit_pool',
+        `حصة الشركة من الوكالات — صندوق الربح — دورة ${cycleId}`,
+        refTable,
+        cycleId
+      );
     }
   }
 }

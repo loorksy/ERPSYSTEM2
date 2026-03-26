@@ -45,11 +45,14 @@ async function computeManagementSheetTotalsFromRows(rows) {
   userLinks.forEach(r => { userToAgency[r.member_user_id] = r.sub_agency_id; });
 
   let sourceFirstSheetW = 0;
+  /** مجموع عمود W كما في الجدول (للإيداع في الصندوق الرئيسي عند التدقيق) */
+  let sumW_raw = 0;
   let sourceYZ = 0;
 
   for (const row of dataRows) {
     const memberUserId = normalizeUserId(row[0]);
     const wNum = parseDecimal(row[COL_W]);
+    sumW_raw += wNum;
     const agencyId = memberUserId ? userToAgency[memberUserId] : null;
     if (agencyId) {
       const agency = (await db.query('SELECT company_percent, commission_percent FROM shipping_sub_agencies WHERE id = $1', [agencyId])).rows[0];
@@ -63,7 +66,7 @@ async function computeManagementSheetTotalsFromRows(rows) {
     sourceYZ += parseDecimal(row[COL_Y]) + parseDecimal(row[COL_Z]);
   }
 
-  return { sourceFirstSheetW, sourceYZ };
+  return { sourceFirstSheetW, sourceYZ, sumW_raw };
 }
 
 function parseRows(val) {
@@ -100,7 +103,7 @@ async function getLocalCycleTables(db, userId, cycleId) {
 }
 
 /**
- * تسجيل أرباح التدقيق في صافي الربح — قيدان منفصلان (Y+Z) و (W)، مرة واحدة لكل دورة.
+ * تسجيل أرباح التدقيق: Y+Z في الدفتر فقط؛ عمود W كاملاً يُودَع في الصندوق الرئيسي (لا قيد audit_management_w).
  * القيد القديم audit_cycle_profits يُعتبر مكتملاً ولا يُكرَّر.
  */
 async function applyCycleAuditProfitsToLedger(userId, cycleId) {
@@ -111,8 +114,8 @@ async function applyCycleAuditProfitsToLedger(userId, cycleId) {
     return { success: false, message: 'لا توجد بيانات إدارة محفوظة للدورة. زامن الدورة أو حمّل الملفات.' };
   }
 
-  const { sourceFirstSheetW, sourceYZ } = await computeManagementSheetTotalsFromRows(tables.managementData);
-  const combined = sourceFirstSheetW + sourceYZ;
+  const { sourceYZ, sumW_raw } = await computeManagementSheetTotalsFromRows(tables.managementData);
+  const combined = sumW_raw + sourceYZ;
 
   const legacy = (await db.query(
     `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = $3 LIMIT 1`,
@@ -122,10 +125,6 @@ async function applyCycleAuditProfitsToLedger(userId, cycleId) {
   const rowYz = (await db.query(
     `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = $3 LIMIT 1`,
     [userId, cycleId, 'audit_management_yz']
-  )).rows[0];
-  const rowW = (await db.query(
-    `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2 AND source_type = $3 LIMIT 1`,
-    [userId, cycleId, 'audit_management_w']
   )).rows[0];
 
   if (!legacy && !rowYz && sourceYZ !== 0) {
@@ -139,19 +138,8 @@ async function applyCycleAuditProfitsToLedger(userId, cycleId) {
       meta: { sourceYZ },
     });
   }
-  if (!legacy && !rowW && sourceFirstSheetW !== 0) {
-    await insertLedgerEntry(db, {
-      userId,
-      bucket: 'net_profit',
-      sourceType: 'audit_management_w',
-      amount: sourceFirstSheetW,
-      cycleId,
-      notes: 'أرباح الإدارة: عمود W (مع تقسيم وكالات فرعية)',
-      meta: { sourceFirstSheetW },
-    });
-  }
 
-  /** إضافة المبلغ للصندوق الرئيسي — دائماً يتحقق حتى لو الأرباح سُجلت مسبقاً في الدفتر */
+  /** إيداع W كامل + Y+Z في الصندوق الرئيسي */
   const mainFundId = await getMainFundId(db, userId);
   if (mainFundId && combined !== 0) {
     const dupFundCredit = (await db.query(
@@ -160,12 +148,12 @@ async function applyCycleAuditProfitsToLedger(userId, cycleId) {
     )).rows[0];
     if (!dupFundCredit) {
       await adjustFundBalance(db, mainFundId, 'USD', combined, 'audit_profit_credit',
-        `أرباح التدقيق (W+Y+Z) — دورة ${cycleId}`, 'financial_cycles', cycleId);
+        `أرباح التدقيق (W كامل + Y+Z) — دورة ${cycleId}`, 'financial_cycles', cycleId);
     }
   }
 
-  const ledgerAlready = !!(legacy || (rowYz && rowW));
-  return { success: true, sourceYZ, sourceFirstSheetW, combined, ledgerAlready };
+  const ledgerAlready = !!(legacy || rowYz);
+  return { success: true, sourceYZ, sumW_raw, combined, ledgerAlready };
 }
 
 /**

@@ -68,4 +68,65 @@ async function computeDebtBreakdown(db, userId) {
   };
 }
 
-module.exports = { computeDebtBreakdown };
+/**
+ * تجميع «ديين لنا»: أرصدة موجبة (لنا) عبر المعتمدين وشركات التحويل والصناديق والوكالات الفرعية.
+ */
+async function computeReceivablesToUs(db, userId) {
+  const accreditation = (await db.query(
+    `SELECT id, name, code, balance_amount AS amount
+     FROM accreditation_entities
+     WHERE user_id = $1 AND balance_amount > 0
+     ORDER BY name`,
+    [userId]
+  )).rows;
+
+  const transferCompanies = (await db.query(
+    `SELECT id, name, balance_amount AS amount, balance_currency
+     FROM transfer_companies
+     WHERE user_id = $1 AND balance_amount > 0
+     ORDER BY name`,
+    [userId]
+  )).rows;
+
+  const funds = (await db.query(
+    `SELECT f.id, f.name, f.fund_number, fb.amount, fb.currency
+     FROM funds f
+     JOIN fund_balances fb ON fb.fund_id = f.id
+     WHERE f.user_id = $1 AND COALESCE(f.exclude_from_dashboard, 0) = 0
+       AND fb.currency = 'USD' AND fb.amount > 0
+     ORDER BY f.is_main DESC, f.name`,
+    [userId]
+  )).rows;
+
+  const subAgencyRows = (await db.query(`
+    SELECT s.id, s.name,
+      COALESCE(SUM(CASE WHEN t.type IN ('profit', 'reward') THEN t.amount ELSE 0 END), 0) -
+      COALESCE(SUM(CASE WHEN t.type IN ('deduction', 'due') THEN t.amount ELSE 0 END), 0) AS balance
+    FROM shipping_sub_agencies s
+    LEFT JOIN sub_agency_transactions t ON t.sub_agency_id = s.id
+    GROUP BY s.id, s.name
+    HAVING (
+      COALESCE(SUM(CASE WHEN t.type IN ('profit', 'reward') THEN t.amount ELSE 0 END), 0) -
+      COALESCE(SUM(CASE WHEN t.type IN ('deduction', 'due') THEN t.amount ELSE 0 END), 0)
+    ) > 0.0001
+    ORDER BY s.name
+  `)).rows;
+
+  let totalUsd = 0;
+  accreditation.forEach((r) => { totalUsd += r.amount || 0; });
+  transferCompanies.forEach((r) => {
+    if ((r.balance_currency || 'USD') === 'USD') totalUsd += r.amount || 0;
+  });
+  funds.forEach((r) => { totalUsd += r.amount || 0; });
+  subAgencyRows.forEach((r) => { totalUsd += r.balance || 0; });
+
+  return {
+    totalUsd,
+    accreditation,
+    transferCompanies,
+    funds,
+    subAgencies: subAgencyRows.map((r) => ({ id: r.id, name: r.name, balance: r.balance })),
+  };
+}
+
+module.exports = { computeDebtBreakdown, computeReceivablesToUs };

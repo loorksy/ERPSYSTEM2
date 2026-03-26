@@ -86,6 +86,17 @@ async function ensureFinancialCyclesUserInfoColumns() {
 }
 
 /** جدول المؤجل متعدد الدورات + ترحيل من deferred_balance_users القديم */
+async function ensureFundsExcludeDashboardColumn() {
+  if (!pgPool) return;
+  try {
+    await pgPool.query('ALTER TABLE funds ADD COLUMN IF NOT EXISTS exclude_from_dashboard INTEGER DEFAULT 0');
+  } catch (e) {
+    if (!/already exists|duplicate column/i.test(String(e.message))) {
+      console.warn('[DB] funds.exclude_from_dashboard:', e.message);
+    }
+  }
+}
+
 async function ensureDeferredSalaryLinesTable() {
   if (!pgPool) return;
   await pgPool.query(`CREATE TABLE IF NOT EXISTS deferred_salary_lines (
@@ -142,6 +153,7 @@ async function initDatabase() {
     console.log('[LorkERP] Using PostgreSQL');
     await ensurePgSchema();
     await ensureFinancialCyclesUserInfoColumns();
+    await ensureFundsExcludeDashboardColumn();
     await ensureDeferredSalaryLinesTable();
     await ensureAdminUser();
     return getDb();

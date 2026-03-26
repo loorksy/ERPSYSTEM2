@@ -110,6 +110,10 @@ function initHomeStats() {
         setEl('netProfit', data.netProfit);
         setEl('totalExpenses', data.totalExpenses);
         setEl('totalDebts', data.totalDebts);
+        var recvH = document.getElementById('receivablesToUsHome');
+        if (recvH) {
+          recvH.textContent = data.receivablesToUsTotal != null ? formatMoney(data.receivablesToUsTotal) : '—';
+        }
         setEl('capitalRecovery', data.capitalRecovered);
         var sub = document.getElementById('cashBalanceSub');
         if (sub) {
@@ -149,6 +153,11 @@ window.homeOpenFundModal = function() {
         '<p class="text-xs text-slate-500">' + (f.fund_number || '') + ' · ' + (f.country || '') + '</p>' +
         '<p class="font-semibold text-indigo-700">' + (bs || '0') + '</p></div>';
     });
+    if (d.profitPoolUsd != null && d.profitPoolUsd > 0) {
+      html += '<div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 mt-2"><strong>صندوق الربح</strong> ' +
+        '<span class="text-xs text-slate-500">(منفصل عن بطاقة رصيد الصندوق)</span>' +
+        '<p class="font-semibold text-indigo-800 mt-1">' + formatMoney(d.profitPoolUsd) + ' USD</p></div>';
+    }
     if (d.recentSnapshots && d.recentSnapshots.length) {
       html += '<p class="font-semibold text-slate-700 mt-2">لقطات من الجداول (مرجع)</p>';
       d.recentSnapshots.forEach(function(s) {

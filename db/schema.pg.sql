@@ -379,6 +379,7 @@ CREATE TABLE IF NOT EXISTS funds (
   country TEXT,
   region_syria TEXT,
   is_main INTEGER DEFAULT 0,
+  exclude_from_dashboard INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

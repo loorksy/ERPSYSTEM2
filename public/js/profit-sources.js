@@ -4,9 +4,9 @@
   /** تسميات عربية لـ source_type في دفتر صافي الربح (وما قد يُضاف لاحقاً) */
   var NET_PROFIT_SOURCE_LABELS = {
     fx_spread_profit: 'ربح فرق التصريف',
-    audit_cycle_profits: 'أرباح تدقيق الدورة (Y+Z و W)',
+    audit_cycle_profits: 'أرباح تدقيق الدورة (Y+Z و إيداع W في الصندوق)',
     audit_management_yz: 'أرباح الإدارة: أعمدة Y+Z',
-    audit_management_w: 'أرباح الإدارة: عمود W',
+    audit_management_w: 'أرباح الإدارة: عمود W (أرشيف — لا يُنشأ قيد جديد)',
     transfer_discount_profit: 'ربح نسبة خصم التحويل',
     cycle_creation_discount_profit: 'ربح خصم التحويل (إنشاء دورة)',
     accreditation_brokerage: 'وساطة معتمدين',
