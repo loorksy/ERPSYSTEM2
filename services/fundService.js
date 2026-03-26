@@ -108,6 +108,20 @@ async function getMainFundUsdBalance(db, userId) {
   return { mainFundId: mainId, usd: row?.amount ?? 0 };
 }
 
+/** مبلغ أرباح التدقيق (W+Y+Z) المُرحّل للصندوق الرئيسي لدورة — يُستخدم لتجنّب جمعه مرتين مع لقطة الجداول */
+async function sumMainFundAuditProfitCreditsForCycle(db, userId, cycleId) {
+  if (!cycleId) return 0;
+  const mainId = await getMainFundId(db, userId);
+  if (!mainId) return 0;
+  const row = (await db.query(
+    `SELECT COALESCE(SUM(amount), 0)::float AS s FROM fund_ledger
+     WHERE fund_id = $1 AND type = 'audit_profit_credit'
+       AND ref_table = 'financial_cycles' AND ref_id = $2`,
+    [mainId, cycleId]
+  )).rows[0];
+  return row?.s ?? 0;
+}
+
 /**
  * ترحيل أرباح إلى صندوق (دفعة واحدة).
  */
@@ -131,5 +145,6 @@ module.exports = {
   getFundTotalsByCurrency,
   getMainFundSummary,
   getMainFundUsdBalance,
+  sumMainFundAuditProfitCreditsForCycle,
   transferProfitToFund,
 };

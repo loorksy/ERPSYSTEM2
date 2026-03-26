@@ -121,6 +121,9 @@ function initHomeStats() {
           if (mf && mf.name) {
             parts.push('الصندوق الرئيسي: ' + mf.name + (data.mainFundUsd != null ? ' (' + formatMoney(data.mainFundUsd) + ')' : ''));
           }
+          if (data.sheetOverlapDedupUsd != null && data.sheetOverlapDedupUsd > 0) {
+            parts.push('لا تكرار أرباح التدقيق: −' + formatMoney(data.sheetOverlapDedupUsd));
+          }
           sub.textContent = parts.join(' | ');
         }
         var link = document.getElementById('deferredBalanceLink');

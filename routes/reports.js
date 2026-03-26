@@ -22,9 +22,14 @@ const {
 } = require('../services/pdf/htmlAccountingPdf');
 
 function sendPdf(res, filename, buffer) {
-  const safe = filename.replace(/[^\w\u0600-\u06FF\-_. ]/g, '_') || 'report.pdf';
+  const displayName = (filename && String(filename).trim()) || 'report.pdf';
+  /** قيمة filename= يجب أن تكون ASCII فقط وإلا Node يرمي ERR_INVALID_CHAR */
+  let asciiFallback = displayName.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_').trim();
+  if (!asciiFallback || /^_+$/.test(asciiFallback)) asciiFallback = 'report.pdf';
+  if (!/\.pdf$/i.test(asciiFallback)) asciiFallback += '.pdf';
+  const utf8 = encodeFilenameRfc5987(displayName);
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${safe}"; filename*=UTF-8''${encodeFilenameRfc5987(safe)}`);
+  res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8}`);
   res.send(buffer);
 }
 

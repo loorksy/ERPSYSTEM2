@@ -170,7 +170,7 @@
       u.searchParams.delete('fab');
       window.history.replaceState({}, '', u.pathname + (u.search || '') + u.hash);
     } catch (_) {}
-    toast('افتح شركة من القائمة، ثم سجّل المرتجع من أسفل نافذة التفاصيل. للصناديع: من القائمة «الصناديع» ثم افتح الصندوق.', 'success');
+    toast('افتح شركة من القائمة، ثم سجّل المرتجع من أسفل نافذة التفاصيل. للصناديق: من القائمة «الصناديق» ثم افتح الصندوق.', 'success');
     var el = document.getElementById('tcCards');
     if (el) setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
   }

@@ -8,9 +8,9 @@ const crypto = require('crypto');
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { google } = require('googleapis');
-const { syncAgenciesFromManagementTable, fetchDeferredBalanceUsers, calculateCashBoxBalance } = require('../services/agencySyncService');
+const { syncAgenciesFromManagementTable, calculateCashBoxBalance } = require('../services/agencySyncService');
 const { ensurePrimaryAccreditationAfterCycleCreate } = require('../services/accreditationCycleService');
-const { applyCycleAuditProfitsToLedger } = require('../services/cycleAccountingService');
+const { applyCycleAuditProfitsToLedger, rebuildDeferredFromLocalAgentData } = require('../services/cycleAccountingService');
 const {
   fetchSheetValuesBatched,
   withSheetsRetry,
@@ -812,15 +812,6 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       }
     }
 
-    /** تحديث رصيد المؤجل من جدول الوكيل */
-    if (agentSsId && localSheets) {
-      try {
-        await fetchDeferredBalanceUsers(cycleId, req.session.userId, localSheets);
-      } catch (deferredErr) {
-        console.error('[payroll-audit-local][Deferred]', deferredErr.message);
-      }
-    }
-
     /** حساب رصيد الصندوق */
     if (mgmtSsId && localSheets) {
       try {
@@ -935,6 +926,14 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
       });
     } catch (cacheErr) {
       console.error('[payroll-audit-local] failed to update search cache', cacheErr.message);
+    }
+
+    /** المؤجل يُبنى بعد حفظ «مدقق» — القراءة من Google قبل التدقيق كانت تُسجّل الجميع كمؤجل */
+    try {
+      const dr = await rebuildDeferredFromLocalAgentData(req.session.userId, cycleId);
+      if (!dr.success) console.warn('[payroll-audit-local] deferred rebuild:', dr.message);
+    } catch (deferRebuildErr) {
+      console.error('[payroll-audit-local] deferred rebuild:', deferRebuildErr.message);
     }
 
     try {
@@ -1072,15 +1071,6 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
       } catch (agencySyncErr) {
         console.error('[AgencySync] Failed', agencySyncErr);
         agencySync = { success: false, error: agencySyncErr.message };
-      }
-    }
-
-    /** تحديث رصيد المؤجل من جدول الوكيل (لا تعطل التدقيق) */
-    if (agentSsId) {
-      try {
-        await fetchDeferredBalanceUsers(cycleId, req.session.userId, sheets);
-      } catch (deferredErr) {
-        console.error('[DeferredBalance] Failed', deferredErr);
       }
     }
 
@@ -1478,6 +1468,16 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     } catch (cacheErr) {
       console.error('[payroll-execute] failed to update search cache', cacheErr.message);
     }
+
+    if (agentSsId) {
+      try {
+        const dr = await rebuildDeferredFromLocalAgentData(req.session.userId, cycleId);
+        if (!dr.success) console.warn('[payroll-execute] deferred rebuild:', dr.message);
+      } catch (deferRebuildErr) {
+        console.error('[payroll-execute] deferred rebuild:', deferRebuildErr.message);
+      }
+    }
+
     try {
       await db.query(
         'UPDATE financial_cycles SET payroll_audit_user_info_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3',

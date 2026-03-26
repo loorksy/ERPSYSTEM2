@@ -386,7 +386,7 @@ async function getMovementsReportData(db, userId, cycleId) {
     fundLedger: fundLedgerOut,
     fundLedgerTruncated: flTrunc,
     noteTransferAndFundNoCycle:
-      'دفتا شركات التحويل والصناديع لا يحتويان عمود دورة؛ تُعرض أحدث الحركات بغض النظر عن الدورة.',
+      'دفتا شركات التحويل والصناديق لا يحتويان عمود دورة؛ تُعرض أحدث الحركات بغض النظر عن الدورة.',
   };
 }
 

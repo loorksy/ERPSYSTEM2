@@ -215,7 +215,7 @@ function renderMovements(data) {
     ])
   );
 
-  inner += '<h2>دفتر الصناديع</h2>';
+  inner += '<h2>دفتر الصناديق</h2>';
   if (data.fundLedgerTruncated) inner += '<p class="muted">مقتطع.</p>';
   inner += tableHtml(
     ['#', 'الصندوق', 'النوع', 'المبلغ', 'عملة', 'ملاحظات', 'تاريخ'],

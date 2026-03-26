@@ -3,7 +3,13 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { calculateCashBoxBalance, fetchDeferredBalanceUsers } = require('../services/agencySyncService');
-const { getFundTotalsByCurrency, getMainFundSummary, getMainFundUsdBalance, transferProfitToFund } = require('../services/fundService');
+const {
+  getFundTotalsByCurrency,
+  getMainFundSummary,
+  getMainFundUsdBalance,
+  sumMainFundAuditProfitCreditsForCycle,
+  transferProfitToFund,
+} = require('../services/fundService');
 const { computeDebtBreakdown } = require('../services/debtAggregation');
 const { sumLedgerBucket } = require('../services/ledgerService');
 const { sumDeferredTotalAllCycles, mergeMemberDeferredIntoCycle } = require('../services/deferredSalaryService');
@@ -132,13 +138,18 @@ router.get('/stats', requireAuth, async (req, res) => {
     /** إجمالي المؤجل عبر كل الدورات (أرصدة غير مدققة متراكمة) */
     deferredBalance = await sumDeferredTotalAllCycles(db, userId);
 
-    /** بطاقة رصيد الصندوق: الصندوق الرئيسي + لقطة الجداول فقط (لا تُجمع كل الصناديع) */
-    cashBalance = (mainFundUsd || 0) + snapshotCash;
+    /** لقطة الجداول (W+Y+Z) + رصيد الصندوق الرئيسي؛ أرباح التدقيق تُرحَّل للصندوق فلا تُجمع مع اللقطة مرتين */
+    let sheetOverlapDedupUsd = 0;
+    if (defaultCycleId) {
+      sheetOverlapDedupUsd = await sumMainFundAuditProfitCreditsForCycle(db, userId, defaultCycleId);
+    }
+    cashBalance = (mainFundUsd || 0) + snapshotCash - sheetOverlapDedupUsd;
 
     res.json({
       success: true,
       cashBalance,
       snapshotCash,
+      sheetOverlapDedupUsd,
       fundTotals,
       mainFund,
       deferredBalance,
@@ -202,7 +213,7 @@ router.post('/refresh-deferred', requireAuth, async (req, res) => {
   }
 });
 
-/** مصادر الأموال: الصناديع وأرصدتها */
+/** مصادر الأموال: الصناديق وأرصدتها */
 router.get('/fund-sources', requireAuth, async (req, res) => {
   try {
     const db = getDb();

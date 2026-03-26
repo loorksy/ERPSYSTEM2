@@ -133,6 +133,13 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
             const rest = await fetchSheetValuesBatched(sheets, spreadsheetId, sheetName, SHEET_BATCH_ROWS + 1);
             rows = rows.concat(rest);
           }
+          if (rows.length === 0) {
+            try {
+              rows = await fetchSheetValuesBatched(sheets, spreadsheetId, sheetName);
+            } catch (e2) {
+              console.warn('[AgencySync] batchGet أعطى صفوفاً فارغة؛ فشل الجلب الاحتياطي للورقة', sheetName, e2.message);
+            }
+          }
         } else {
           rows = await fetchSheetValuesBatched(sheets, spreadsheetId, sheetName);
         }

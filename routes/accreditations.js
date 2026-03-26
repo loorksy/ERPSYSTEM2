@@ -91,7 +91,7 @@ router.post('/:id/add-amount', requireAuth, async (req, res) => {
     const db = getDb();
     const mainFundId = await getMainFundId(db, req.session.userId);
     if (!mainFundId) {
-      return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً من قسم الصناديع قبل إضافة مبالغ.' });
+      return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً من قسم الصناديق قبل إضافة مبالغ.' });
     }
     const ent = (await db.query(
       'SELECT id, balance_amount FROM accreditation_entities WHERE id = $1 AND user_id = $2',

@@ -55,7 +55,7 @@ const pages = [
   { path: '/sub-agencies', page: 'sub-agencies', title: 'الوكالات الفرعية' },
   { path: '/main-agency', page: 'main-agency', title: 'الوكالة الرئيسية' },
   { path: '/transfer-companies', page: 'transfer-companies', title: 'شركات التحويل' },
-  { path: '/funds', page: 'funds', title: 'الصناديع' },
+  { path: '/funds', page: 'funds', title: 'الصناديق' },
   { path: '/shipping', page: 'shipping', title: 'الشحن' },
   { path: '/client-portal', page: 'client-portal', title: 'واجهة العملاء' },
 ];
