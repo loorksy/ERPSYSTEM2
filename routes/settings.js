@@ -125,7 +125,11 @@ router.post('/reset-data', requireAuth, async (req, res) => {
     if (!wipe && filtered.length === 0) {
       return res.json({ success: false, message: 'فعّل «حذف كل شيء» أو اختر فئة واحدة على الأقل.' });
     }
-    await runTransaction((client) => executeReset(client, req.session.userId, filtered, wipe));
+    await runTransaction((client) =>
+      executeReset(client, req.session.userId, filtered, wipe, {
+        preserveIntegrations: wipe,
+      })
+    );
     res.json({ success: true, message: 'تم حذف البيانات المحددة من الخادم.' });
   } catch (error) {
     console.error('[settings] reset-data:', error);

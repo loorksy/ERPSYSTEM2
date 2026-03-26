@@ -96,7 +96,7 @@
               حذف البيانات من الخادم
             </h4>
             <p class="text-sm text-red-700 mb-3">
-              يمكنك اختيار أنواع البيانات المراد حذفها أو حذف كل شيء دون استثناء. يتم التنفيذ على قاعدة البيانات فقط؛ لن يُحذف شيء من ملفات Google إلا إذا اخترت مسح ربط Sheets محلياً.
+              يمكنك اختيار أنواع البيانات المراد حذفها أو «حذف كل شيء»: في هذه الحالة يُمسح كل البيانات التشغيلية من الخادم مع <strong>الإبقاء</strong> على ربط Google Sheets محلياً وعلى إعدادات الذكاء الاصطناعي. لمسح الربط أو الذكاء اختر الفئة المناسبة من القائمة يدوياً.
             </p>
             <button type="button" onclick="openResetDataModal()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-red-600 text-white hover:bg-red-700 active:scale-[0.97]">
               <i class="fas fa-trash"></i>
@@ -236,8 +236,8 @@
         <label class="flex items-start gap-3 p-3 rounded-xl border-2 border-red-200 bg-red-50/80 cursor-pointer">
           <input type="checkbox" id="resetWipeAll" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500" onchange="onResetWipeAllChange()">
           <span>
-            <span class="font-bold text-red-800 block">حذف كل شيء بدون استثناء</span>
-            <span class="text-sm text-red-700">يشمل جميع الفئات أدناه دفعة واحدة.</span>
+            <span class="font-bold text-red-800 block">حذف كل شيء (البيانات التشغيلية)</span>
+            <span class="text-sm text-red-700">يشمل جميع الفئات أدناه دفعة واحدة، ما عدا ربط Google Sheets والذكاء الاصطناعي (يُحفظان). لحذفهما اختر الفئتين من القائمة يدوياً.</span>
           </span>
         </label>
         <div id="resetDataCategories" class="space-y-2 text-sm text-slate-700 border border-slate-200 rounded-xl p-3 bg-slate-50/80 max-h-[40vh] overflow-y-auto">

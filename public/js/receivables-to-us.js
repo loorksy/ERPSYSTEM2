@@ -72,11 +72,13 @@
 
         var ag = document.getElementById('recvAgencies');
         if (ag) {
-          if (!d.subAgencies || !d.subAgencies.length) ag.innerHTML = listEmpty('لا توجد أرصدة موجبة');
-          else {
+          if (!d.subAgencies || !d.subAgencies.length) {
+            ag.innerHTML = listEmpty('لا يوجد دين مسجل لنا من الوكالات (رصيد محاسبي سالب للوكالة فقط)');
+          } else {
             ag.innerHTML = '<ul class="divide-y divide-slate-100">' + d.subAgencies.map(function(x) {
+              var amt = x.amountOwedToUs != null ? x.amountOwedToUs : Math.abs(parseFloat(x.balance) || 0);
               return '<li class="py-2 flex justify-between gap-4"><span>' + esc(x.name) +
-                '</span><span class="font-semibold text-emerald-700 tabular-nums">' + fmt(x.balance) + '</span></li>';
+                '</span><span class="font-semibold text-emerald-700 tabular-nums">' + fmt(amt) + '</span></li>';
             }).join('') + '</ul>';
           }
         }

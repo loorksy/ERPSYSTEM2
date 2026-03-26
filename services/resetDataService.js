@@ -60,7 +60,13 @@ const RESET_CATEGORIES = [
   },
 ];
 
-function has(cat, selected, wipeAll) {
+/**
+ * @param {boolean} preserveIntegrations عند wipeAll: عدم مسح فئتي ai و google_sheets
+ */
+function has(cat, selected, wipeAll, preserveIntegrations) {
+  if (preserveIntegrations && wipeAll && (cat === 'ai' || cat === 'google_sheets')) {
+    return false;
+  }
   return wipeAll || (selected && selected.includes(cat)) || (selected && selected.includes('all'));
 }
 
@@ -69,19 +75,21 @@ function has(cat, selected, wipeAll) {
  * @param {number} userId
  * @param {string[]} selected
  * @param {boolean} wipeAll
+ * @param {{ preserveIntegrations?: boolean }} [options]
  */
-async function executeReset(client, userId, selected, wipeAll) {
+async function executeReset(client, userId, selected, wipeAll, options = {}) {
   const s = selected || [];
+  const preserveIntegrations = !!options.preserveIntegrations;
 
   // 1) معاملات الوكالة المرتبطة بعمليات شحن (قبل حذف shipping_transactions)
-  if (has('sub_agencies', s, wipeAll) || wipeAll) {
+  if (has('sub_agencies', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM sub_agency_transactions');
-  } else if (has('shipping', s, wipeAll)) {
+  } else if (has('shipping', s, wipeAll, preserveIntegrations)) {
     await client.query('DELETE FROM sub_agency_transactions WHERE shipping_transaction_id IS NOT NULL');
   }
 
   // 2) الشحن
-  if (has('shipping', s, wipeAll) || wipeAll) {
+  if (has('shipping', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM shipping_carrier_transactions');
     await client.query('DELETE FROM shipping_transactions');
     await client.query('DELETE FROM shipping_inventory');
@@ -89,7 +97,7 @@ async function executeReset(client, userId, selected, wipeAll) {
   }
 
   // 3) الدورات والرواتب والمرتبط بالدورات
-  if (has('payroll_cycles', s, wipeAll) || wipeAll) {
+  if (has('payroll_cycles', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query(
       'DELETE FROM cash_box_snapshot WHERE cycle_id IN (SELECT id FROM financial_cycles WHERE user_id = $1)',
       [userId]
@@ -123,7 +131,7 @@ async function executeReset(client, userId, selected, wipeAll) {
   }
 
   // 4) الوكالات الفرعية (بعد الدورات إن وُجدت؛ يبقى تنظيف الجداول العامة)
-  if (has('sub_agencies', s, wipeAll) || wipeAll) {
+  if (has('sub_agencies', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM user_agency_link');
     await client.query('DELETE FROM agency_sheet_mapping');
     await client.query('DELETE FROM agency_cycle_users');
@@ -133,13 +141,13 @@ async function executeReset(client, userId, selected, wipeAll) {
   }
 
   // 5) قوائم الشحن
-  if (has('shipping_lists', s, wipeAll) || wipeAll) {
+  if (has('shipping_lists', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM shipping_approved');
     await client.query('DELETE FROM shipping_companies');
   }
 
   // 6) صناديع (قبل شركات التحويل إن كان هناك FK من funds)
-  if (has('funds', s, wipeAll) || wipeAll) {
+  if (has('funds', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM financial_returns WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM entity_payables WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM fx_spread_entries WHERE user_id = $1', [userId]);
@@ -161,18 +169,18 @@ async function executeReset(client, userId, selected, wipeAll) {
    * دفتر موحّد، مصاريف، تبديل راتب (قبل حذف شركات التحويل)، وساطة إدارية.
    * يُشغَّل عند: الدفتر صراحةً، أو الصناديق، أو حذف كل شيء — لربط القيود بالبيانات المحذوفة.
    */
-  if (has('accounting_ledger', s, wipeAll) || has('funds', s, wipeAll) || wipeAll) {
+  if (has('accounting_ledger', s, wipeAll, preserveIntegrations) || has('funds', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM salary_swap_entries WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM ledger_entries WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM expense_entries WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM admin_brokerage_entries WHERE user_id = $1', [userId]);
   }
   /* ديون مسجّلة (تبديل راتب/تقسيط…) إذا لم تُمسَح مع الصناديق */
-  if (has('accounting_ledger', s, wipeAll) || wipeAll) {
+  if (has('accounting_ledger', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query('DELETE FROM entity_payables WHERE user_id = $1', [userId]);
   }
 
-  if (has('transfer_companies', s, wipeAll) || wipeAll) {
+  if (has('transfer_companies', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query(
       'DELETE FROM transfer_company_ledger WHERE company_id IN (SELECT id FROM transfer_companies WHERE user_id = $1)',
       [userId]
@@ -180,7 +188,7 @@ async function executeReset(client, userId, selected, wipeAll) {
     await client.query('DELETE FROM transfer_companies WHERE user_id = $1', [userId]);
   }
 
-  if (has('accreditations', s, wipeAll) || wipeAll) {
+  if (has('accreditations', s, wipeAll, preserveIntegrations) || wipeAll) {
     await client.query(
       'DELETE FROM accreditation_ledger WHERE accreditation_id IN (SELECT id FROM accreditation_entities WHERE user_id = $1)',
       [userId]
@@ -188,13 +196,13 @@ async function executeReset(client, userId, selected, wipeAll) {
     await client.query('DELETE FROM accreditation_entities WHERE user_id = $1', [userId]);
   }
 
-  if (has('ai', s, wipeAll) || wipeAll) {
+  if (has('ai', s, wipeAll, preserveIntegrations)) {
     await client.query('DELETE FROM analysis_jobs WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM message_analyses');
     await client.query('DELETE FROM ai_config');
   }
 
-  if (has('google_sheets', s, wipeAll) || wipeAll) {
+  if (has('google_sheets', s, wipeAll, preserveIntegrations)) {
     await client.query(
       `UPDATE google_sheets_config SET spreadsheet_id = NULL, token = NULL, credentials = NULL,
        sync_enabled = 0, last_sync = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = 1`

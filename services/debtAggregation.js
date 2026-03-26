@@ -69,7 +69,8 @@ async function computeDebtBreakdown(db, userId) {
 }
 
 /**
- * تجميع «ديين لنا»: أرصدة موجبة (لنا) عبر المعتمدين وشركات التحويل والصناديق والوكالات الفرعية.
+ * تجميع «ديين لنا»: أرصدة لصالحنا عبر المعتمدين وشركات التحويل والصناديق.
+ * الوكالات الفرعية: يُعرض فقط الرصيد المحاسبي السالب (الوكالة مدينة لنا)، كقيمة موجبة amountOwedToUs.
  */
 async function computeReceivablesToUs(db, userId) {
   const accreditation = (await db.query(
@@ -108,7 +109,7 @@ async function computeReceivablesToUs(db, userId) {
     HAVING (
       COALESCE(SUM(CASE WHEN t.type IN ('profit', 'reward') THEN t.amount ELSE 0 END), 0) -
       COALESCE(SUM(CASE WHEN t.type IN ('deduction', 'due') THEN t.amount ELSE 0 END), 0)
-    ) > 0.0001
+    ) < -0.0001
     ORDER BY s.name
   `)).rows;
 
@@ -118,15 +119,28 @@ async function computeReceivablesToUs(db, userId) {
     if ((r.balance_currency || 'USD') === 'USD') totalUsd += r.amount || 0;
   });
   funds.forEach((r) => { totalUsd += r.amount || 0; });
-  subAgencyRows.forEach((r) => { totalUsd += r.balance || 0; });
+  subAgencyRows.forEach((r) => {
+    const owed = Math.abs(r.balance || 0);
+    totalUsd += owed;
+  });
 
   return {
     totalUsd,
     accreditation,
     transferCompanies,
     funds,
-    subAgencies: subAgencyRows.map((r) => ({ id: r.id, name: r.name, balance: r.balance })),
+    subAgencies: subAgencyRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      balanceRaw: r.balance,
+      amountOwedToUs: Math.abs(r.balance || 0),
+    })),
   };
 }
+
+/**
+ * توسعة مستقبلية محتملة: تسجيل صريح لتحويلات نقدية للوكالة مقابل نصيب الربح
+ * (أنواع حركات جديدة أو جدول مرتبط بالصندوق) — راجع منطق sub_agency_transactions و fund_ledger.
+ */
 
 module.exports = { computeDebtBreakdown, computeReceivablesToUs };
