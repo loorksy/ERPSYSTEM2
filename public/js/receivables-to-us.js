@@ -28,30 +28,16 @@
         if (!d.success) {
           totalEl.textContent = '—';
           var err = d.message || 'فشل التحميل';
-          ['recvCompanies', 'recvAgencies'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.innerHTML = '<p class="text-red-600">' + esc(err) + '</p>';
-          });
+          var ag = document.getElementById('recvAgencies');
+          if (ag) ag.innerHTML = '<p class="text-red-600">' + esc(err) + '</p>';
           return;
         }
         totalEl.textContent = fmt(d.totalUsd);
 
-        var comp = document.getElementById('recvCompanies');
-        if (comp) {
-          if (!d.transferCompanies || !d.transferCompanies.length) {
-            comp.innerHTML = listEmpty('لا توجد مبالغ لنا مسجّلة في شركات التحويل');
-          } else {
-            comp.innerHTML = '<ul class="divide-y divide-slate-100">' + d.transferCompanies.map(function(x) {
-              return '<li class="py-2 flex justify-between gap-4"><span>' + esc(x.name) + '</span>' +
-                '<span class="font-semibold text-emerald-700 tabular-nums">' + fmt(x.amount) + '</span></li>';
-            }).join('') + '</ul>';
-          }
-        }
-
         var ag = document.getElementById('recvAgencies');
         if (ag) {
           if (!d.subAgencies || !d.subAgencies.length) {
-            ag.innerHTML = listEmpty('لا يوجد دين لنا من الوكالات (رصيد سالب للوكالة فقط)');
+            ag.innerHTML = listEmpty('لا يوجد دين لنا مسجّل من الوكالات (لا رصيد سالب للوكالة)');
           } else {
             ag.innerHTML = '<ul class="divide-y divide-slate-100">' + d.subAgencies.map(function(x) {
               var amt = x.amountOwedToUs != null ? x.amountOwedToUs : Math.abs(parseFloat(x.balance) || 0);

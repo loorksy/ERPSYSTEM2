@@ -69,19 +69,10 @@ async function computeDebtBreakdown(db, userId) {
 }
 
 /**
- * تجميع «ديين لنا»: مبالغ ناتجة عن معاملات/سحوبات (أموال أو شحن عبر الوكالات)، وليس أرصدة جارية لمعتمدين أو صناديق.
- * — شركات التحويل: رصيد لنا من سجل التحويل.
- * — الوكالات الفرعية: رصيد محاسبي سالب فقط (مديونية الوكالة لنا من حركات sub_agency_transactions).
+ * تجميع «ديين لنا»: فقط مديونية الوكالات الفرعية لنا من حركات المعاملات (شحن/مكافآت/خصومات…).
+ * لا يُضمّن: أرصدة الصناديق، الاعتمادات، شركات التحويل، أو أرباح الإدارة/الجدول — تلك لها بطاقاتها.
  */
 async function computeReceivablesToUs(db, userId) {
-  const transferCompanies = (await db.query(
-    `SELECT id, name, balance_amount AS amount, balance_currency
-     FROM transfer_companies
-     WHERE user_id = $1 AND balance_amount > 0
-     ORDER BY name`,
-    [userId]
-  )).rows;
-
   const subAgencyRows = (await db.query(`
     SELECT s.id, s.name,
       COALESCE(SUM(CASE WHEN t.type IN ('profit', 'reward') THEN t.amount ELSE 0 END), 0) -
@@ -97,9 +88,6 @@ async function computeReceivablesToUs(db, userId) {
   `)).rows;
 
   let totalUsd = 0;
-  transferCompanies.forEach((r) => {
-    if ((r.balance_currency || 'USD') === 'USD') totalUsd += r.amount || 0;
-  });
   subAgencyRows.forEach((r) => {
     const owed = Math.abs(r.balance || 0);
     totalUsd += owed;
@@ -107,7 +95,7 @@ async function computeReceivablesToUs(db, userId) {
 
   return {
     totalUsd,
-    transferCompanies,
+    transferCompanies: [],
     subAgencies: subAgencyRows.map((r) => ({
       id: r.id,
       name: r.name,
