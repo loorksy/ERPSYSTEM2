@@ -95,57 +95,59 @@
     var rows = accBulkStagingItems.map(function(row, idx) {
       var r = rowBp(row, idx);
       return (
-        '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-indigo-50/25 transition-colors">' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle text-slate-600 tabular-nums whitespace-nowrap" data-label="#"><span class="acc-bulk-val">' + escHtml(r.lineNum) + '</span></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle font-mono text-sm text-slate-800" data-label="كود"><span class="acc-bulk-val">' + escHtml(row.code) + '</span></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle font-medium text-slate-900 min-w-0" data-label="الاسم"><span class="acc-bulk-val line-clamp-3 break-words inline-block max-w-full">' + escHtml(row.name) + '</span></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle text-indigo-700 font-semibold tabular-nums whitespace-nowrap" data-label="المبلغ"><span class="acc-bulk-val">' + escHtml(row.amount) + '</span></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle" data-label="وساطة %">' +
-        '<input type="number" min="0" max="100" step="0.01" class="acc-bulk-bp w-full max-w-full sm:max-w-[5.5rem] min-h-[40px] sm:min-h-[40px] px-3 py-2 sm:py-1.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" data-idx="' + idx + '" value="' + escHtml(accBulkBpInputValue(r.bpVal, defB)) + '"></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle" data-label="الاتجاه">' +
-        '<select class="acc-bulk-dir w-full max-w-full min-w-0 min-h-[40px] sm:min-h-[40px] px-3 py-2 sm:py-2 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" data-idx="' + idx + '">' +
+        '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-slate-50 transition-colors">' +
+        '<td class="acc-bulk-td p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(r.lineNum) + '</span></td>' +
+        '<td class="acc-bulk-td p-3 align-middle" data-label="المعتمد">' +
+          '<div class="acc-bulk-val">' +
+            '<div class="font-bold text-slate-800 text-sm">' + escHtml(row.name) + '</div>' +
+            '<div class="font-mono text-slate-500 text-xs mt-0.5">' + escHtml(row.code) + '</div>' +
+          '</div>' +
+        '</td>' +
+        '<td class="acc-bulk-td p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val font-bold text-indigo-600 tabular-nums">' + escHtml(row.amount) + '</span></td>' +
+        '<td class="acc-bulk-td p-3 align-middle" data-label="وساطة %">' +
+        '<input type="number" min="0" max="100" step="0.01" class="acc-bulk-bp w-full sm:w-20 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-shadow" data-idx="' + idx + '" value="' + escHtml(accBulkBpInputValue(r.bpVal, defB)) + '"></td>' +
+        '<td class="acc-bulk-td p-3 align-middle" data-label="الاتجاه">' +
+        '<select class="acc-bulk-dir w-full px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-shadow" data-idx="' + idx + '">' +
         '<option value="to_us"' + (row.salaryDirection === 'to_us' ? ' selected' : '') + '>راتب لنا</option>' +
         '<option value="to_them"' + (row.salaryDirection === 'to_them' ? ' selected' : '') + '>راتب علينا</option></select></td>' +
-        '<td class="acc-bulk-td p-2 sm:p-3 align-middle" data-label="النوع">' +
-        '<select class="acc-bulk-kind w-full max-w-full min-w-0 min-h-[40px] sm:min-h-[40px] px-3 py-2 sm:py-2 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" data-idx="' + idx + '">' +
+        '<td class="acc-bulk-td p-3 align-middle" data-label="النوع">' +
+        '<select class="acc-bulk-kind w-full px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-shadow" data-idx="' + idx + '">' +
         '<option value="salary"' + (row.amountKind === 'salary' ? ' selected' : '') + '>راتب</option>' +
         '<option value="debt_to_us"' + (row.amountKind === 'debt_to_us' ? ' selected' : '') + '>دين لنا</option></select></td>' +
-        '<td class="acc-bulk-td acc-bulk-td-actions p-2 sm:p-3 align-middle whitespace-nowrap" data-label="إجراء">' +
-        '<button type="button" class="min-h-[40px] sm:min-h-0 w-full sm:w-auto px-4 py-2 sm:py-0 rounded-xl border border-red-100 sm:border-0 bg-red-50/80 sm:bg-transparent text-red-600 text-sm font-semibold hover:bg-red-100 sm:hover:bg-transparent sm:hover:underline" data-acc-delete="' + idx + '">حذف</button></td></tr>'
+        '<td class="acc-bulk-td p-3 align-middle text-left sm:w-12" data-label="إجراء">' +
+        '<button type="button" class="w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors py-2 sm:py-0 text-sm font-semibold sm:font-normal" data-acc-delete="' + idx + '"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none"></i></button></td></tr>'
       );
     }).join('');
 
     var colgroup =
       '<colgroup>' +
-      '<col style="width:3%">' +
-      '<col style="width:8%">' +
-      '<col style="width:26%">' +
-      '<col style="width:10%">' +
-      '<col style="width:8%">' +
-      '<col style="width:18%">' +
-      '<col style="width:15%">' +
+      '<col style="width:4%">' +
+      '<col style="width:30%">' +
       '<col style="width:12%">' +
+      '<col style="width:12%">' +
+      '<col style="width:16%">' +
+      '<col style="width:16%">' +
+      '<col style="width:10%">' +
       '</colgroup>';
 
     var thead =
       '<thead class="acc-bulk-thead">' +
-      '<tr class="border-b border-slate-100 bg-slate-50 text-slate-700">' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-hashtag text-[0.65rem] text-slate-400" aria-hidden="true"></i>#</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-barcode text-[0.65rem] text-slate-400" aria-hidden="true"></i>كود</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold"><span class="inline-flex items-center gap-1.5"><i class="fas fa-user text-[0.65rem] text-slate-400" aria-hidden="true"></i>الاسم</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-coins text-[0.65rem] text-slate-400" aria-hidden="true"></i>المبلغ</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-percent text-[0.65rem] text-slate-400" aria-hidden="true"></i>وساطة %</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold"><span class="inline-flex items-center gap-1.5"><i class="fas fa-right-left text-[0.65rem] text-slate-400" aria-hidden="true"></i>الاتجاه</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold"><span class="inline-flex items-center gap-1.5"><i class="fas fa-tag text-[0.65rem] text-slate-400" aria-hidden="true"></i>النوع</span></th>' +
-      '<th class="p-2 sm:p-3 text-xs sm:text-sm font-bold w-16"><span class="inline-flex items-center gap-1.5"><i class="fas fa-cog text-[0.65rem] text-slate-400" aria-hidden="true"></i></span></th>' +
+      '<tr class="border-b border-slate-200 bg-slate-50 text-slate-600">' +
+      '<th class="p-3 text-xs font-bold text-center">#</th>' +
+      '<th class="p-3 text-xs font-bold text-right">المعتمد</th>' +
+      '<th class="p-3 text-xs font-bold text-right">المبلغ</th>' +
+      '<th class="p-3 text-xs font-bold text-center">وساطة %</th>' +
+      '<th class="p-3 text-xs font-bold text-right">الاتجاه</th>' +
+      '<th class="p-3 text-xs font-bold text-right">النوع</th>' +
+      '<th class="p-3 text-xs font-bold text-center"></th>' +
       '</tr></thead>';
 
     tb.innerHTML =
-      '<div class="acc-bulk-scroll max-h-[min(38vh,18rem)] sm:max-h-[min(52vh,30rem)] lg:max-h-[min(60vh,38rem)] overflow-y-auto overflow-x-auto overscroll-contain [-webkit-overflow-scrolling:touch]">' +
-      '<table class="acc-bulk-review w-full min-w-0 text-right border-collapse text-sm">' +
+      '<div class="acc-bulk-scroll max-h-[50vh] overflow-y-auto overflow-x-auto overscroll-contain">' +
+      '<table class="acc-bulk-review w-full min-w-[800px] sm:min-w-0 text-right border-collapse text-sm">' +
       colgroup +
       thead +
-      '<tbody>' + rows + '</tbody></table></div>';
+      '<tbody class="bg-white">' + rows + '</tbody></table></div>';
   }
 
   function wireAccBulkStagingDelegation() {
