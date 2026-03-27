@@ -40,9 +40,9 @@
 
   function accResetBulkStagingTableScroll() {
     var wrap = document.querySelector('#accBulkStagingTable .acc-bulk-scroll');
-    if (!wrap) return;
-    wrap.scrollTop = 0;
-    wrap.scrollLeft = 0;
+    if (wrap) wrap.scrollLeft = 0;
+    var body = document.getElementById('accBulkModalBody');
+    if (body) body.scrollTop = 0;
   }
 
   function accBulkReviewKindCodeToRow(code) {
@@ -170,8 +170,8 @@
       '</tr></thead>';
 
     tb.innerHTML =
-      '<div class="acc-bulk-scroll w-full h-full overflow-y-auto overflow-x-hidden sm:overflow-x-auto overscroll-contain flex-1 relative">' +
-      '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[640px] text-right border-collapse text-sm pb-10">' +
+      '<div class="acc-bulk-scroll w-full min-w-0 overflow-x-auto">' +
+      '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[640px] text-right border-collapse text-sm">' +
       colgroup +
       thead +
       '<tbody class="bg-white">' + rows + '</tbody></table></div>';
@@ -341,24 +341,32 @@
     });
   }
 
+  function accDelRowHtml(a) {
+    var name = escHtml(a.name || '');
+    var code = escHtml(a.code || '');
+    var bal = (a.balance_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    return (
+      '<label class="acc-del-row flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white cursor-pointer hover:border-indigo-100 hover:bg-indigo-50/40 transition-colors shadow-sm">' +
+      '<input type="checkbox" class="acc-del-cb h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" value="' + a.id + '">' +
+      '<span class="flex-1 min-w-0 text-sm text-slate-800">' + name + (code ? ' <span class="text-slate-400 text-xs font-mono">' + code + '</span>' : '') + '</span>' +
+      '<span class="shrink-0 text-sm font-bold text-emerald-600 tabular-nums">' + bal + '</span>' +
+      '</label>'
+    );
+  }
+
   function accRefreshDeliveryList(cycleId) {
     var listEl = document.getElementById('accDelList');
     if (!listEl) return;
-    listEl.innerHTML = '<p class="text-slate-400">جاري التحميل…</p>';
+    listEl.innerHTML = '<p class="py-10 text-center text-sm text-slate-500">جاري التحميل…</p>';
     var url = '/api/accreditations/with-balance';
     if (cycleId) url += '?cycleId=' + encodeURIComponent(cycleId);
     apiCall(url).then(function(res) {
       if (!listEl) return;
       if (!res.success || !(res.list || []).length) {
-        listEl.innerHTML = '<p class="text-slate-500">لا يوجد معتمدون برصيد' + (cycleId ? ' له نشاط في الدورة المختارة' : '') + '</p>';
+        listEl.innerHTML = '<p class="py-10 text-center text-sm text-slate-500">لا يوجد معتمدون برصيد' + (cycleId ? ' له نشاط في الدورة المختارة' : '') + '</p>';
         return;
       }
-      listEl.innerHTML = (res.list || []).map(function(a) {
-        return '<label class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 cursor-pointer hover:bg-slate-50">' +
-          '<input type="checkbox" class="acc-del-cb" value="' + a.id + '">' +
-          '<span class="flex-1">' + (a.name || '') + ' <span class="text-slate-400 text-xs">' + (a.code || '') + '</span></span>' +
-          '<span class="font-semibold text-indigo-600">' + (a.balance_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + '</span></label>';
-      }).join('');
+      listEl.innerHTML = (res.list || []).map(accDelRowHtml).join('');
     });
   }
 
@@ -557,23 +565,11 @@
   };
 
   window.accOpenDelivery = function() {
-    fillCycleSelect('accDelCycle');
-    var listEl = document.getElementById('accDelList');
-    if (listEl) listEl.innerHTML = '<p class="text-slate-400">جاري التحميل…</p>';
     document.getElementById('accDeliveryModal').classList.remove('hidden');
     document.getElementById('accDeliveryModal').classList.add('flex');
-    apiCall('/api/accreditations/with-balance').then(function(res) {
-      if (!listEl) return;
-      if (!res.success || !(res.list || []).length) {
-        listEl.innerHTML = '<p class="text-slate-500">لا يوجد معتمدون برصيد</p>';
-        return;
-      }
-      listEl.innerHTML = (res.list || []).map(function(a) {
-        return '<label class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 cursor-pointer hover:bg-slate-50">' +
-          '<input type="checkbox" class="acc-del-cb" value="' + a.id + '">' +
-          '<span class="flex-1">' + (a.name || '') + ' <span class="text-slate-400 text-xs">' + (a.code || '') + '</span></span>' +
-          '<span class="font-semibold text-indigo-600">' + (a.balance_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + '</span></label>';
-      }).join('');
+    fillCycleSelect('accDelCycle').then(function() {
+      var sel = document.getElementById('accDelCycle');
+      accRefreshDeliveryList(sel && sel.value ? sel.value : '');
     });
   };
   window.accCloseDelivery = function() {
@@ -741,11 +737,21 @@
     });
   }
 
+  function wireAccDeliveryCycle() {
+    var sel = document.getElementById('accDelCycle');
+    if (!sel || sel.dataset.accDelBound) return;
+    sel.dataset.accDelBound = '1';
+    sel.addEventListener('change', function() {
+      accRefreshDeliveryList(sel.value || '');
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     wireAccBulkStagingDelegation();
     wireAccBulkSourceMethod();
     wireAccBulkDropzone();
     wireAccBulkReviewKind();
+    wireAccDeliveryCycle();
     accSyncBulkSourcePanels();
     accLoad();
     accAmountKindChange();
