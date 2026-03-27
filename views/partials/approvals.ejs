@@ -82,10 +82,16 @@
   }
   /* استيراد: نمط لوحة الإجراء السريع (ضيق) — مراجعة: نمط بطاقة العملاء (عرض max-w-5xl) */
   #accBulkModal[data-acc-step="import"] .acc-bulk-modal-shell {
-    max-width: min(100vw - 1.25rem, 30rem);
+    max-width: min(100vw - 1.25rem, 42rem);
   }
   #accBulkModal[data-acc-step="review"] .acc-bulk-modal-shell {
     max-width: min(100vw - 1.5rem, 64rem);
+  }
+  
+  @media (min-width: 1024px) {
+    #accBulkModal .acc-bulk-modal-shell {
+      margin-right: 16rem; /* لدفع القائمة يساراً بمقدار عرض القائمة الجانبية تقريباً */
+    }
   }
   .acc-bulk-src-btn {
     transition: all 0.2s ease;
@@ -98,12 +104,19 @@
   }
   .acc-bulk-modal-body {
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pan-x;
+    touch-action: auto;
   }
   .acc-bulk-scroll {
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pan-x;
+    touch-action: auto;
+  }
+  @media (max-width: 767px) {
+    .acc-bulk-scroll {
+      touch-action: auto;
+      max-height: none !important;
+      overflow: visible !important;
+    }
   }
   /* iOS Safari: تجنّب تكبير الصفحة عند التركيز على حقول أصغر من 16px */
   @media (max-width: 639px) {
@@ -149,27 +162,31 @@
       width: 100%;
     }
     .acc-bulk-review tbody tr.acc-bulk-tr {
-      display: block;
-      width: 100%;
-      max-width: 100%;
-      border: 1px solid rgb(241 245 249);
-      border-radius: 0.75rem;
-      margin-bottom: 0.75rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: 
+        "name number"
+        "amount amount"
+        "broker dir"
+        "type action";
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px solid rgb(226 232 240);
+      border-radius: 1rem;
+      margin-bottom: 1rem;
       background: #fff;
-      box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04);
-      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      position: relative;
     }
-    /* عمودي: تسمية ثم قيمة بعرض كامل يتناسب مع RTL */
     .acc-bulk-review tbody td.acc-bulk-td {
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      justify-content: flex-start;
-      gap: 0.25rem;
-      padding: 0.5rem 0.75rem !important;
-      border-bottom: 1px solid rgb(241 245 249);
-      width: 100%;
-      max-width: 100%;
+      justify-content: center;
+      padding: 0 !important;
+      border: none !important;
+      width: 100% !important;
+      max-width: 100% !important;
       box-sizing: border-box;
     }
     .acc-bulk-review tbody td.acc-bulk-td:last-child { border-bottom: none; }
@@ -179,9 +196,8 @@
       font-size: 0.7rem;
       font-weight: 600;
       color: rgb(100 116 139);
-      max-width: none;
-      width: 100%;
-      text-align: start;
+      margin-bottom: 0.35rem;
+      text-align: right;
     }
     .acc-bulk-review tbody td.acc-bulk-td > *:last-child {
       flex: 0 0 auto;
@@ -190,7 +206,68 @@
       text-align: start;
     }
     .acc-bulk-review tbody td.acc-bulk-td .acc-bulk-val {
-      text-align: start;
+      text-align: right;
+    }
+    
+    /* Layout using nth-child */
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(1) {
+      grid-area: number;
+      align-items: flex-end;
+      justify-content: flex-start;
+    }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(1)::before { display: none; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(1) .acc-bulk-val {
+      background: rgb(241 245 249);
+      color: rgb(100 116 139);
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(2) {
+      grid-area: name;
+    }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(2)::before { display: none; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(2) .acc-bulk-val { text-align: right !important; }
+    
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(3) {
+      grid-area: amount;
+      background: rgb(238 242 255);
+      padding: 0.75rem 1rem !important;
+      border-radius: 0.75rem;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(3)::before { margin-bottom: 0; color: rgb(79 70 229); font-weight: 700; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(3) .acc-bulk-val { font-size: 1.125rem; font-weight: 800; color: rgb(67 56 202); }
+    
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(4) { grid-area: broker; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(5) { grid-area: dir; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(6) { grid-area: type; }
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(7) { 
+      grid-area: action; 
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+    
+    .acc-bulk-review tbody td.acc-bulk-td select,
+    .acc-bulk-review tbody td.acc-bulk-td input {
+      min-height: 2.75rem !important;
+      width: 100% !important;
+      max-width: none !important;
+      background-color: rgb(248 250 252) !important;
+      border-color: rgb(226 232 240) !important;
+    }
+    .acc-bulk-review tbody td.acc-bulk-td button {
+      min-height: 2.75rem !important;
+      width: 100% !important;
+      border-radius: 0.75rem !important;
+      font-weight: 700 !important;
+      background-color: rgb(254 242 242) !important;
+      color: rgb(220 38 38) !important;
     }
   }
   /* مسافة فوق شريط التنقل الثابت + زر + العائم (~72px) */
@@ -276,7 +353,7 @@
 </div>
 
 <div id="accBulkModal" class="fixed inset-0 z-[9990] hidden items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/60 backdrop-blur-sm transition-opacity" dir="rtl" data-acc-step="import">
-  <div class="acc-bulk-modal-shell bg-white rounded-[2rem] shadow-2xl w-full flex flex-col min-h-0 relative transform transition-all overflow-hidden mx-auto lg:mr-32 xl:mr-48">
+  <div class="acc-bulk-modal-shell bg-white rounded-2xl sm:rounded-[2rem] shadow-2xl w-full flex flex-col min-h-0 relative transform transition-all overflow-hidden mx-auto">
     
     <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-start sm:items-center bg-white/80 backdrop-blur-md z-10 shrink-0">
       <div class="flex items-center gap-3">

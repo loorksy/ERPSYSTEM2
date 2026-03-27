@@ -95,7 +95,7 @@
     var rows = accBulkStagingItems.map(function(row, idx) {
       var r = rowBp(row, idx);
       return (
-        '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-slate-50 transition-colors">' +
+        '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-slate-50 transition-colors relative">' +
         '<td class="acc-bulk-td p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(r.lineNum) + '</span></td>' +
         '<td class="acc-bulk-td p-3 align-middle" data-label="المعتمد">' +
           '<div class="acc-bulk-val">' +
@@ -143,8 +143,8 @@
       '</tr></thead>';
 
     tb.innerHTML =
-      '<div class="acc-bulk-scroll max-h-[50vh] overflow-y-auto overflow-x-auto overscroll-contain">' +
-      '<table class="acc-bulk-review w-full min-w-[800px] sm:min-w-0 text-right border-collapse text-sm">' +
+      '<div class="acc-bulk-scroll w-full h-full max-h-[50vh] sm:max-h-[60vh] overflow-y-auto overflow-x-hidden sm:overflow-x-auto overscroll-contain">' +
+      '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[800px] text-right border-collapse text-sm">' +
       colgroup +
       thead +
       '<tbody class="bg-white">' + rows + '</tbody></table></div>';
