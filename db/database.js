@@ -97,6 +97,64 @@ async function ensureFundsExcludeDashboardColumn() {
   }
 }
 
+async function ensureMemberDirectoryTables() {
+  if (!pgPool) return;
+  const stmts = [
+    `CREATE TABLE IF NOT EXISTS member_profiles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      display_name TEXT,
+      last_seen_name TEXT,
+      total_salary_audited_usd REAL DEFAULT 0,
+      deferred_balance_usd REAL DEFAULT 0,
+      debt_to_company_usd REAL DEFAULT 0,
+      meta_json TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, member_user_id)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_member_profiles_uid ON member_profiles(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_member_profiles_member ON member_profiles(user_id, member_user_id)',
+    `CREATE TABLE IF NOT EXISTS member_profile_events (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      amount REAL,
+      cycle_id INTEGER,
+      notes TEXT,
+      status TEXT DEFAULT 'done',
+      meta_json TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_member_profile_events_member ON member_profile_events(user_id, member_user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_member_profile_events_created ON member_profile_events(user_id, created_at DESC)',
+    `CREATE TABLE IF NOT EXISTS member_adjustments (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      member_user_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      amount REAL NOT NULL,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      cycle_id INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      processed_at TIMESTAMP,
+      CONSTRAINT member_adjustments_kind_chk CHECK (kind IN ('deduct', 'add', 'reward'))
+    )`,
+  ];
+  for (const s of stmts) {
+    try {
+      await pgPool.query(s);
+    } catch (e) {
+      if (!/already exists/i.test(String(e.message))) {
+        console.warn('[DB] member directory:', e.message);
+      }
+    }
+  }
+}
+
 async function ensureDeferredSalaryLinesTable() {
   if (!pgPool) return;
   await pgPool.query(`CREATE TABLE IF NOT EXISTS deferred_salary_lines (
@@ -155,6 +213,7 @@ async function initDatabase() {
     await ensureFinancialCyclesUserInfoColumns();
     await ensureFundsExcludeDashboardColumn();
     await ensureDeferredSalaryLinesTable();
+    await ensureMemberDirectoryTables();
     await ensureAdminUser();
     return getDb();
   }

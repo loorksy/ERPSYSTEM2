@@ -158,6 +158,32 @@ async function transferProfitToFund(db, userId, fundId, amount, currency, cycleI
   );
 }
 
+/** مصادر لها إيداع صندوق الربح من مسار آخر (مثل agency_company_to_profit_pool) — لا نكرّر المرآة */
+const NET_PROFIT_LEDGER_MIRROR_SKIP = new Set(['sub_agency_company_profit']);
+
+/**
+ * إيداع/خصم موازٍ في صندوق الربح لقيد دفتر net_profit (مرجع ledger_entries لمنع التكرار).
+ * @param {number} p.amountSigned — نفس إشارة p.amount في insertLedgerEntry
+ */
+async function mirrorNetProfitLedgerToProfitFund(db, { userId, ledgerEntryId, amountSigned, sourceType, currency, notes }) {
+  if (!ledgerEntryId || !userId) return;
+  if (NET_PROFIT_LEDGER_MIRROR_SKIP.has(sourceType)) return;
+  const amtSigned = Number(amountSigned);
+  const amountAbs = Math.abs(amtSigned);
+  if (!amountAbs) return;
+  const delta = amtSigned >= 0 ? amountAbs : -amountAbs;
+  const cur = currency || 'USD';
+  const profitFundId = await getProfitFundId(db, userId);
+  if (!profitFundId) return;
+  const dup = (await db.query(
+    `SELECT 1 FROM fund_ledger WHERE fund_id = $1 AND ref_table = 'ledger_entries' AND ref_id = $2 LIMIT 1`,
+    [profitFundId, ledgerEntryId]
+  )).rows[0];
+  if (dup) return;
+  const note = notes || `مرآة دفتر صافي الربح${sourceType ? ` — ${sourceType}` : ''}`;
+  await adjustFundBalance(db, profitFundId, cur, delta, 'net_profit_mirror', note, 'ledger_entries', ledgerEntryId);
+}
+
 module.exports = {
   getMainFundId,
   ensureDefaultMainFund,
@@ -173,4 +199,5 @@ module.exports = {
   getMainFundUsdBalance,
   getProfitFundUsdBalance,
   transferProfitToFund,
+  mirrorNetProfitLedgerToProfitFund,
 };

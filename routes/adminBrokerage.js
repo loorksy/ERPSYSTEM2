@@ -3,7 +3,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { adjustFundBalance, getMainFundId } = require('../services/fundService');
-const { insertLedgerEntry } = require('../services/ledgerService');
+const { insertLedgerEntry, insertNetProfitLedgerAndMirrorFund } = require('../services/ledgerService');
 
 router.post('/add', requireAuth, async (req, res) => {
   try {
@@ -27,7 +27,7 @@ router.post('/add', requireAuth, async (req, res) => {
     const entryId = ins.rows[0].id;
 
     if (profitAmount > 0) {
-      await insertLedgerEntry(db, {
+      await insertNetProfitLedgerAndMirrorFund(db, {
         userId: req.session.userId,
         bucket: 'net_profit',
         sourceType: 'admin_brokerage',

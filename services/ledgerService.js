@@ -38,6 +38,24 @@ async function insertLedgerEntry(db, p) {
   return r.rows[0]?.id;
 }
 
+/**
+ * إدراج قيد net_profit ثم مرآة آمنة إلى صندوق الربح (بدون تكرار مع حركات الوكالات المزدوجة).
+ */
+async function insertNetProfitLedgerAndMirrorFund(db, p) {
+  const id = await insertLedgerEntry(db, p);
+  if (p.bucket !== 'net_profit' || !id) return id;
+  const { mirrorNetProfitLedgerToProfitFund } = require('./fundService');
+  await mirrorNetProfitLedgerToProfitFund(db, {
+    userId: p.userId,
+    ledgerEntryId: id,
+    amountSigned: Number(p.amount) || 0,
+    sourceType: p.sourceType,
+    currency: p.currency || 'USD',
+    notes: p.notes,
+  });
+  return id;
+}
+
 /** إجمالي دلو معيّن */
 async function sumLedgerBucket(db, userId, bucket, currency = 'USD') {
   if (bucket === 'net_profit') {
@@ -102,6 +120,7 @@ async function aggregateNetProfitBySource(db, userId, currency = 'USD') {
 
 module.exports = {
   insertLedgerEntry,
+  insertNetProfitLedgerAndMirrorFund,
   sumLedgerBucket,
   sumExpenseEntries,
   aggregateNetProfitBySource,

@@ -7,7 +7,7 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
 const { adjustFundBalance, getMainFundId } = require('../services/fundService');
-const { insertLedgerEntry } = require('../services/ledgerService');
+const { insertLedgerEntry, insertNetProfitLedgerAndMirrorFund } = require('../services/ledgerService');
 const { processAccreditationBulkRows, parseCsvTextToRows } = require('../services/accreditationBulkImport');
 const { extractSpreadsheetIdFromUrl, fetchSheetRowsUsingStoredGoogleConfig } = require('../services/googleSheetReadService');
 
@@ -113,7 +113,7 @@ router.post('/:id/add-amount', requireAuth, async (req, res) => {
     await db.query('UPDATE accreditation_entities SET balance_amount = $1 WHERE id = $2', [newBal, id]);
 
     if (brokerageAmount > 0) {
-      await insertLedgerEntry(db, {
+      await insertNetProfitLedgerAndMirrorFund(db, {
         userId: req.session.userId,
         bucket: 'net_profit',
         sourceType: 'accreditation_brokerage',

@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const { getDb } = require('../db/database');
 const { normalizeUserId, computeSalaryWithDiscount } = require('./payrollSearchService');
-const { insertLedgerEntry } = require('./ledgerService');
+const { insertNetProfitLedgerAndMirrorFund } = require('./ledgerService');
 const { replaceDeferredLinesForCycle } = require('./deferredSalaryService');
 const { parseDecimal } = require('../utils/numbers');
 const {
@@ -367,6 +367,7 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
 
   const result = [];
   const lineRows = [];
+  const { applyDebtAgainstCycleSalary } = require('./memberAdjustmentsService');
 
   for (const row of dataRows) {
     const memberUserId = normalizeUserId(row[COL_A]);
@@ -374,7 +375,10 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
 
     const extraIdC = (row[COL_C] != null ? String(row[COL_C]) : '').trim();
     const { before, after } = computeSalaryWithDiscount([row[COL_D]], discountPct);
-    const balanceAfter = Math.round(after * 100) / 100;
+    let balanceAfter = Math.round(after * 100) / 100;
+    if (balanceAfter === 0) continue;
+    const repay = await applyDebtAgainstCycleSalary(db, userId, cycleId, memberUserId, balanceAfter);
+    balanceAfter = Math.round((balanceAfter - repay) * 100) / 100;
     if (balanceAfter === 0) continue;
 
     result.push({ member_user_id: memberUserId, extra_id_c: extraIdC, balance_d: balanceAfter });
@@ -396,7 +400,7 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
       [userId, cycleId]
     )).rows[0];
     if (!dup) {
-      await insertLedgerEntry(db, {
+      await insertNetProfitLedgerAndMirrorFund(db, {
         userId,
         bucket: 'net_profit',
         sourceType: 'transfer_discount_profit',
@@ -530,7 +534,7 @@ async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
   }
 
   if (totalCompanyProfit > 0 && userId) {
-    await insertLedgerEntry(db, {
+    await insertNetProfitLedgerAndMirrorFund(db, {
       userId,
       bucket: 'net_profit',
       sourceType: 'sub_agency_company_profit',

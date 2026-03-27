@@ -59,7 +59,18 @@ const pages = [
   { path: '/funds', page: 'funds', title: 'الصناديق' },
   { path: '/shipping', page: 'shipping', title: 'الشحن' },
   { path: '/client-portal', page: 'client-portal', title: 'واجهة العملاء' },
+  { path: '/member-directory', page: 'member-directory', title: 'بيانات المستخدمين' },
+  { path: '/member-adjustments', page: 'member-adjustments', title: 'إضافات وخصومات' },
 ];
+
+router.get('/member-directory/member/:memberUserId', requireAuth, (req, res) => {
+  res.render('dashboard', {
+    title: 'ملف عضو',
+    page: 'member-directory-detail',
+    memberUserId: req.params.memberUserId,
+    user: req.session.user,
+  });
+});
 
 pages.forEach(({ path, page, title }) => {
   router.get(path, requireAuth, (req, res) => {

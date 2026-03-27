@@ -160,6 +160,8 @@ const adminBrokerageRoutes = require('./routes/adminBrokerage');
 const payablesRoutes = require('./routes/payables');
 const quickActionRoutes = require('./routes/quickAction');
 const reportsRoutes = require('./routes/reports');
+const memberDirectoryRoutes = require('./routes/member-directory');
+const memberAdjustmentsRoutes = require('./routes/member-adjustments');
 
 app.use('/', authRoutes);
 app.use('/dashboard', dashboardRoutes);
@@ -181,6 +183,8 @@ app.use('/api/admin-brokerage', adminBrokerageRoutes);
 app.use('/api/payables', payablesRoutes);
 app.use('/api/quick-action', quickActionRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/member-directory', memberDirectoryRoutes);
+app.use('/api/member-adjustments', memberAdjustmentsRoutes);
 app.use('/ai', aiRoutes(io));
 app.use('/', pagesRoutes);
 

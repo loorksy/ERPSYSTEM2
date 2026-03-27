@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { getDb } = require('../db/database');
-const { insertLedgerEntry } = require('../services/ledgerService');
+const { insertNetProfitLedgerAndMirrorFund } = require('../services/ledgerService');
 const { adjustFundBalance, getMainFundId } = require('../services/fundService');
 
 /**
@@ -93,7 +93,7 @@ router.post('/add', requireAuth, async (req, res) => {
       [userId, cid, cur, amt, ir, sr, spread, et, eid, notes || null]
     );
     const entryId = r.rows[0].id;
-    await insertLedgerEntry(db, {
+    await insertNetProfitLedgerAndMirrorFund(db, {
       userId,
       bucket: 'net_profit',
       sourceType: 'fx_spread_profit',

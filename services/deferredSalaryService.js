@@ -109,6 +109,13 @@ async function mergeMemberDeferredIntoCycle(db, userId, memberUserId, targetCycl
       JSON.stringify({ mergedFromCycleIds, consolidatedTotal: total }),
     ]
   );
+  try {
+    const { upsertMemberProfileFromAudit } = require('./memberDirectoryService');
+    await upsertMemberProfileFromAudit(db, userId, targetCycleId, mid, 'مدقق', 'deferred_merge', {
+      mergedFromCycleIds,
+      consolidatedTotal: total,
+    });
+  } catch (_) {}
 
   return {
     success: true,

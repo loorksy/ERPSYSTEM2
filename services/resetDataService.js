@@ -124,6 +124,9 @@ async function executeReset(client, userId, selected, wipeAll, options = {}) {
       [userId]
     );
     await client.query('DELETE FROM payroll_user_audit_cache WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM member_profile_events WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM member_adjustments WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM member_profiles WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM payroll_cycle_cache WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM payroll_cycle_columns WHERE user_id = $1', [userId]);
     await client.query('DELETE FROM payroll_settings WHERE user_id = $1', [userId]);

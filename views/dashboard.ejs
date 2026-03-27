@@ -297,6 +297,18 @@
           </a>
         </li>
         <li>
+          <a href="/member-directory" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-directory' || page === 'member-directory-detail' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
+            <i class="fas fa-address-book w-5 text-center <%= page === 'member-directory' || page === 'member-directory-detail' ? 'text-indigo-400' : '' %>"></i>
+            <span>بيانات المستخدمين</span>
+          </a>
+        </li>
+        <li>
+          <a href="/member-adjustments" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-adjustments' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
+            <i class="fas fa-balance-scale w-5 text-center <%= page === 'member-adjustments' ? 'text-indigo-400' : '' %>"></i>
+            <span>إضافات وخصومات</span>
+          </a>
+        </li>
+        <li>
           <a href="/messages" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'messages' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-envelope-open-text w-5 text-center <%= page === 'messages' ? 'text-indigo-400' : '' %>"></i>
             <span>ترتيب الرسائل</span>
@@ -463,6 +475,12 @@
         <%- include('partials/payables-overview') %>
       <% } else if (page === 'receivables-to-us') { %>
         <%- include('partials/receivables-to-us') %>
+      <% } else if (page === 'member-directory') { %>
+        <%- include('partials/member-directory') %>
+      <% } else if (page === 'member-directory-detail') { %>
+        <%- include('partials/member-directory-detail') %>
+      <% } else if (page === 'member-adjustments') { %>
+        <%- include('partials/member-adjustments') %>
       <% } %>
     </div>
   </main>
@@ -556,6 +574,15 @@
   <% } %>
   <% if (page === 'receivables-to-us') { %>
     <script src="/js/receivables-to-us.js"></script>
+  <% } %>
+  <% if (page === 'member-directory') { %>
+    <script src="/js/member-directory.js"></script>
+  <% } %>
+  <% if (page === 'member-directory-detail') { %>
+    <script src="/js/member-directory-detail.js"></script>
+  <% } %>
+  <% if (page === 'member-adjustments') { %>
+    <script src="/js/member-adjustments.js"></script>
   <% } %>
 </body>
 </html>

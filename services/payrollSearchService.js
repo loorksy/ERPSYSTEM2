@@ -166,6 +166,10 @@ async function saveUserAuditStatus(userId, cycleId, memberUserId, status, source
        updated_at = CURRENT_TIMESTAMP`,
     [userId, cycleId, String(memberUserId), status, source || null, details ? JSON.stringify(details) : null]
   );
+  try {
+    const { upsertMemberProfileFromAudit } = require('./memberDirectoryService');
+    await upsertMemberProfileFromAudit(db, userId, cycleId, String(memberUserId), status, source, details);
+  } catch (_) {}
   if (status === 'مدقق') {
     const { removeDeferredLineForAuditedUser } = require('./deferredSalaryService');
     await removeDeferredLineForAuditedUser(db, userId, cycleId, String(memberUserId));

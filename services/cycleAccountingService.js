@@ -1,7 +1,7 @@
 const { getDb } = require('../db/database');
 const { parseDecimal } = require('../utils/numbers');
 const { normalizeUserId } = require('./payrollSearchService');
-const { insertLedgerEntry } = require('./ledgerService');
+const { insertNetProfitLedgerAndMirrorFund } = require('./ledgerService');
 const { replaceDeferredLinesForCycle } = require('./deferredSalaryService');
 const { computeSalaryWithDiscount, getCycleColumns } = require('./payrollSearchService');
 const { getMainFundId, adjustFundBalance } = require('./fundService');
@@ -128,7 +128,7 @@ async function applyCycleAuditProfitsToLedger(userId, cycleId) {
   )).rows[0];
 
   if (!legacy && !rowYz && sourceYZ !== 0) {
-    await insertLedgerEntry(db, {
+    await insertNetProfitLedgerAndMirrorFund(db, {
       userId,
       bucket: 'net_profit',
       sourceType: 'audit_management_yz',
@@ -197,12 +197,17 @@ async function rebuildDeferredFromLocalAgentData(userId, cycleId) {
     transferDiscountProfit += Math.round((before - after) * 100) / 100;
   }
 
+  const { applyDebtAgainstCycleSalary } = require('./memberAdjustmentsService');
+
   for (const row of dataRows) {
     const memberUserId = normalizeUserId(row[agentIdx]);
     if (!memberUserId || auditedSet.has(memberUserId)) continue;
 
     const { before, after } = computeSalaryWithDiscount([row[agentSalaryIdx]], discountPct);
-    const balanceAfter = Math.round(after * 100) / 100;
+    let balanceAfter = Math.round(after * 100) / 100;
+    if (balanceAfter === 0) continue;
+    const repay = await applyDebtAgainstCycleSalary(db, userId, cycleId, memberUserId, balanceAfter);
+    balanceAfter = Math.round((balanceAfter - repay) * 100) / 100;
     if (balanceAfter === 0) continue;
 
     totalDeferred += balanceAfter;
@@ -225,7 +230,7 @@ async function rebuildDeferredFromLocalAgentData(userId, cycleId) {
       [userId, cycleId]
     )).rows[0];
     if (!dup) {
-      await insertLedgerEntry(db, {
+      await insertNetProfitLedgerAndMirrorFund(db, {
         userId,
         bucket: 'net_profit',
         sourceType: 'transfer_discount_profit',

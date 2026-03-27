@@ -1,5 +1,5 @@
 const { adjustFundBalance, getMainFundId } = require('./fundService');
-const { insertLedgerEntry } = require('./ledgerService');
+const { insertLedgerEntry, insertNetProfitLedgerAndMirrorFund } = require('./ledgerService');
 
 /**
  * استيراد أرصدة معتمدين من ملف: أعمدة A كود، B اسم، C رصيد، D معتمد رئيسي.
@@ -62,7 +62,7 @@ async function processAccreditationBulkRows(db, userId, rows, cycleId, brokerage
       const brokerageAmount = bal * (pct / 100);
       const remainder = bal - brokerageAmount;
       if (brokerageAmount > 0) {
-        await insertLedgerEntry(db, {
+        await insertNetProfitLedgerAndMirrorFund(db, {
           userId,
           bucket: 'net_profit',
           sourceType: 'accreditation_brokerage',

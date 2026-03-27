@@ -1,0 +1,61 @@
+(function () {
+  const memberId = document.getElementById('maMemberId');
+  const kind = document.getElementById('maKind');
+  const amount = document.getElementById('maAmount');
+  const cycleId = document.getElementById('maCycleId');
+  const notes = document.getElementById('maNotes');
+  const btn = document.getElementById('maSubmitBtn');
+  const pasteBtn = document.getElementById('maPasteBtn');
+  const msg = document.getElementById('maMsg');
+
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const t = await navigator.clipboard.readText();
+      memberId.value = (t || '').trim();
+    } catch (_) {}
+  });
+
+  btn.addEventListener('click', async () => {
+    msg.textContent = '';
+    const cidRaw = (cycleId.value || '').trim();
+    const cid = cidRaw ? parseInt(cidRaw, 10) : null;
+    const body = {
+      memberUserId: (memberId.value || '').trim(),
+      kind: kind.value,
+      amount: parseFloat(amount.value),
+      notes: (notes.value || '').trim() || null,
+      cycleId: cid && !Number.isNaN(cid) ? cid : null,
+    };
+    if (!body.memberUserId) {
+      msg.textContent = 'أدخل رقم المستخدم';
+      msg.className = 'text-sm text-center text-red-600';
+      return;
+    }
+    if (!(body.amount > 0)) {
+      msg.textContent = 'أدخل مبلغاً صالحاً';
+      msg.className = 'text-sm text-center text-red-600';
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/member-adjustments/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.textContent = data.message || 'تم';
+        msg.className = 'text-sm text-center text-emerald-600';
+        amount.value = '';
+      } else {
+        msg.textContent = data.message || 'فشل';
+        msg.className = 'text-sm text-center text-red-600';
+      }
+    } catch (e) {
+      msg.textContent = e.message || 'فشل';
+      msg.className = 'text-sm text-center text-red-600';
+    }
+    btn.disabled = false;
+  });
+})();

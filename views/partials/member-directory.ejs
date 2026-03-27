@@ -1,0 +1,50 @@
+<div class="max-w-5xl mx-auto space-y-6 pb-8" dir="rtl">
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="p-4 sm:p-6 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i class="fas fa-address-book text-indigo-600"></i>
+          بيانات المستخدمين
+        </h2>
+        <p class="text-xs text-slate-500">بحث برقم المستخدم أو الاسم — يُحدَّث الملف عند التدقيق</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="mdSearchInput" placeholder="بحث..."
+          class="flex-1 py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
+        <button type="button" id="mdPasteBtn"
+          class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-medium hover:bg-slate-100">
+          لصق من الحافظة
+        </button>
+        <button type="button" id="mdSearchBtn"
+          class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">
+          بحث
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm text-right">
+        <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
+          <tr>
+            <th class="px-4 py-3">رقم المستخدم</th>
+            <th class="px-4 py-3">الاسم</th>
+            <th class="px-4 py-3">مؤجل</th>
+            <th class="px-4 py-3">دين</th>
+            <th class="px-4 py-3">آخر تحديث</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody id="mdTableBody" class="divide-y divide-slate-100 text-slate-800"></tbody>
+      </table>
+    </div>
+    <div class="p-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100">
+      <span id="mdPageInfo" class="text-xs text-slate-500"></span>
+      <div class="flex gap-2">
+        <button type="button" id="mdPrevBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 disabled:opacity-40">السابق</button>
+        <button type="button" id="mdNextBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 disabled:opacity-40">التالي</button>
+      </div>
+    </div>
+  </section>
+</div>
