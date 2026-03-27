@@ -578,7 +578,9 @@
     <script src="/js/transfer-companies.js"></script>
   <% } %>
   <% if (page === 'approvals') { %>
-    <script src="/js/approvals.js"></script>
+    <script defer src="/js/approvals/utils.js"></script>
+    <script defer src="/js/approvals/bulk.js"></script>
+    <script defer src="/js/approvals/page.js"></script>
   <% } %>
   <% if (page === 'debts' || page === 'debt-company' || page === 'debt-fund') { %>
     <script src="/js/debts.js"></script>

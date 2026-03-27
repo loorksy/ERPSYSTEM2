@@ -1,0 +1,28 @@
+<div class="w-full min-w-0 flex flex-col" dir="rtl">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6 shrink-0">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md">
+        <i class="fas fa-stamp text-xl"></i>
+      </div>
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900">الاعتمادات</h2>
+        <p class="text-sm text-slate-500 mt-0.5">المعتمدون، الأرصدة، والتسليم</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" onclick="accOpenBulk()" class="px-4 py-2.5 rounded-xl bg-slate-600 text-white text-sm font-semibold shadow-md hover:bg-slate-700 active:scale-[0.99] transition">رفع أرصدة</button>
+      <button type="button" onclick="accOpenDelivery()" class="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow-md hover:bg-emerald-700 active:scale-[0.99] transition">تسليم</button>
+      <button type="button" onclick="accOpenAdd()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold shadow-md hover:bg-indigo-700 active:scale-[0.99] transition">
+        <i class="fas fa-plus ml-2"></i> إضافة معتمد
+      </button>
+    </div>
+  </div>
+  <div class="acc-approvals-list-shell rounded-2xl border border-slate-100 bg-white shadow-sm w-full flex flex-col overflow-hidden">
+    <div id="accCards" class="grid flex-1 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 sm:p-6 min-h-0 content-start">
+      <div class="col-span-full acc-approvals-empty text-slate-400">
+        <i class="fas fa-spinner fa-spin text-3xl text-indigo-400" aria-hidden="true"></i>
+        <span class="text-sm font-medium">جاري التحميل...</span>
+      </div>
+    </div>
+  </div>
+</div>
