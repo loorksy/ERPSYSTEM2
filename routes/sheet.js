@@ -917,6 +917,7 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
             type: r.type,
             title: r.title,
             localOnly: true,
+            salaryAfterDiscount: r.salaryValue,
           });
         }
       }
@@ -1458,7 +1459,11 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
         if (r.type === 'سحب إدارة' && r.userId) auditedMgmtIdsSet.add(r.userId);
         if (r.userId && (r.type.startsWith('سحب وكالة') || r.type === 'سحب إدارة')) {
           const src = r.type.startsWith('سحب وكالة') ? 'تدقيق وكيل من النظام' : 'تدقيق ادارة من النظام';
-          await saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, { type: r.type, title: r.title });
+          await saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
+            type: r.type,
+            title: r.title,
+            salaryAfterDiscount: r.salaryValue,
+          });
         }
       }
       await saveCycleCache(req.session.userId, cycleId, {

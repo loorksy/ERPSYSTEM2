@@ -8,12 +8,17 @@ router.post('/apply', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const { memberUserId, kind, amount, notes, cycleId } = req.body || {};
+    let cid = null;
+    if (cycleId != null && cycleId !== '') {
+      const n = parseInt(cycleId, 10);
+      if (!Number.isNaN(n)) cid = n;
+    }
     const r = await processAdjustment(db, req.session.userId, {
       memberUserId,
       kind,
       amount,
       notes,
-      cycleId: cycleId != null ? parseInt(cycleId, 10) : null,
+      cycleId: cid,
     });
     if (!r.success) return res.json(r);
     res.json({ success: true, message: 'تم التسجيل', id: r.id });

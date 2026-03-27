@@ -17,7 +17,7 @@
 
   async function load() {
     const url = '/api/member-directory/member/' + encodeURIComponent(memberUserId);
-    const res = await fetch(url);
+    const res = await fetch(url, { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.success) {
       summary.innerHTML = '<p class="text-red-600">' + esc(data.message || 'فشل') + '</p>';
@@ -30,6 +30,9 @@
         '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">الاسم</div><div class="font-medium">' +
         esc(p.display_name || p.last_seen_name || '—') +
         '</div></div>' +
+        '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">آخر راتب (تدقيق)</div><div class="font-mono">' +
+        esc(Number(p.total_salary_audited_usd || 0).toFixed(2)) +
+        ' USD</div><div class="text-[0.65rem] text-slate-400 mt-1">يُحدَّد من آخر تدقيق يتضمّن مبلغ الراتب</div></div>' +
         '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">رصيد مؤجل</div><div class="font-mono">' +
         esc(Number(p.deferred_balance_usd || 0).toFixed(2)) +
         ' USD</div></div>' +
@@ -61,23 +64,39 @@
 
     const ar = data.auditRows || [];
     auditBlock.innerHTML = ar.length
-      ? '<table class="min-w-full text-xs"><thead><tr class="text-slate-500"><th class="py-1 px-2">دورة</th><th class="py-1 px-2">الحالة</th><th class="py-1 px-2">المصدر</th><th class="py-1 px-2">تاريخ</th></tr></thead><tbody>' +
+      ? '<table class="min-w-full text-xs"><thead><tr class="text-slate-500"><th class="py-1 px-2">الدورة</th><th class="py-1 px-2">راتب بعد الخصم</th><th class="py-1 px-2">قبل الخصم</th><th class="py-1 px-2">الحالة</th><th class="py-1 px-2">المصدر</th><th class="py-1 px-2">تاريخ</th></tr></thead><tbody>' +
         ar
-          .map(
-            (r) =>
-              '<tr><td class="py-1 px-2">' +
+          .map((r) => {
+            const sal =
+              r.salary_audited_usd != null && !Number.isNaN(Number(r.salary_audited_usd))
+                ? Number(r.salary_audited_usd).toFixed(2)
+                : '—';
+            const before =
+              r.salary_before_usd != null && !Number.isNaN(Number(r.salary_before_usd))
+                ? Number(r.salary_before_usd).toFixed(2)
+                : '—';
+            const cname = r.cycle_name ? esc(r.cycle_name) + ' — ' : '';
+            return (
+              '<tr><td class="py-1 px-2 whitespace-nowrap">' +
+              cname +
+              '#' +
               esc(r.cycle_id) +
+              '</td><td class="py-1 px-2 font-mono">' +
+              esc(sal) +
+              '</td><td class="py-1 px-2 font-mono">' +
+              esc(before) +
               '</td><td class="py-1 px-2">' +
               esc(r.audit_status) +
               '</td><td class="py-1 px-2">' +
               esc(r.audit_source || '') +
-              '</td><td class="py-1 px-2">' +
+              '</td><td class="py-1 px-2 whitespace-nowrap">' +
               esc(r.updated_at ? new Date(r.updated_at).toLocaleString('ar') : '') +
               '</td></tr>'
-          )
+            );
+          })
           .join('') +
         '</tbody></table>'
-      : '<p class="text-slate-500">لا سجلات تدقيق.</p>';
+      : '<p class="text-slate-500">لا سجلات تدقيق لهذا الرقم — تأكد من التدقيق من الرواتب أو البحث.</p>';
 
     const ev = data.events || [];
     eventsBlock.innerHTML = ev.length

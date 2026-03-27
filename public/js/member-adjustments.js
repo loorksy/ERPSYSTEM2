@@ -41,9 +41,24 @@
       const res = await fetch('/api/member-adjustments/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (_) {
+        msg.textContent = 'استجابة غير صالحة من الخادم (' + res.status + ')';
+        msg.className = 'text-sm text-center text-red-600';
+        btn.disabled = false;
+        return;
+      }
+      if (res.status === 401) {
+        msg.textContent = 'انتهت الجلسة — أعد تسجيل الدخول';
+        msg.className = 'text-sm text-center text-red-600';
+        btn.disabled = false;
+        return;
+      }
       if (data.success) {
         msg.textContent = data.message || 'تم';
         msg.className = 'text-sm text-center text-emerald-600';

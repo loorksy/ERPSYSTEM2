@@ -19,16 +19,22 @@
 
   async function load() {
     const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), q: q || '' });
-    const res = await fetch('/api/member-directory/list?' + params.toString());
+    const res = await fetch('/api/member-directory/list?' + params.toString(), { credentials: 'same-origin' });
+    if (res.status === 401) {
+      tbody.innerHTML =
+        '<tr><td colspan="7" class="px-4 py-6 text-center text-red-600">انتهت الجلسة — أعد تسجيل الدخول</td></tr>';
+      return;
+    }
     const data = await res.json();
     if (!data.success) {
-      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-red-600">' + esc(data.message || 'فشل') + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-red-600">' + esc(data.message || 'فشل') + '</td></tr>';
       return;
     }
     total = data.total || 0;
     const rows = data.rows || [];
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-500">لا توجد نتائج — سيظهر الأعضاء بعد التدقيق أو الإضافة اليدوية</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">لا توجد نتائج — يُستخرج الأعضاء من التدقيق، المؤجل، أو الوكالات</td></tr>';
     } else {
       tbody.innerHTML = rows
         .map((r) => {
@@ -40,6 +46,9 @@
             '</td>' +
             '<td class="px-4 py-2">' +
             esc(r.display_name || r.last_seen_name || '—') +
+            '</td>' +
+            '<td class="px-4 py-2 font-mono">' +
+            esc(Number(r.total_salary_audited_usd || 0).toFixed(2)) +
             '</td>' +
             '<td class="px-4 py-2">' +
             esc(Number(r.deferred_balance_usd || 0).toFixed(2)) +
