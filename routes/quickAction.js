@@ -33,6 +33,12 @@ router.get('/context', requireAuth, async (req, res) => {
       shippingCrystal: crystal,
       shippingQtyTotal: shippingQty,
       cashBlocked,
+      links: {
+        receivablesToUs: '/receivables-to-us',
+        paymentDueAnchor: '/receivables-to-us#payment-due',
+        subAgencies: '/sub-agencies',
+        approvals: '/approvals',
+      },
     });
   } catch (e) {
     res.json({
@@ -41,6 +47,12 @@ router.get('/context', requireAuth, async (req, res) => {
       mainFundUsd: 0,
       shippingQtyTotal: 0,
       cashBlocked: true,
+      links: {
+        receivablesToUs: '/receivables-to-us',
+        paymentDueAnchor: '/receivables-to-us#payment-due',
+        subAgencies: '/sub-agencies',
+        approvals: '/approvals',
+      },
     });
   }
 });

@@ -111,8 +111,9 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
     const cid = parseInt(cycleId, 10);
     if (!id || !cid) return res.json({ success: false, message: 'الوكالة والدورة مطلوبان' });
     const pct = parseFloat(commissionPercent);
-    const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const companyPct = pctVal;
+    const agencyPct = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
+    /** نفس منطق shipping_sub_agencies: نسبة الوكالة + نسبة الشركة = 100 */
+    const companyPct = 100 - agencyPct;
     const db = getDb();
     const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -123,7 +124,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
          commission_percent = excluded.commission_percent,
          company_percent = excluded.company_percent,
          saved_at = CURRENT_TIMESTAMP`,
-      [cid, id, pctVal, companyPct]
+      [cid, id, agencyPct, companyPct]
     );
     await recalculateSyncProfitsForCycle(db, cid, req.session.userId);
     res.json({ success: true, message: 'تم حفظ النسبة وإعادة احتساب أرباح المزامنة لهذه الدورة' });
@@ -317,6 +318,62 @@ router.post('/:id/reward', requireAuth, async (req, res) => {
     });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
+  }
+});
+
+/**
+ * خصم وكالة: شحن (إعادة توجيه لبيع مربوط بالوكالة) أو راتب (من الصندوق أو تسجيل دين علينا).
+ */
+router.post('/:id/deduct', requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { kind, amount, notes, payrollMode } = req.body || {};
+    if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
+    const k = String(kind || '').toLowerCase();
+    if (k === 'shipping') {
+      return res.json({
+        success: true,
+        redirect: `/shipping?fab=out&buyerSubAgencyId=${id}`,
+        message: 'افتح الشحن لإتمام البيع المربوط بهذه الوكالة',
+      });
+    }
+    if (k !== 'salary') return res.json({ success: false, message: 'نوع الخصم غير معروف' });
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'المبلغ غير صالح' });
+    const db = getDb();
+    const userId = req.session.userId;
+    const mode = payrollMode === 'debt_only' ? 'debt_only' : 'fund';
+    if (mode === 'debt_only') {
+      await db.query(
+        `INSERT INTO entity_payables (user_id, entity_type, entity_id, amount, currency, notes)
+         VALUES ($1, 'sub_agency', $2, $3, 'USD', $4)`,
+        [userId, id, amt, notes || 'خصم راتب — دين علينا']
+      );
+      await db.query(
+        `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes) VALUES ($1, 'deduction', $2, $3)`,
+        [id, amt, notes || 'خصم راتب (دين)']
+      );
+      return res.json({ success: true, message: 'تم تسجيل الدين والخصم محاسبياً' });
+    }
+    const mainId = await getMainFundId(db, userId);
+    if (!mainId) return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً' });
+    await adjustFundBalance(db, mainId, 'USD', -amt, 'sub_agency_salary_deduct', notes || 'خصم راتب وكالة', 'shipping_sub_agencies', id);
+    await insertLedgerEntry(db, {
+      userId,
+      bucket: 'expense',
+      sourceType: 'sub_agency_salary_deduct',
+      amount: amt,
+      refTable: 'shipping_sub_agencies',
+      refId: id,
+      notes: notes || 'خصم راتب وكالة فرعية',
+    });
+    await db.query(
+      `INSERT INTO sub_agency_transactions (sub_agency_id, type, amount, notes) VALUES ($1, 'deduction', $2, $3)`,
+      [id, amt, notes || 'خصم راتب']
+    );
+    return res.json({ success: true, message: 'تم الخصم من الصندوق الرئيسي' });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل الخصم' });
   }
 });
 

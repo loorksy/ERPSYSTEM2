@@ -73,6 +73,7 @@
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="out-co">شركة تحويل</button>' +
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="out-fund">صندوق</button>' +
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="out-exp">مصروف</button>' +
+        '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-amber-200 bg-amber-50/80 text-right font-semibold hover:bg-amber-100" data-qa="out-paydue">مطلوب دفع <span class="text-slate-500 text-xs">(تسليم)</span></button>' +
         '<p class="pt-2 text-center"><a href="/transfer-companies" class="text-xs text-amber-700 font-semibold hover:underline">مرتجع — شركات التحويل</a></p>' +
         '</div>'
       );
@@ -92,6 +93,8 @@
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="in-debt">دين</button>' +
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="in-acc">اعتماد</button>' +
         '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="in-fx">فرق تصريف</button>' +
+        '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-teal-200 bg-teal-50/80 text-right font-semibold hover:bg-teal-100" data-qa="in-recv">ديين لنا</button>' +
+        '<button type="button" class="qa-item w-full py-3 px-4 rounded-xl border border-slate-200 text-right font-semibold hover:bg-slate-50" data-qa="in-subdeduct">خصم وكالة <span class="text-slate-500 text-xs">(شحن/راتب)</span></button>' +
         '</div>'
       );
       bindInItems();
@@ -112,6 +115,12 @@
         if (k === 'out-co') return formCompanyPayout();
         if (k === 'out-fund') return formFundReceive();
         if (k === 'out-exp') return formExpense();
+        if (k === 'out-paydue') {
+          hideCascade();
+          var u = (qaContext && qaContext.links && qaContext.links.paymentDueAnchor) || '/receivables-to-us#payment-due';
+          window.location.href = u;
+          return;
+        }
       });
     });
   }
@@ -132,6 +141,18 @@
         }
         if (k === 'in-acc') return formAccIncoming();
         if (k === 'in-fx') return formFxSpread();
+        if (k === 'in-recv') {
+          hideCascade();
+          var ru = (qaContext && qaContext.links && qaContext.links.receivablesToUs) || '/receivables-to-us';
+          window.location.href = ru;
+          return;
+        }
+        if (k === 'in-subdeduct') {
+          hideCascade();
+          var su = (qaContext && qaContext.links && qaContext.links.subAgencies) || '/sub-agencies';
+          window.location.href = su;
+          return;
+        }
       });
     });
   }

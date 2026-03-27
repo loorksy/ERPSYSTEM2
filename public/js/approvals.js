@@ -258,8 +258,19 @@
     currentId = null;
   };
 
+  window.accAmountKindChange = function() {
+    var k = document.getElementById('accAmountKind');
+    var show = !k || k.value === 'salary';
+    document.querySelectorAll('.acc-salary-only').forEach(function(el) {
+      el.classList.toggle('hidden', !show);
+    });
+  };
+
   window.accShowAddAmount = function() {
     document.getElementById('accAddAmountPanel').classList.toggle('hidden');
+    var ak = document.getElementById('accAmountKind');
+    if (ak) ak.value = 'salary';
+    accAmountKindChange();
   };
   window.accShowTransfer = function() {
     document.getElementById('accTransferPanel').classList.toggle('hidden');
@@ -277,6 +288,7 @@
     apiCall('/api/accreditations/' + currentId + '/add-amount', {
       method: 'POST',
       body: JSON.stringify({
+        amountKind: document.getElementById('accAmountKind') ? document.getElementById('accAmountKind').value : 'salary',
         salaryDirection: document.getElementById('accSalaryDir').value,
         amount: document.getElementById('accAmt').value,
         brokeragePct: document.getElementById('accBroker').value,
@@ -333,5 +345,8 @@
     });
   });
 
-  document.addEventListener('DOMContentLoaded', accLoad);
+  document.addEventListener('DOMContentLoaded', function() {
+    accLoad();
+    accAmountKindChange();
+  });
 })();

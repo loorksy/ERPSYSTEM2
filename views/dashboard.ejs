@@ -399,12 +399,6 @@
           </a>
         </li>
         <li>
-          <a href="/media-finance" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'media-finance' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
-            <i class="fas fa-photo-video w-5 text-center <%= page === 'media-finance' ? 'text-indigo-400' : '' %>"></i>
-            <span>الوسائط المالية</span>
-          </a>
-        </li>
-        <li>
           <a href="/admin-brokerage" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'admin-brokerage' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-percent w-5 text-center <%= page === 'admin-brokerage' ? 'text-indigo-400' : '' %>"></i>
             <span>وساطة إدارية</span>
@@ -487,8 +481,6 @@
         <%- include('partials/profit-sources') %>
       <% } else if (page === 'profit-source-detail') { %>
         <%- include('partials/profit-source-detail') %>
-      <% } else if (page === 'media-finance') { %>
-        <%- include('partials/media-finance') %>
       <% } else if (page === 'admin-brokerage') { %>
         <%- include('partials/admin-brokerage') %>
       <% } else if (page === 'payables-overview') { %>
@@ -594,9 +586,6 @@
   <% } %>
   <% if (page === 'profit-source-detail') { %>
     <script src="/js/profit-source-detail.js"></script>
-  <% } %>
-  <% if (page === 'media-finance') { %>
-    <script src="/js/media-finance.js"></script>
   <% } %>
   <% if (page === 'receivables-to-us') { %>
     <script src="/js/receivables-to-us.js"></script>

@@ -81,23 +81,36 @@ router.post('/:id/pin', requireAuth, async (req, res) => {
   }
 });
 
-/** إضافة مبلغ: وساطة → صافي الربح، الباقي → الصندوق الرئيسي */
+/** إضافة مبلغ: وساطة → صافي الربح، الباقي → الصندوق الرئيسي — أو «دين لنا» دون وساطة/صندوق */
 router.post('/:id/add-amount', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { salaryDirection, amount, brokeragePct, cycleId, notes } = req.body || {};
+    const { salaryDirection, amount, brokeragePct, cycleId, notes, amountKind } = req.body || {};
     const amt = parseFloat(amount);
     if (!id || isNaN(amt) || amt <= 0) return res.json({ success: false, message: 'مبلغ غير صالح' });
     const db = getDb();
-    const mainFundId = await getMainFundId(db, req.session.userId);
-    if (!mainFundId) {
-      return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً من قسم الصناديق قبل إضافة مبالغ.' });
-    }
     const ent = (await db.query(
       'SELECT id, balance_amount FROM accreditation_entities WHERE id = $1 AND user_id = $2',
       [id, req.session.userId]
     )).rows[0];
     if (!ent) return res.json({ success: false, message: 'غير موجود' });
+
+    if (amountKind === 'debt_to_us') {
+      const cid = cycleId ? parseInt(cycleId, 10) : null;
+      await db.query(
+        `INSERT INTO accreditation_ledger (accreditation_id, entry_type, amount, currency, direction, cycle_id, notes)
+         VALUES ($1, 'debt_to_us', $2, 'USD', 'to_us', $3, $4)`,
+        [id, amt, cid, notes || 'دين لنا — على المعتمد']
+      );
+      const newBal = (ent.balance_amount || 0) - amt;
+      await db.query('UPDATE accreditation_entities SET balance_amount = $1 WHERE id = $2', [newBal, id]);
+      return res.json({ success: true, message: 'تم تسجيل دين لنا', newBalance: newBal });
+    }
+
+    const mainFundId = await getMainFundId(db, req.session.userId);
+    if (!mainFundId) {
+      return res.json({ success: false, message: 'عيّن صندوقاً رئيسياً من قسم الصناديق قبل إضافة مبالغ.' });
+    }
     const pct = parseFloat(brokeragePct);
     const brokerageAmount = !isNaN(pct) && pct > 0 ? amt * (pct / 100) : 0;
     const remainder = amt - brokerageAmount;

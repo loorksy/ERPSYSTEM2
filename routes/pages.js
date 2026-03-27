@@ -81,10 +81,6 @@ router.get('/profit-sources/:sourceType/detail', requireAuth, (req, res) => {
   });
 });
 
-router.get('/media-finance', requireAuth, (req, res) => {
-  res.render('dashboard', { title: 'الوسائط المالية', page: 'media-finance', user: req.session.user });
-});
-
 pages.forEach(({ path, page, title }) => {
   router.get(path, requireAuth, (req, res) => {
     res.render('dashboard', { title, page, user: req.session.user });

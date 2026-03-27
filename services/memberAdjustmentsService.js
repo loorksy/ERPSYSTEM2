@@ -133,8 +133,12 @@ async function processAdjustment(db, userId, { memberUserId, kind, amount, notes
         });
         sheetSynced = sr.sheetSynced;
         sheetMessage = sr.sheetMessage || '';
+        if (!sheetSynced && sheetMessage) {
+          console.warn('[member-adjustments] Google Sheet لم يُحدَّث:', sheetMessage);
+        }
       } catch (sheetErr) {
         sheetMessage = sheetErr.message || String(sheetErr);
+        console.warn('[member-adjustments] خطأ Google Sheet:', sheetMessage);
       }
     }
 

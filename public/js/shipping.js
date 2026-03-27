@@ -318,16 +318,32 @@
         var u = new URL(window.location.href);
         u.searchParams.delete('fab');
         u.searchParams.delete('qaFocus');
+        u.searchParams.delete('buyerSubAgencyId');
         var q = u.search;
         window.history.replaceState({}, '', u.pathname + (q || '') + u.hash);
       } catch (_) {}
     }
     if (fab === 'out') {
+      var subAgencyPrefill = '';
+      try {
+        subAgencyPrefill = new URLSearchParams(window.location.search).get('buyerSubAgencyId') || '';
+      } catch (_) {}
       setTimeout(function() {
         var mainTab = document.querySelector('[onclick*="shipping-main"]');
         if (mainTab) mainTab.click();
         loadSellDropdowns();
         if (window.shippingOpenSellModal) window.shippingOpenSellModal();
+        if (subAgencyPrefill) {
+          setTimeout(function() {
+            var bt = document.getElementById('sellBuyerType');
+            if (bt) {
+              bt.value = 'sub_agent';
+              if (window.shippingSellBuyerTypeChange) window.shippingSellBuyerTypeChange();
+            }
+            var ss = document.getElementById('sellSubAgencyId');
+            if (ss) ss.value = subAgencyPrefill;
+          }, 400);
+        }
         stripFabParam();
       }, 120);
     } else if (fab === 'in') {

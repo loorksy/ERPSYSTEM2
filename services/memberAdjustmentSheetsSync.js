@@ -61,7 +61,11 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
     return { sheetSynced: false, sheetMessage: 'رقم مستخدم أو مبلغ غير صالح لتطبيق التعديل على الشيت' };
   }
 
-  let cycleId = cycleIdOpt;
+  let cycleId =
+    cycleIdOpt != null && cycleIdOpt !== ''
+      ? parseInt(String(cycleIdOpt), 10)
+      : null;
+  if (cycleId !== null && Number.isNaN(cycleId)) cycleId = null;
   if (!cycleId) {
     const r = (await db.query(
       `SELECT id FROM financial_cycles WHERE user_id = $1
@@ -140,8 +144,8 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
   const cur = parseCellNumber(row[salCol]);
   const next = Math.round((cur + delta) * 100) / 100;
   const finalVal = Math.max(0, next);
-  /** نص عشري صريح يمنع عرض/تخزين الشيت كعدد صحيح (مثال: 90.65 + 10 → 100.65) */
-  const cellForApi = String(Number(finalVal.toFixed(2)));
+  /** رقم بمنزلتين عشريتين؛ RAW يكتب القيمة كرقم دون إعادة تحليل قد تُسقط الكسور في بعض الإعدادات الإقليمية */
+  const numericCell = Number(Number(finalVal).toFixed(2));
 
   const sheetRow1 = found + 1;
   const letter = columnIndexToLetter(salCol);
@@ -152,8 +156,8 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
     sheets.spreadsheets.values.update({
       spreadsheetId: ssId,
       range,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [[cellForApi]] },
+      valueInputOption: 'RAW',
+      requestBody: { values: [[numericCell]] },
     })
   );
 

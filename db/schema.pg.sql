@@ -610,3 +610,13 @@ ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS transfer_discount_pct REAL
 ALTER TABLE financial_cycles ADD COLUMN IF NOT EXISTS payroll_audit_user_info_hash TEXT;
 ALTER TABLE accreditation_entities ADD COLUMN IF NOT EXISTS is_primary INTEGER DEFAULT 0;
 ALTER TABLE entity_payables ADD COLUMN IF NOT EXISTS settlement_mode TEXT DEFAULT 'payable';
+
+CREATE TABLE IF NOT EXISTS financial_cycle_opening_snapshots (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  cycle_id INTEGER NOT NULL REFERENCES financial_cycles(id) ON DELETE CASCADE,
+  receivables_json TEXT,
+  payment_due_json TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_cycle_open_snap_cycle ON financial_cycle_opening_snapshots(cycle_id);

@@ -69,7 +69,8 @@ async function computeDebtBreakdown(db, userId) {
 }
 
 /**
- * تجميع «ديين لنا»: وكالات فرعية (رصيد سالب)، معتمدين (رصيد موجب)، مستخدمون (دين على العضو)، مرتجعات معلّقة لدى الكيان.
+ * تجميع «ديين لنا»: وكالات فرعية (رصيد سالب)، معتمدين (رصيد سالب = لنا عليهم)، مستخدمون، مرتجعات معلّقة.
+ * أرصدة المعتمد الموجبة تُعرض في «مطلوب دفع» وليست ديناً لنا.
  */
 async function computeReceivablesToUs(db, userId) {
   const subAgencyRows = (await db.query(`
@@ -92,11 +93,11 @@ async function computeReceivablesToUs(db, userId) {
   });
 
   const accreditations = (await db.query(
-    `SELECT id, name, balance_amount FROM accreditation_entities WHERE user_id = $1 AND balance_amount > 0.0001 ORDER BY name`,
+    `SELECT id, name, balance_amount FROM accreditation_entities WHERE user_id = $1 AND balance_amount < -0.0001 ORDER BY name`,
     [userId]
   )).rows;
   accreditations.forEach((r) => {
-    totalUsd += Number(r.balance_amount) || 0;
+    totalUsd += Math.abs(Number(r.balance_amount) || 0);
   });
 
   const members = (await db.query(
@@ -128,7 +129,7 @@ async function computeReceivablesToUs(db, userId) {
     accreditations: accreditations.map((r) => ({
       id: r.id,
       name: r.name,
-      amountOwedToUs: Number(r.balance_amount) || 0,
+      amountOwedToUs: Math.abs(Number(r.balance_amount) || 0),
     })),
     members: members.map((r) => ({
       memberUserId: r.member_user_id,

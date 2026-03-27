@@ -10,6 +10,7 @@ const { getDb } = require('../db/database');
 const { google } = require('googleapis');
 const { syncAgenciesFromManagementTable, calculateCashBoxBalance } = require('../services/agencySyncService');
 const { ensurePrimaryAccreditationAfterCycleCreate } = require('../services/accreditationCycleService');
+const { onFinancialCycleCreated } = require('../services/cycleFinancialHook');
 const { applyCycleAuditProfitsToLedger, rebuildDeferredFromLocalAgentData } = require('../services/cycleAccountingService');
 const {
   fetchSheetValuesBatched,
@@ -576,6 +577,11 @@ router.post('/cycles', requireAuth, async (req, res) => {
         if (!dr.success) console.warn('[cycles] rebuildDeferred:', dr.message);
       } catch (e) {
         console.error('[cycles] rebuildDeferred:', e.message);
+      }
+      try {
+        await onFinancialCycleCreated(db, req.session.userId, id);
+      } catch (e) {
+        console.error('[cycles] onFinancialCycleCreated:', e.message);
       }
     }
     res.json({ success: true, id, message: 'تم حفظ الدورة المالية' });

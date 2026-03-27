@@ -105,28 +105,6 @@ router.get('/net-profit-by-source/:sourceType/detail', requireAuth, async (req, 
   }
 });
 
-/** سجل مصروفات قسم الوسائط المالية (تصنيف media_finance أو ملاحظات «وسائط») */
-router.get('/media-finance-ledger', requireAuth, async (req, res) => {
-  try {
-    const db = getDb();
-    const userId = req.session.userId;
-    const rows = (
-      await db.query(
-        `SELECT id, amount, category, notes, created_at
-         FROM expense_entries
-         WHERE user_id = $1
-         AND (category = 'media_finance' OR COALESCE(notes, '') ILIKE '%وسائط%')
-         ORDER BY created_at DESC
-         LIMIT 200`,
-        [userId]
-      )
-    ).rows;
-    res.json({ success: true, rows });
-  } catch (e) {
-    res.json({ success: false, message: e.message || 'فشل', rows: [] });
-  }
-});
-
 router.post('/add', requireAuth, async (req, res) => {
   try {
     const { amount, category, notes, debitMainFund } = req.body || {};

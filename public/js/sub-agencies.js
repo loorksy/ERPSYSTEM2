@@ -202,6 +202,40 @@
     document.getElementById('subAgencyRewardModal').classList.remove('flex');
   };
 
+  window.subAgenciesOpenDeductModal = function() {
+    if (!currentAgencyId) {
+      showToast('افتح لوحة وكالة أولاً', 'error');
+      return;
+    }
+    var kindEl = document.getElementById('subAgencyDeductKind');
+    if (kindEl) kindEl.value = 'shipping';
+    subAgenciesDeductKindChange();
+    document.getElementById('subAgencyDeductModal').classList.remove('hidden');
+    document.getElementById('subAgencyDeductModal').classList.add('flex');
+  };
+
+  window.subAgenciesCloseDeductModal = function() {
+    document.getElementById('subAgencyDeductModal').classList.add('hidden');
+    document.getElementById('subAgencyDeductModal').classList.remove('flex');
+  };
+
+  window.subAgenciesDeductKindChange = function() {
+    var k = document.getElementById('subAgencyDeductKind');
+    var kind = k ? k.value : 'shipping';
+    var sal = document.getElementById('subAgencyDeductSalaryFields');
+    var shipHint = document.getElementById('subAgencyDeductShipHint');
+    var btn = document.getElementById('subAgencyDeductSubmit');
+    if (kind === 'salary') {
+      if (sal) sal.classList.remove('hidden');
+      if (shipHint) shipHint.classList.add('hidden');
+      if (btn) btn.textContent = 'تنفيذ';
+    } else {
+      if (sal) sal.classList.add('hidden');
+      if (shipHint) shipHint.classList.remove('hidden');
+      if (btn) btn.textContent = 'فتح الشحن';
+    }
+  };
+
   window.subAgenciesShowUsers = function() {
     if (!currentAgencyId) return;
     document.getElementById('subAgencyUsersModal').classList.remove('hidden');
@@ -271,6 +305,41 @@
       if (res.success) {
         subAgenciesCloseAddModal();
         loadAgencies();
+      }
+    });
+  });
+
+  document.getElementById('subAgencyDeductForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!currentAgencyId) return;
+    var kindEl = document.getElementById('subAgencyDeductKind');
+    var kind = kindEl ? kindEl.value : 'shipping';
+    if (kind === 'shipping') {
+      apiCall('/api/sub-agencies/' + currentAgencyId + '/deduct', {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'shipping' })
+      }).then(function(res) {
+        if (res.redirect) {
+          subAgenciesCloseDeductModal();
+          window.location.href = res.redirect;
+          return;
+        }
+        showToast(res.message || '', res.success ? 'success' : 'error');
+      });
+      return;
+    }
+    var amt = document.getElementById('subAgencyDeductAmount').value;
+    var payrollMode = document.getElementById('subAgencyDeductPayrollMode').value;
+    var notes = document.getElementById('subAgencyDeductNotes').value;
+    apiCall('/api/sub-agencies/' + currentAgencyId + '/deduct', {
+      method: 'POST',
+      body: JSON.stringify({ kind: 'salary', amount: amt, payrollMode: payrollMode, notes: notes })
+    }).then(function(res) {
+      showToast(res.message || '', res.success ? 'success' : 'error');
+      if (res.success) {
+        subAgenciesCloseDeductModal();
+        subAgenciesLoadDashboard();
+        subAgenciesLoadTransactions();
       }
     });
   });

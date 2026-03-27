@@ -11,6 +11,7 @@ const {
   transferProfitToFund,
 } = require('../services/fundService');
 const { computeDebtBreakdown, computeReceivablesToUs } = require('../services/debtAggregation');
+const { computePaymentDue } = require('../services/paymentDueService');
 const { sumLedgerBucket } = require('../services/ledgerService');
 const { sumDeferredTotalAllCycles, mergeMemberDeferredIntoCycle } = require('../services/deferredSalaryService');
 
@@ -86,11 +87,18 @@ router.get('/stats', requireAuth, async (req, res) => {
     let shippingDebt = sellAgg?.debt_sell ?? 0;
 
     let receivablesToUsTotal = null;
+    let paymentDueTotal = null;
     try {
       const recv = await computeReceivablesToUs(db, userId);
       receivablesToUsTotal = recv.totalUsd;
     } catch (_) {
       receivablesToUsTotal = null;
+    }
+    try {
+      const due = await computePaymentDue(db, userId);
+      paymentDueTotal = due.totalUsd;
+    } catch (_) {
+      paymentDueTotal = null;
     }
 
     let debtBreakdown = {
@@ -173,6 +181,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       capitalRecovered,
       totalDebts,
       receivablesToUsTotal,
+      paymentDueTotal,
       shippingDebt,
       accreditationDebtTotal,
       payablesSumUsd: debtBreakdown.payablesSumUsd,
@@ -271,7 +280,13 @@ router.get('/receivables-to-us', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const data = await computeReceivablesToUs(db, req.session.userId);
-    res.json({ success: true, ...data });
+    let paymentDue = null;
+    try {
+      paymentDue = await computePaymentDue(db, req.session.userId);
+    } catch (_) {
+      paymentDue = null;
+    }
+    res.json({ success: true, ...data, paymentDue });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }

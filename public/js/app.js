@@ -114,6 +114,10 @@ function initHomeStats() {
         if (recvH) {
           recvH.textContent = data.receivablesToUsTotal != null ? formatMoney(data.receivablesToUsTotal) : '—';
         }
+        var pdH = document.getElementById('paymentDueHome');
+        if (pdH) {
+          pdH.textContent = data.paymentDueTotal != null ? formatMoney(data.paymentDueTotal) : '—';
+        }
         setEl('capitalRecovery', data.capitalRecovered);
         var sub = document.getElementById('cashBalanceSub');
         if (sub) {

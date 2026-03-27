@@ -144,6 +144,27 @@ async function listMemberProfiles(db, userId, { q = '', page = 1, pageSize = 50 
      LIMIT $${qTrim === '' ? 2 : 3} OFFSET $${qTrim === '' ? 3 : 4}`,
     listParams
   )).rows;
+
+  const auditRows = (await db.query(
+    `SELECT DISTINCT ON (member_user_id) member_user_id, details_json
+     FROM payroll_user_audit_cache
+     WHERE user_id = $1 AND audit_status = 'مدقق'
+     ORDER BY member_user_id, updated_at DESC NULLS LAST`,
+    [userId]
+  )).rows;
+  const salaryFromAudit = new Map();
+  for (const ar of auditRows) {
+    const sal = salaryFromAuditDetails(parseJsonSafe(ar.details_json, {}));
+    if (sal != null && !Number.isNaN(sal)) salaryFromAudit.set(String(ar.member_user_id).trim(), sal);
+  }
+  for (const row of rows) {
+    const mid = String(row.member_user_id || '').trim();
+    const cur = row.total_salary_audited_usd != null ? Number(row.total_salary_audited_usd) : null;
+    if ((cur == null || cur === 0) && salaryFromAudit.has(mid)) {
+      row.total_salary_audited_usd = salaryFromAudit.get(mid);
+    }
+  }
+
   return { rows, total, page: p, pageSize: ps };
 }
 

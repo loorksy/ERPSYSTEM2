@@ -108,12 +108,16 @@
       <button type="button" id="accPinBtn" onclick="accTogglePin()" class="py-2 px-3 rounded-xl bg-amber-100 text-amber-800 text-sm">تثبيت</button>
     </div>
     <div id="accAddAmountPanel" class="hidden space-y-2 mb-4 p-4 rounded-xl bg-slate-50">
-      <select id="accSalaryDir" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
+      <select id="accAmountKind" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" onchange="accAmountKindChange()">
+        <option value="salary">راتب (وساطة + صندوق حسب الاتجاه)</option>
+        <option value="debt_to_us">دين لنا — على المعتمد (بدون وساطة/صندوق)</option>
+      </select>
+      <select id="accSalaryDir" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm acc-salary-only">
         <option value="to_us">راتب لنا</option>
         <option value="to_them">راتب علينا</option>
       </select>
       <input type="number" id="accAmt" step="0.01" placeholder="المبلغ" class="w-full px-3 py-2 rounded-lg border border-slate-200">
-      <input type="number" id="accBroker" step="0.1" placeholder="نسبة الوساطة %" class="w-full px-3 py-2 rounded-lg border border-slate-200">
+      <input type="number" id="accBroker" step="0.1" placeholder="نسبة الوساطة %" class="w-full px-3 py-2 rounded-lg border border-slate-200 acc-salary-only">
       <select id="accCycle" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"><option value="">— دورة مالية —</option></select>
       <button type="button" onclick="accSubmitAmount()" class="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm">تسجيل</button>
     </div>

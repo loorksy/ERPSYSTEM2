@@ -5,6 +5,33 @@ const { getDb } = require('../db/database');
 const { adjustFundBalance, getMainFundId } = require('../services/fundService');
 const { insertLedgerEntry, insertNetProfitLedgerAndMirrorFund } = require('../services/ledgerService');
 
+/** سجل وساطة إدارية: قيود الدفتر + صفوف الإدخال */
+router.get('/ledger', requireAuth, async (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.session.userId;
+    const entries = (await db.query(
+      `SELECT id, cycle_id, amount, brokerage_pct, profit_amount, main_fund_amount, notes, created_at
+       FROM admin_brokerage_entries WHERE user_id = $1 ORDER BY created_at DESC LIMIT 200`,
+      [userId]
+    )).rows;
+    const ids = entries.map((e) => e.id);
+    let ledgerRows = [];
+    if (ids.length) {
+      ledgerRows = (await db.query(
+        `SELECT id, bucket, source_type, amount, currency, cycle_id, ref_id, notes, created_at
+         FROM ledger_entries
+         WHERE user_id = $1 AND ref_table = 'admin_brokerage_entries' AND ref_id = ANY($2::int[])
+         ORDER BY created_at DESC`,
+        [userId, ids]
+      )).rows;
+    }
+    res.json({ success: true, entries, ledgerEntries: ledgerRows });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل', entries: [], ledgerEntries: [] });
+  }
+});
+
 router.post('/add', requireAuth, async (req, res) => {
   try {
     const { cycleId, amount, brokeragePct, notes } = req.body || {};
