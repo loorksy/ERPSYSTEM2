@@ -11,6 +11,14 @@
       .replace(/"/g, '&quot;');
   }
 
+  function accSyncBulkStep() {
+    var modal = document.getElementById('accBulkModal');
+    if (!modal) return;
+    var st = document.getElementById('accBulkStaging');
+    var reviewing = !!(st && !st.classList.contains('hidden') && accBulkStagingItems.length > 0);
+    modal.setAttribute('data-acc-step', reviewing ? 'review' : 'import');
+  }
+
   function accShowStagingFromPreview(preview) {
     var valid = (preview || []).filter(function(r) { return r.valid; });
     if (!valid.length) {
@@ -32,13 +40,23 @@
     accRenderStagingTable();
     var st = document.getElementById('accBulkStaging');
     if (st) st.classList.remove('hidden');
+    accSyncBulkStep();
+    if (st) {
+      try {
+        st.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (e) {
+        st.scrollIntoView(true);
+      }
+    }
   }
 
   function accRenderStagingTable() {
     var tb = document.getElementById('accBulkStagingTable');
     if (!tb) return;
     var badge = document.getElementById('accBulkStagingBadge');
-    if (badge) badge.textContent = accBulkStagingItems.length + ' صف';
+    var badgeText = badge && badge.querySelector('.acc-bulk-badge-text');
+    if (badgeText) badgeText.textContent = accBulkStagingItems.length + ' صف';
+    else if (badge) badge.textContent = accBulkStagingItems.length + ' صف';
     var br = document.getElementById('accBulkBroker');
     var defB = br && br.value !== '' && br.value != null ? br.value : '0';
     if (!accBulkStagingItems.length) {
@@ -77,14 +95,14 @@
     var thead =
       '<thead class="acc-bulk-thead sticky top-0 z-20 shadow-sm">' +
       '<tr class="border-b border-slate-100 bg-slate-50 text-slate-700">' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">#</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">كود</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap min-w-[7rem]">الاسم</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">المبلغ</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">وساطة %</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">الاتجاه</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap">النوع</th>' +
-      '<th class="p-3 text-xs sm:text-sm font-bold w-20"></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-hashtag text-[0.65rem] text-slate-400" aria-hidden="true"></i>#</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-barcode text-[0.65rem] text-slate-400" aria-hidden="true"></i>كود</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap min-w-[7rem]"><span class="inline-flex items-center gap-1.5"><i class="fas fa-user text-[0.65rem] text-slate-400" aria-hidden="true"></i>الاسم</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-coins text-[0.65rem] text-slate-400" aria-hidden="true"></i>المبلغ</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-percent text-[0.65rem] text-slate-400" aria-hidden="true"></i>وساطة %</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-right-left text-[0.65rem] text-slate-400" aria-hidden="true"></i>الاتجاه</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><i class="fas fa-tag text-[0.65rem] text-slate-400" aria-hidden="true"></i>النوع</span></th>' +
+      '<th class="p-3 text-xs sm:text-sm font-bold w-20"><span class="inline-flex items-center gap-1.5"><i class="fas fa-cog text-[0.65rem] text-slate-400" aria-hidden="true"></i></span></th>' +
       '</tr></thead>';
 
     tb.innerHTML =
@@ -136,6 +154,7 @@
     if (st) st.classList.add('hidden');
     var tb = document.getElementById('accBulkStagingTable');
     if (tb) tb.innerHTML = '';
+    accSyncBulkStep();
   };
 
   window.accCommitBulk = function() {
@@ -166,6 +185,7 @@
         accCloseBulk();
         var f = document.getElementById('accBulkFile');
         if (f) f.value = '';
+        accBulkClearFileNameDisplay();
         var p = document.getElementById('accBulkPaste');
         if (p) p.value = '';
         var u = document.getElementById('accBulkSheetUrl');
@@ -281,8 +301,62 @@
     sel.addEventListener('change', accSyncBulkSourcePanels);
   }
 
+  function accBulkClearFileNameDisplay() {
+    var el = document.getElementById('accBulkFileName');
+    if (el) {
+      el.textContent = '';
+      el.classList.add('hidden');
+    }
+  }
+
+  function accBulkUpdateFileNameDisplay() {
+    var input = document.getElementById('accBulkFile');
+    var el = document.getElementById('accBulkFileName');
+    if (!el || !input) return;
+    if (input.files && input.files[0]) {
+      el.textContent = input.files[0].name;
+      el.classList.remove('hidden');
+    } else {
+      el.textContent = '';
+      el.classList.add('hidden');
+    }
+  }
+
+  function wireAccBulkDropzone() {
+    var dz = document.getElementById('accBulkDropzone');
+    var input = document.getElementById('accBulkFile');
+    if (!dz || !input || dz.dataset.accBulkDzBound) return;
+    dz.dataset.accBulkDzBound = '1';
+    input.addEventListener('change', accBulkUpdateFileNameDisplay);
+    ['dragenter', 'dragover'].forEach(function(ev) {
+      dz.addEventListener(ev, function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.add('acc-bulk-dropzone-drag');
+      });
+    });
+    dz.addEventListener('dragleave', function(e) {
+      if (e.relatedTarget && dz.contains(e.relatedTarget)) return;
+      dz.classList.remove('acc-bulk-dropzone-drag');
+    });
+    dz.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dz.classList.remove('acc-bulk-dropzone-drag');
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      try {
+        var dt = new DataTransfer();
+        dt.items.add(files[0]);
+        input.files = dt.files;
+      } catch (err) {}
+      accBulkUpdateFileNameDisplay();
+    });
+  }
+
   window.accOpenBulk = function() {
     accClearBulkStaging();
+    accBulkClearFileNameDisplay();
     fillCycleSelect('accBulkCycle', { defaultLatest: true, keepSelection: false });
     var br = document.getElementById('accBulkBroker');
     if (br) {
@@ -297,6 +371,7 @@
     var method = document.getElementById('accBulkSourceMethod');
     if (method) method.value = 'file';
     accSyncBulkSourcePanels();
+    accSyncBulkStep();
     document.getElementById('accBulkModal').classList.remove('hidden');
     document.getElementById('accBulkModal').classList.add('flex');
   };
@@ -548,6 +623,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     wireAccBulkStagingDelegation();
     wireAccBulkSourceMethod();
+    wireAccBulkDropzone();
     accSyncBulkSourcePanels();
     accLoad();
     accAmountKindChange();
