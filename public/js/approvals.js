@@ -339,6 +339,17 @@
     });
   }
 
+  function accSyncBulkSourceButtons() {
+    var sel = document.getElementById('accBulkSourceMethod');
+    var v = sel && sel.value ? sel.value : 'file';
+    document.querySelectorAll('.acc-bulk-src-btn').forEach(function(btn) {
+      var k = btn.getAttribute('data-acc-source');
+      var on = k === v;
+      btn.classList.toggle('acc-bulk-src-btn--active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
   function accSyncBulkSourcePanels() {
     var sel = document.getElementById('accBulkSourceMethod');
     var v = sel && sel.value ? sel.value : 'file';
@@ -352,6 +363,7 @@
       if (!el) return;
       el.classList.toggle('hidden', k !== v);
     });
+    accSyncBulkSourceButtons();
   }
   window.accSyncBulkSourcePanels = accSyncBulkSourcePanels;
 
@@ -360,6 +372,14 @@
     if (!sel || sel.dataset.accBulkMethodBound) return;
     sel.dataset.accBulkMethodBound = '1';
     sel.addEventListener('change', accSyncBulkSourcePanels);
+    document.querySelectorAll('.acc-bulk-src-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var k = btn.getAttribute('data-acc-source');
+        if (!k || !sel || sel.value === k) return;
+        sel.value = k;
+        accSyncBulkSourcePanels();
+      });
+    });
   }
 
   function accBulkClearFileNameDisplay() {
