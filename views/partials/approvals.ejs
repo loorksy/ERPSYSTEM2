@@ -161,7 +161,7 @@
       grid-template-areas: 
         "name number"
         "amount amount"
-        "broker type"
+        "broker broker"
         "action action";
       gap: 0.75rem;
       padding: 1rem;
@@ -239,8 +239,7 @@
     .acc-bulk-review tbody td.acc-bulk-td:nth-child(3) .acc-bulk-val { font-size: 1.125rem; font-weight: 800; color: rgb(67 56 202); }
     
     .acc-bulk-review tbody td.acc-bulk-td:nth-child(4) { grid-area: broker; }
-    .acc-bulk-review tbody td.acc-bulk-td:nth-child(5) { grid-area: type; }
-    .acc-bulk-review tbody td.acc-bulk-td:nth-child(6) { 
+    .acc-bulk-review tbody td.acc-bulk-td:nth-child(5) { 
       grid-area: action; 
       justify-content: center;
       margin-top: 0.5rem;
@@ -389,19 +388,6 @@
             <label class="block text-xs font-semibold text-slate-600 mb-1.5">نسبة وساطة افتراضية %</label>
             <input type="number" id="accBulkBroker" min="0" max="100" step="0.01" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" placeholder="مثال: 0">
           </div>
-          <div class="sm:col-span-2 border-t border-slate-100 pt-3 mt-1">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">تطبيق نوع الرصيد على جميع الصفوف</label>
-            <div class="flex flex-col sm:flex-row gap-3">
-              <select id="accBulkGlobalKind" class="w-full sm:flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none">
-                <option value="salary_to_us">راتب لنا (وساطة + صندوق)</option>
-                <option value="salary_to_them">راتب علينا (وساطة + صندوق)</option>
-                <option value="debt_to_us">دين لنا (بدون وساطة/صندوق)</option>
-              </select>
-              <button type="button" onclick="accApplyGlobalSettings()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors whitespace-nowrap">
-                تطبيق على الكل
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -452,6 +438,16 @@
             <span id="accBulkStagingBadge" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 border border-emerald-200 shadow-sm">
               <i class="fas fa-check-circle"></i> <span class="acc-bulk-badge-text">0</span>
             </span>
+          </div>
+
+          <div id="accBulkReviewKindWrap" class="px-4 sm:px-5 py-3 border-b border-slate-100 bg-white">
+            <label for="accBulkReviewKind" class="block text-xs font-semibold text-slate-600 mb-1.5">النوع والاتجاه (لجميع الصفوف)</label>
+            <p class="text-[11px] text-slate-500 mb-2 leading-relaxed">نفس خيارات «إضافة مبلغ» اليدوي؛ يُطبَّق على كل المعتمدين في هذه الدفعة.</p>
+            <select id="accBulkReviewKind" class="w-full max-w-xl px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none">
+              <option value="salary_to_us">راتب لنا (وساطة + صندوق حسب الاتجاه)</option>
+              <option value="salary_to_them">راتب علينا (وساطة + صندوق حسب الاتجاه)</option>
+              <option value="debt_to_us">دين لنا — على المعتمد (بدون وساطة/صندوق)</option>
+            </select>
           </div>
           
           <div id="accBulkStagingTable" class="w-full"></div>

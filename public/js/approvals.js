@@ -45,6 +45,34 @@
     wrap.scrollLeft = 0;
   }
 
+  function accBulkReviewKindCodeToRow(code) {
+    if (code === 'debt_to_us') return { amountKind: 'debt_to_us', salaryDirection: 'to_us' };
+    if (code === 'salary_to_them') return { amountKind: 'salary', salaryDirection: 'to_them' };
+    return { amountKind: 'salary', salaryDirection: 'to_us' };
+  }
+
+  function accRowToBulkReviewKindCode(row) {
+    if (row.amountKind === 'debt_to_us') return 'debt_to_us';
+    if (row.amountKind === 'salary' && row.salaryDirection === 'to_them') return 'salary_to_them';
+    return 'salary_to_us';
+  }
+
+  function accApplyBulkReviewKindToItems() {
+    var sel = document.getElementById('accBulkReviewKind');
+    if (!sel || !accBulkStagingItems.length) return;
+    var r = accBulkReviewKindCodeToRow(sel.value || 'salary_to_us');
+    accBulkStagingItems.forEach(function(it) {
+      it.amountKind = r.amountKind;
+      it.salaryDirection = r.salaryDirection;
+    });
+  }
+
+  function accSyncBulkReviewKindSelect() {
+    var sel = document.getElementById('accBulkReviewKind');
+    if (!sel || !accBulkStagingItems.length) return;
+    sel.value = accRowToBulkReviewKindCode(accBulkStagingItems[0]);
+  }
+
   function accShowStagingFromPreview(preview) {
     var valid = (preview || []).filter(function(r) { return r.valid; });
     if (!valid.length) {
@@ -63,6 +91,8 @@
         amountKind: 'salary',
       };
     });
+    accSyncBulkReviewKindSelect();
+    accApplyBulkReviewKindToItems();
     accRenderStagingTable();
     var st = document.getElementById('accBulkStaging');
     if (st) st.classList.remove('hidden');
@@ -101,22 +131,8 @@
       return v;
     }
 
-    function accGetRowKindValue(row) {
-      if (row.amountKind === 'debt_to_us') return 'debt_to_us';
-      if (row.amountKind === 'salary' && row.salaryDirection === 'to_them') return 'salary_to_them';
-      return 'salary_to_us';
-    }
-
     var rows = accBulkStagingItems.map(function(row, idx) {
       var r = rowBp(row, idx);
-      var combinedKind = accGetRowKindValue(row);
-      var kindSelectHtml = 
-        '<select class="acc-bulk-combined-kind w-full px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-shadow" data-idx="' + idx + '">' +
-        '<option value="salary_to_us"' + (combinedKind === 'salary_to_us' ? ' selected' : '') + '>راتب لنا (وساطة + صندوق)</option>' +
-        '<option value="salary_to_them"' + (combinedKind === 'salary_to_them' ? ' selected' : '') + '>راتب علينا (وساطة + صندوق)</option>' +
-        '<option value="debt_to_us"' + (combinedKind === 'debt_to_us' ? ' selected' : '') + '>دين لنا (بدون وساطة/صندوق)</option>' +
-        '</select>';
-
       return (
         '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-slate-50 transition-colors relative">' +
         '<td class="acc-bulk-td p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(r.lineNum) + '</span></td>' +
@@ -129,7 +145,6 @@
         '<td class="acc-bulk-td p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val font-bold text-indigo-600 tabular-nums">' + escHtml(row.amount) + '</span></td>' +
         '<td class="acc-bulk-td p-3 align-middle" data-label="وساطة %">' +
         '<input type="number" min="0" max="100" step="0.01" class="acc-bulk-bp w-full sm:w-20 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-shadow" data-idx="' + idx + '" value="' + escHtml(accBulkBpInputValue(r.bpVal, defB)) + '"></td>' +
-        '<td class="acc-bulk-td p-3 align-middle" data-label="النوع">' + kindSelectHtml + '</td>' +
         '<td class="acc-bulk-td p-3 align-middle text-left sm:w-12" data-label="إجراء">' +
         '<button type="button" class="w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors py-2 sm:py-0 text-sm font-semibold sm:font-normal" data-acc-delete="' + idx + '"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none"></i></button></td></tr>'
       );
@@ -138,10 +153,9 @@
     var colgroup =
       '<colgroup>' +
       '<col style="width:4%">' +
-      '<col style="width:30%">' +
-      '<col style="width:14%">' +
-      '<col style="width:14%">' +
-      '<col style="width:28%">' +
+      '<col style="width:34%">' +
+      '<col style="width:16%">' +
+      '<col style="width:16%">' +
       '<col style="width:10%">' +
       '</colgroup>';
 
@@ -152,13 +166,12 @@
       '<th class="p-3 text-xs font-bold text-right">المعتمد</th>' +
       '<th class="p-3 text-xs font-bold text-right">المبلغ</th>' +
       '<th class="p-3 text-xs font-bold text-center">وساطة %</th>' +
-      '<th class="p-3 text-xs font-bold text-right">النوع</th>' +
       '<th class="p-3 text-xs font-bold text-center"></th>' +
       '</tr></thead>';
 
     tb.innerHTML =
       '<div class="acc-bulk-scroll w-full h-full overflow-y-auto overflow-x-hidden sm:overflow-x-auto overscroll-contain flex-1 relative">' +
-      '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[800px] text-right border-collapse text-sm pb-10">' +
+      '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[640px] text-right border-collapse text-sm pb-10">' +
       colgroup +
       thead +
       '<tbody class="bg-white">' + rows + '</tbody></table></div>';
@@ -168,25 +181,6 @@
     var c = document.getElementById('accBulkStagingTable');
     if (!c || c.dataset.accBulkBound) return;
     c.dataset.accBulkBound = '1';
-    c.addEventListener('change', function(e) {
-      var t = e.target;
-      var idx = parseInt(t.getAttribute('data-idx'), 10);
-      if (isNaN(idx) || !accBulkStagingItems[idx]) return;
-      
-      if (t.classList.contains('acc-bulk-combined-kind')) {
-        var val = t.value;
-        if (val === 'debt_to_us') {
-          accBulkStagingItems[idx].amountKind = 'debt_to_us';
-          accBulkStagingItems[idx].salaryDirection = 'to_us'; // default
-        } else if (val === 'salary_to_them') {
-          accBulkStagingItems[idx].amountKind = 'salary';
-          accBulkStagingItems[idx].salaryDirection = 'to_them';
-        } else {
-          accBulkStagingItems[idx].amountKind = 'salary';
-          accBulkStagingItems[idx].salaryDirection = 'to_us';
-        }
-      }
-    });
     c.addEventListener('input', function(e) {
       var t = e.target;
       if (!t.classList.contains('acc-bulk-bp')) return;
@@ -221,35 +215,12 @@
     accSyncBulkStep();
   };
 
-  window.accApplyGlobalSettings = function() {
-    if (!accBulkStagingItems || !accBulkStagingItems.length) return;
-    
-    var val = document.getElementById('accBulkGlobalKind').value;
-    var newKind = 'salary';
-    var newDir = 'to_us';
-
-    if (val === 'debt_to_us') {
-      newKind = 'debt_to_us';
-      newDir = 'to_us';
-    } else if (val === 'salary_to_them') {
-      newKind = 'salary';
-      newDir = 'to_them';
-    }
-
-    accBulkStagingItems.forEach(function(item) {
-      item.amountKind = newKind;
-      item.salaryDirection = newDir;
-    });
-
-    accRenderStagingTable();
-    toast('تم تطبيق النوع على جميع الصفوف', 'success');
-  };
-
   window.accCommitBulk = function() {
     if (!accBulkStagingItems.length) {
       toast('لا توجد صفوف', 'error');
       return;
     }
+    accApplyBulkReviewKindToItems();
     var cid = document.getElementById('accBulkCycle').value;
     var defBr = document.getElementById('accBulkBroker') ? document.getElementById('accBulkBroker').value : '';
     var items = accBulkStagingItems.map(function(r) {
@@ -503,6 +474,8 @@
     }
     var method = document.getElementById('accBulkSourceMethod');
     if (method) method.value = 'file';
+    var rk = document.getElementById('accBulkReviewKind');
+    if (rk) rk.value = 'salary_to_us';
     accSyncBulkSourcePanels();
     accSyncBulkStep();
     var modal = document.getElementById('accBulkModal');
@@ -759,10 +732,20 @@
     });
   });
 
+  function wireAccBulkReviewKind() {
+    var rk = document.getElementById('accBulkReviewKind');
+    if (!rk || rk.dataset.accBulkBound) return;
+    rk.dataset.accBulkBound = '1';
+    rk.addEventListener('change', function() {
+      accApplyBulkReviewKindToItems();
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     wireAccBulkStagingDelegation();
     wireAccBulkSourceMethod();
     wireAccBulkDropzone();
+    wireAccBulkReviewKind();
     accSyncBulkSourcePanels();
     accLoad();
     accAmountKindChange();
