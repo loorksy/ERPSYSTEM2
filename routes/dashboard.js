@@ -280,13 +280,18 @@ router.get('/receivables-to-us', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const data = await computeReceivablesToUs(db, req.session.userId);
-    let paymentDue = null;
-    try {
-      paymentDue = await computePaymentDue(db, req.session.userId);
-    } catch (_) {
-      paymentDue = null;
-    }
-    res.json({ success: true, ...data, paymentDue });
+    res.json({ success: true, ...data });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل' });
+  }
+});
+
+/** «مطلوب دفع» — صفحة مستقلة */
+router.get('/payment-due', requireAuth, async (req, res) => {
+  try {
+    const db = getDb();
+    const data = await computePaymentDue(db, req.session.userId);
+    res.json({ success: true, ...data });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل' });
   }

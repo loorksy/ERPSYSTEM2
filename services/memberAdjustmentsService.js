@@ -1,3 +1,4 @@
+const { parseLocaleDecimal } = require('./payrollSearchService');
 const { getMemberProfileRow, refreshMemberDeferredSnapshot } = require('./memberDirectoryService');
 const { reduceDeferredLinesForMember, addDeferredAdjustmentToMemberLines } = require('./deferredSalaryService');
 
@@ -44,7 +45,8 @@ async function applyDebtAgainstCycleSalary(db, userId, cycleId, memberUserId, cy
 }
 
 async function processAdjustment(db, userId, { memberUserId, kind, amount, notes, cycleId, syncUserInfoSheet, userInfoUserIdCol, userInfoSalaryCol }) {
-  const amt = Math.abs(Number(amount));
+  const amtParsed = parseLocaleDecimal(amount);
+  const amt = Math.abs(Number.isFinite(amtParsed) ? amtParsed : NaN);
   if (!amt || Number.isNaN(amt)) return { success: false, message: 'مبلغ غير صالح' };
   const mid = String(memberUserId || '').trim();
   if (!mid) return { success: false, message: 'رقم المستخدم مطلوب' };
@@ -53,10 +55,14 @@ async function processAdjustment(db, userId, { memberUserId, kind, amount, notes
 
   await ensureMemberProfileExists(db, userId, mid);
   await refreshMemberDeferredSnapshot(db, userId, mid);
+  const defSumRow = (await db.query(
+    `SELECT COALESCE(SUM(balance_d), 0)::float AS t FROM deferred_salary_lines WHERE user_id = $1 AND member_user_id = $2`,
+    [userId, mid]
+  )).rows[0];
+  let def = Math.round(Number(defSumRow?.t ?? 0) * 100) / 100;
   const profile = await getMemberProfileRow(db, userId, mid);
-  let def = Number(profile?.deferred_balance_usd || 0);
-  let sal = Number(profile?.total_salary_audited_usd || 0);
-  let debt = Number(profile?.debt_to_company_usd || 0);
+  let sal = Math.round(Number(profile?.total_salary_audited_usd || 0) * 100) / 100;
+  let debt = Math.round(Number(profile?.debt_to_company_usd || 0) * 100) / 100;
 
   const ins = await db.query(
     `INSERT INTO member_adjustments (user_id, member_user_id, kind, amount, status, notes, cycle_id, processed_at)

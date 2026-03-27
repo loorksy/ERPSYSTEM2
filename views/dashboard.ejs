@@ -375,6 +375,12 @@
           </a>
         </li>
         <li>
+          <a href="/payment-due" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payment-due' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
+            <i class="fas fa-money-bill-wave w-5 text-center <%= page === 'payment-due' ? 'text-amber-400' : '' %>"></i>
+            <span>مطلوب دفع</span>
+          </a>
+        </li>
+        <li>
           <a href="/fx-spread" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'fx-spread' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-chart-line w-5 text-center <%= page === 'fx-spread' ? 'text-indigo-400' : '' %>"></i>
             <span>فرق التصريف</span>
@@ -487,6 +493,8 @@
         <%- include('partials/payables-overview') %>
       <% } else if (page === 'receivables-to-us') { %>
         <%- include('partials/receivables-to-us') %>
+      <% } else if (page === 'payment-due') { %>
+        <%- include('partials/payment-due') %>
       <% } else if (page === 'member-directory') { %>
         <%- include('partials/member-directory') %>
       <% } else if (page === 'member-directory-detail') { %>
@@ -589,6 +597,9 @@
   <% } %>
   <% if (page === 'receivables-to-us') { %>
     <script src="/js/receivables-to-us.js"></script>
+  <% } %>
+  <% if (page === 'payment-due') { %>
+    <script src="/js/payment-due.js"></script>
   <% } %>
   <% if (page === 'member-directory') { %>
     <script src="/js/member-directory.js"></script>

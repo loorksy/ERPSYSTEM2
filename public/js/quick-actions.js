@@ -117,7 +117,7 @@
         if (k === 'out-exp') return formExpense();
         if (k === 'out-paydue') {
           hideCascade();
-          var u = (qaContext && qaContext.links && qaContext.links.paymentDueAnchor) || '/receivables-to-us#payment-due';
+          var u = (qaContext && qaContext.links && qaContext.links.paymentDuePage) || '/payment-due';
           window.location.href = u;
           return;
         }

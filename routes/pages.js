@@ -48,6 +48,7 @@ const pages = [
   { path: '/admin-brokerage', page: 'admin-brokerage', title: 'وساطة إدارية' },
   { path: '/payables-us', page: 'payables-overview', title: 'دين علينا' },
   { path: '/receivables-to-us', page: 'receivables-to-us', title: 'ديين لنا' },
+  { path: '/payment-due', page: 'payment-due', title: 'مطلوب دفع' },
   { path: '/deferred-balance', page: 'deferred-balance', title: 'رصيد المؤجل' },
   { path: '/search', page: 'search', title: 'البحث' },
   { path: '/clients', page: 'clients', title: 'بيانات العملاء' },

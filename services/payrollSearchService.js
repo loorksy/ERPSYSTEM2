@@ -20,6 +20,39 @@ function normalizeUserId(val) {
   return s;
 }
 
+/**
+ * راتب أو مبلغ من الشيت/النموذج: يدعم 90,65 و 1.234,56 و 1,234.56 دون تحويل «90,65» إلى 9065.
+ */
+function parseLocaleDecimal(val) {
+  if (val == null || val === '') return NaN;
+  if (typeof val === 'number' && !Number.isNaN(val) && isFinite(val)) return val;
+  let s = String(val).replace(/[\u200B-\u200D\u2060\uFEFF\u200E\u200F\u202A-\u202E]/g, '').trim();
+  const arabic = '٠١٢٣٤٥٦٧٨٩';
+  const persian = '۰۱۲۳۴۵۶۷۸۹';
+  const western = '0123456789';
+  for (let i = 0; i < 10; i++) {
+    s = s.replace(new RegExp(arabic[i], 'g'), western[i]).replace(new RegExp(persian[i], 'g'), western[i]);
+  }
+  s = s.replace(/\s/g, '').replace(/\$/g, '').replace(/USD/gi, '');
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if (lastComma >= 0 && lastDot < 0) {
+    const parts = s.split(',');
+    if (parts.length === 2 && parts[1].length <= 2 && /^\d*$\.?\d*$/.test(parts[0].replace(/,/g, ''))) {
+      s = parts[0].replace(/,/g, '') + '.' + parts[1];
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (lastDot >= 0 && lastComma >= 0) {
+    if (lastDot > lastComma) s = s.replace(/,/g, '');
+    else s = s.replace(/\./g, '').replace(',', '.');
+  } else {
+    s = s.replace(/,/g, '');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) || !isFinite(n) ? NaN : n;
+}
+
 function parseJsonSafe(text, fallback) {
   if (!text) return fallback;
   try {
@@ -195,6 +228,7 @@ async function getUserAuditStatus(userId, cycleId, memberUserId) {
 module.exports = {
   normalizeForNumber,
   normalizeUserId,
+  parseLocaleDecimal,
   computeSalaryWithDiscount,
   classifyManualStatus,
   columnLetterToIndex,

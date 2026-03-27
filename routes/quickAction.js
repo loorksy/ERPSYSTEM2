@@ -35,7 +35,7 @@ router.get('/context', requireAuth, async (req, res) => {
       cashBlocked,
       links: {
         receivablesToUs: '/receivables-to-us',
-        paymentDueAnchor: '/receivables-to-us#payment-due',
+        paymentDuePage: '/payment-due',
         subAgencies: '/sub-agencies',
         approvals: '/approvals',
       },
@@ -49,7 +49,7 @@ router.get('/context', requireAuth, async (req, res) => {
       cashBlocked: true,
       links: {
         receivablesToUs: '/receivables-to-us',
-        paymentDueAnchor: '/receivables-to-us#payment-due',
+        paymentDuePage: '/payment-due',
         subAgencies: '/sub-agencies',
         approvals: '/approvals',
       },

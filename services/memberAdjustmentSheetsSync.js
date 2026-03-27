@@ -5,7 +5,7 @@
 const crypto = require('crypto');
 const { google } = require('googleapis');
 const { withSheetsRetry, fetchSheetValuesBatched, escapeSheetTitleForRange } = require('./googleSheetsReadHelpers');
-const { normalizeUserId, columnLetterToIndex, normalizeForNumber } = require('./payrollSearchService');
+const { normalizeUserId, columnLetterToIndex, parseLocaleDecimal } = require('./payrollSearchService');
 const { isHeaderRowUserInfo } = require('./payrollAuditEngine');
 
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/sheets/callback`;
@@ -36,10 +36,13 @@ function getOAuth2Client(credentials) {
   return new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
 }
 
-function parseCellNumber(v) {
-  const s = normalizeForNumber(v != null ? v : '');
-  const n = parseFloat(s);
-  return isNaN(n) || !isFinite(n) ? 0 : n;
+function parseSalaryCellNumber(v) {
+  const n = parseLocaleDecimal(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function roundMoney2(n) {
+  return Math.round(Number(n) * 100) / 100;
 }
 
 /**
@@ -56,8 +59,9 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
   } = options;
 
   const mid = normalizeUserId(memberUserId);
-  const amt = Math.abs(Number(amount));
-  if (!mid || !amt) {
+  const amtParsed = parseLocaleDecimal(amount);
+  const amt = Math.abs(Number.isFinite(amtParsed) ? amtParsed : Number(amount));
+  if (!mid || !amt || Number.isNaN(amt)) {
     return { sheetSynced: false, sheetMessage: 'رقم مستخدم أو مبلغ غير صالح لتطبيق التعديل على الشيت' };
   }
 
@@ -141,11 +145,11 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
 
   const row = rows[found];
   while (row.length <= salCol) row.push('');
-  const cur = parseCellNumber(row[salCol]);
-  const next = Math.round((cur + delta) * 100) / 100;
+  const cur = parseSalaryCellNumber(row[salCol]);
+  const next = roundMoney2(cur + delta);
   const finalVal = Math.max(0, next);
-  /** رقم بمنزلتين عشريتين؛ RAW يكتب القيمة كرقم دون إعادة تحليل قد تُسقط الكسور في بعض الإعدادات الإقليمية */
-  const numericCell = Number(Number(finalVal).toFixed(2));
+  /** USER_ENTERED مع نص عشري صريح يحافظ على الكسور في الشيت (مثال: 100.65 وليس تقريباً لعدد صحيح). */
+  const cellDisplay = roundMoney2(finalVal).toFixed(2);
 
   const sheetRow1 = found + 1;
   const letter = columnIndexToLetter(salCol);
@@ -156,12 +160,12 @@ async function applyAdjustmentToUserInfoGoogleSheet(db, userId, options) {
     sheets.spreadsheets.values.update({
       spreadsheetId: ssId,
       range,
-      valueInputOption: 'RAW',
-      requestBody: { values: [[numericCell]] },
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [[cellDisplay]] },
     })
   );
 
-  row[salCol] = finalVal;
+  row[salCol] = roundMoney2(finalVal);
   const hash = hashUserInfoRows(rows);
   await db.query(
     `UPDATE financial_cycles SET user_info_data = $1, payroll_audit_user_info_hash = $2, updated_at = CURRENT_TIMESTAMP
