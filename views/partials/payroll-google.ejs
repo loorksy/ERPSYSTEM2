@@ -7,7 +7,6 @@
     <div>
       <h2 class="text-xl font-bold text-slate-800">تدقيق الرواتب</h2>
       <p class="text-sm text-slate-500">مزامنة الدورة المالية ثم اختيار الجدول وتنفيذ التدقيق</p>
-      <p class="mt-1 text-xs"><a href="/payroll-local" class="text-indigo-600 hover:underline font-medium">تدقيق محلي مع معاينة الجداول وتصدير ←</a></p>
     </div>
   </div>
 
@@ -41,7 +40,7 @@
         <i class="fas fa-cogs text-emerald-600"></i>
         خيارات التدقيق
       </h3>
-      <p class="text-sm text-slate-600">اختر جدول <strong>معلومات المستخدمين</strong>، حدد الأعمدة، ثم <strong>مزامنة للتدقيق</strong> (سحب من Google فقط) وبعدها <strong>تدقيق محلي</strong> على السيرفر — أو استخدم <strong>تطبيق على Google</strong> للكتابة في الجداول كما سابقاً.</p>
+      <p class="text-sm text-slate-600">اختر جدول <strong>معلومات المستخدمين</strong>، حدد الأعمدة، ثم <strong>مزامنة للتدقيق</strong> (سحب من Google فقط) وبعدها استخدم <strong>تطبيق على Google</strong> للكتابة في الجداول كما سابقاً.</p>
 
       <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end flex-wrap">
         <div class="flex-1 min-w-0 sm:min-w-[200px]">
@@ -52,9 +51,6 @@
         </div>
         <button type="button" id="payrollSyncAuditBtn" onclick="payrollSyncForAudit()" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all shrink-0" title="جلب إدارة + وكيل + معلومات المستخدمين وحفظها على السيرفر">
           <i class="fas fa-cloud-download-alt"></i> مزامنة للتدقيق
-        </button>
-        <button type="button" id="payrollAuditLocalBtn" onclick="payrollAuditLocal()" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-slate-700 text-white hover:bg-slate-800 active:scale-[0.98] transition-all shrink-0" title="تدقيق على السيرفر دون كتابة على Google">
-          <i class="fas fa-server"></i> تدقيق محلي
         </button>
         <button type="button" id="payrollExecuteBtn" onclick="payrollExecute()" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] transition-all shrink-0" title="كتابة النتائج والألوان في Google">
           <i class="fas fa-play"></i> تطبيق على Google
@@ -487,55 +483,6 @@ async function payrollSyncForAudit() {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
   }
   if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> مزامنة للتدقيق'; }
-}
-
-async function payrollAuditLocal() {
-  var cycleId = document.getElementById('payrollCycleSelect').value;
-  if (!cycleId) {
-    if (typeof showToast === 'function') showToast('اختر الدورة المالية أولاً', 'error');
-    return;
-  }
-  var btn = document.getElementById('payrollAuditLocalBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التدقيق...'; }
-  var discountRate = document.getElementById('payrollDiscountRate').value;
-  var agentColor = document.getElementById('payrollAgentColor').value;
-  var managementColor = document.getElementById('payrollMgmtColor').value;
-  var userInfoUserIdCol = (document.getElementById('payrollUserInfoUserIdCol') && document.getElementById('payrollUserInfoUserIdCol').value) || 'C';
-  var userInfoTitleCol = (document.getElementById('payrollUserInfoTitleCol') && document.getElementById('payrollUserInfoTitleCol').value) || 'D';
-  var userInfoSalaryCol = (document.getElementById('payrollUserInfoSalaryCol') && document.getElementById('payrollUserInfoSalaryCol').value) || 'L';
-  var cycleMgmtUserIdCol = (document.getElementById('payrollCycleMgmtUserIdCol') && document.getElementById('payrollCycleMgmtUserIdCol').value) || 'A';
-  var cycleAgentUserIdCol = (document.getElementById('payrollCycleAgentUserIdCol') && document.getElementById('payrollCycleAgentUserIdCol').value) || 'A';
-  var cycleAgentSalaryCol = (document.getElementById('payrollCycleAgentSalaryCol') && document.getElementById('payrollCycleAgentSalaryCol').value) || 'D';
-  try {
-    var res = await fetch('/api/sheet/payroll-audit-local', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cycleId: Number(cycleId),
-        discountRate: Number(discountRate) || 0,
-        agentColor: agentColor || '#3b82f6',
-        managementColor: managementColor || '#10b981',
-        userInfoUserIdCol: userInfoUserIdCol,
-        userInfoTitleCol: userInfoTitleCol,
-        userInfoSalaryCol: userInfoSalaryCol,
-        cycleMgmtUserIdCol: cycleMgmtUserIdCol,
-        cycleAgentUserIdCol: cycleAgentUserIdCol,
-        cycleAgentSalaryCol: cycleAgentSalaryCol
-      })
-    });
-    var data = await res.json();
-    if (data.success) {
-      var html = payrollBuildResultHtml(data);
-      document.getElementById('payrollResultsContent').innerHTML = html;
-      document.getElementById('payrollResultsSection').classList.remove('hidden');
-      if (typeof showToast === 'function') showToast(data.message || 'تم', data.applied ? 'success' : 'warning');
-    } else {
-      if (typeof showToast === 'function') showToast(data.message || 'فشل', 'error');
-    }
-  } catch (_) {
-    if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
-  }
-  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-server"></i> تدقيق محلي'; }
 }
 
 async function payrollExecute() {

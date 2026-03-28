@@ -300,13 +300,7 @@
         <li>
           <a href="/payroll" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payroll-google' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-money-check-alt w-5 text-center <%= page === 'payroll-google' ? 'text-indigo-400' : '' %>"></i>
-            <span class="leading-snug">تدقيق الرواتب<br><span class="text-[0.65rem] font-normal opacity-80">مزامنة وتطبيق سحابي</span></span>
-          </a>
-        </li>
-        <li>
-          <a href="/payroll-local" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payroll-local-preview' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
-            <i class="fas fa-table w-5 text-center <%= page === 'payroll-local-preview' ? 'text-indigo-400' : '' %>"></i>
-            <span class="leading-snug">تدقيق محلي ومعاينة<br><span class="text-[0.65rem] font-normal opacity-80">جداول وتصدير</span></span>
+            <span>تدقيق الرواتب</span>
           </a>
         </li>
         <li>
@@ -464,8 +458,6 @@
         <%- include('partials/sheet') %>
       <% } else if (page === 'payroll-google') { %>
         <%- include('partials/payroll-google') %>
-      <% } else if (page === 'payroll-local-preview') { %>
-        <%- include('partials/payroll-local-preview') %>
       <% } else if (page === 'deferred-balance') { %>
         <%- include('partials/deferred-balance') %>
       <% } else if (page === 'search') { %>
