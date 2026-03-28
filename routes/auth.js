@@ -23,7 +23,8 @@ router.post('/login', async (req, res) => {
       id: user.id,
       username: user.username,
       displayName: user.display_name,
-      role: user.role
+      role: user.role,
+      useSimpleFinancialTerms: !!user.use_simple_financial_terms,
     };
     res.redirect('/dashboard');
   } catch (e) {

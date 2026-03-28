@@ -14,6 +14,7 @@ const {
   getComprehensiveReportData,
 } = require('../services/accountingReportData');
 const { enrichFundLedgerDisplayNotes } = require('../services/fundLedgerNotes');
+const { resolveReportTerminologyMode } = require('../services/financialTerminology');
 const {
   renderSubAgency,
   renderAccreditations,
@@ -60,7 +61,7 @@ router.get('/pdf/sub-agency', requireAuth, async (req, res) => {
     }
     const data = await getSubAgencyReportData(db, userId, subAgencyId, cycleId);
     if (!data) return res.status(404).json({ success: false, message: 'الوكالة غير موجودة' });
-    const html = renderSubAgency(data);
+    const html = renderSubAgency(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     const name = `وكالة-${data.agency.name || subAgencyId}.pdf`;
     sendPdf(res, name, buf);
@@ -80,7 +81,7 @@ router.get('/pdf/accreditations', requireAuth, async (req, res) => {
       if (!c) return res.status(404).json({ success: false, message: 'الدورة غير موجودة' });
     }
     const data = await getAccreditationsReportData(db, userId, cycleId);
-    const html = renderAccreditations(data);
+    const html = renderAccreditations(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     sendPdf(res, 'اعتمادات.pdf', buf);
   } catch (e) {
@@ -93,7 +94,7 @@ router.get('/pdf/transfer-companies', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const data = await getTransferCompaniesReportData(db, req.session.userId);
-    const html = renderTransferCompanies(data);
+    const html = renderTransferCompanies(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     sendPdf(res, 'شركات-التحويل.pdf', buf);
   } catch (e) {
@@ -112,7 +113,7 @@ router.get('/pdf/transfer-company-ledger', requireAuth, async (req, res) => {
     const userId = req.session.userId;
     const data = await getTransferCompanyLedgerReportData(db, userId, companyId);
     if (!data) return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
-    const html = renderTransferCompanyLedger(data);
+    const html = renderTransferCompanyLedger(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     const name = `حركات-${data.company.name || companyId}.pdf`;
     sendPdf(res, name, buf);
@@ -135,7 +136,7 @@ router.get('/pdf/fund-ledger', requireAuth, async (req, res) => {
     if (data.rows && data.rows.length) {
       data.rows = await enrichFundLedgerDisplayNotes(db, userId, data.rows);
     }
-    const html = renderFundLedger(data);
+    const html = renderFundLedger(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     const name = `حركات-صندوق-${data.fund.name || fundId}.pdf`;
     sendPdf(res, name, buf);
@@ -156,7 +157,7 @@ router.get('/pdf/movements', requireAuth, async (req, res) => {
     }
     const data = await getMovementsReportData(db, userId, cycleId);
     if (cycleId && !data) return res.status(404).json({ success: false, message: 'الدورة غير موجودة' });
-    const html = renderMovements(data);
+    const html = renderMovements(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     sendPdf(res, 'حركات.pdf', buf);
   } catch (e) {
@@ -175,7 +176,7 @@ router.get('/pdf/comprehensive', requireAuth, async (req, res) => {
       if (!c) return res.status(404).json({ success: false, message: 'الدورة غير موجودة' });
     }
     const data = await getComprehensiveReportData(db, userId, cycleId);
-    const html = renderComprehensive(data);
+    const html = renderComprehensive(data, resolveReportTerminologyMode(req));
     const buf = await htmlToPdfBuffer(html);
     sendPdf(res, 'تقرير-شامل.pdf', buf);
   } catch (e) {

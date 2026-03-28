@@ -121,6 +121,20 @@
               </button>
             </form>
           </div>
+
+          <div class="border-t border-slate-100 pt-8">
+            <h4 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-book-open text-indigo-500"></i> التقارير والمصطلحات</h4>
+            <p class="text-sm text-slate-600 mb-4">عند التصدير إلى PDF يمكن عرض أسماء مبسّطة للعملاء بدل المصطلحات المحاسبية الدقيقة. المحاسبون يبقون على العرض التقني الافتراضي حتى تفعّل الخيار أدناه أو تستخدم الرابط مع <code class="text-xs bg-slate-100 px-1 rounded" dir="ltr">?reportTerms=client</code>.</p>
+            <label class="flex items-start gap-3 cursor-pointer select-none max-w-xl">
+              <input type="checkbox" id="simpleFinancialTerms" class="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                <%= (typeof useSimpleFinancialTerms !== 'undefined' && useSimpleFinancialTerms) ? 'checked' : '' %>
+                onchange="saveSimpleFinancialTerms(this.checked)">
+              <span class="text-sm text-slate-800 leading-relaxed">
+                <span class="font-semibold block">استخدام مصطلحات مالية مبسّطة في التقارير</span>
+                <span class="text-slate-500 text-xs mt-0.5 block">ينطبق على تحميل تقارير PDF من النظام (مثل التقرير الشامل وحركات الصناديق). يمكن تجاوز الإعداد مؤقتاً من عنوان الرابط.</span>
+              </span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -513,6 +527,20 @@ function disconnectSheets() {
         btn.innerHTML = '<i class="fas fa-unlink"></i> قطع الاتصال';
       }
     });
+}
+
+async function saveSimpleFinancialTerms(checked) {
+  try {
+    var res = await fetch('/settings/simple-financial-terms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ useSimpleTerms: !!checked })
+    });
+    var data = await res.json();
+    if (typeof showToast === 'function') showToast(data.message || (data.success ? 'تم الحفظ' : 'فشل'), data.success ? 'success' : 'error');
+  } catch (_) {
+    if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+  }
 }
 
 async function saveCurrency(e) {

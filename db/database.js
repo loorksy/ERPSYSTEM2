@@ -211,6 +211,17 @@ async function ensureDeferredSalaryLinesTable() {
   }
 }
 
+async function ensureUserSimpleFinancialTermsColumn() {
+  if (!pgPool) return;
+  try {
+    await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS use_simple_financial_terms BOOLEAN DEFAULT FALSE');
+  } catch (e) {
+    if (!/already exists|duplicate column/i.test(String(e.message))) {
+      console.warn('[DB] users.use_simple_financial_terms:', e.message);
+    }
+  }
+}
+
 async function ensureAdminUser() {
   if (!pgPool) return;
   const r = await query('SELECT * FROM users WHERE username = $1', [process.env.ADMIN_USERNAME || 'admin']);
@@ -239,6 +250,7 @@ async function initDatabase() {
     await ensureAccreditationBalanceBuckets();
     await ensureDeferredSalaryLinesTable();
     await ensureMemberDirectoryTables();
+    await ensureUserSimpleFinancialTermsColumn();
     await ensureAdminUser();
     return getDb();
   }

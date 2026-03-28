@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "meta": {
+    "description": "مسرد مصطلحات مالية: المصطلح الأصلي كما في النظام، وصياغة مبسّطة للعملاء. عدّل الملف ثم أعد تشغيل الخادم لتحميل التغييرات.",
+    "modes": {
+      "accountant_mode": "مصطلحات تقنية كما يظهر للمحاسب/الإدارة",
+      "client_mode": "صياغة مبسّطة للعميل غير المتخصص"
+    }
+  },
+  "entries": [
+    {
+      "id": "summary_total_revenue",
+      "original_term": "إجمالي الإيرادات",
+      "simple_term": "إجمالي قيمة مبيعات الشحن المسجّلة",
+      "description": "مجموع مبالغ البيع في وحدة الشحن (شامل البيع الآجل).",
+      "category": "balance",
+      "example": "في الملخص: «إجمالي قيمة مبيعات الشحن المسجّلة» يوضّح حجم المبيعات دون مصطلح «إيرادات» المحاسبي."
+    },
+    {
+      "id": "summary_net_profit",
+      "original_term": "الربح الصافي",
+      "simple_term": "الربح بعد خصم المصاريف (تقدير)",
+      "description": "ربح الشحن زائد أرباح أخرى ناقص المصاريف من الدفاتر.",
+      "category": "balance",
+      "example": "«الربح بعد خصم المصاريف» أوضح للعميل من «صافي» وحده."
+    },
+    {
+      "id": "summary_total_expenses",
+      "original_term": "المصاريف (مجمّع)",
+      "simple_term": "مجموع المصاريف المسجّلة",
+      "description": "ما سُجّل كمصروف في دفتر المصاريف.",
+      "category": "balance",
+      "example": "بدل «مجمّع» نستخدم «المسجّلة» لتوضيح أن الرقم من النظام."
+    },
+    {
+      "id": "summary_total_debts",
+      "original_term": "إجمالي الديون",
+      "simple_term": "إجمالي المبالغ المستحقة (ديون)",
+      "description": "تجميع التزامات وشحن واعتمادات وغيرها كما يحسبها النظام.",
+      "category": "balance",
+      "example": "«المستحقة» تربط الدين بمعنى «مطلوب سداده»."
+    },
+    {
+      "id": "summary_cash_balance",
+      "original_term": "رصيد الصندوق (تقدير)",
+      "simple_term": "النقد المتاح في الصندوق الرئيسي (تقريباً)",
+      "description": "صندوق نقدي رئيسي مع لقطة صندوق نقدي للدورة إن وُجدت.",
+      "category": "balance",
+      "example": "«النقد المتاح» أوضح من «رصيد صندوق» للغير محاسبين."
+    },
+    {
+      "id": "summary_deferred",
+      "original_term": "رصيد المؤجل",
+      "simple_term": "رواتب ومستحقات مؤجّلة للموظفين",
+      "description": "مبالغ مرتبطة بالمؤجّل من جداول الرواتب/المستخدمين.",
+      "category": "balance",
+      "example": "«مؤجّلة» تفسّر أن المال مخصّص لاحقاً وليس نقداً يدوياً."
+    },
+    {
+      "id": "summary_capital_recovered",
+      "original_term": "رأس المال المسترد",
+      "simple_term": "رأس المال الذي عاد من المبيعات",
+      "description": "مجموع حقول رأس المال في معاملات بيع الشحن.",
+      "category": "balance",
+      "example": "«عاد من المبيعات» يفسّر الاسترداد دون مصطلح محاسبي ثقيل."
+    },
+    {
+      "id": "summary_shipping_profit",
+      "original_term": "ربح الشحن",
+      "simple_term": "ربح وحدة الشحن",
+      "description": "مجموع أرباح أسطر بيع الشحن.",
+      "category": "balance",
+      "example": "«وحدة الشحن» تربط الربح بالنشاط الملموس."
+    },
+    {
+      "id": "summary_ledger_net_profit",
+      "original_term": "صافي الربح من الدفتر",
+      "simple_term": "أرباح إضافية من سجل الأرباح",
+      "description": "مجموع دفتر صافي الربح (مصادر متعددة).",
+      "category": "advanced",
+      "example": "بدل «دفتر» نستخدم «سجل الأرباح» للقارئ غير المحاسب."
+    },
+    {
+      "id": "summary_shipping_debt",
+      "original_term": "ديون الشحن",
+      "simple_term": "مبيعات شحن لم تُسدَّد بعد (آجل)",
+      "description": "مبيعات بحالة دين في معاملات الشحن.",
+      "category": "balance",
+      "example": "«لم تُسدَّد بعد» توضّح معنى الدين للعميل."
+    },
+    {
+      "id": "summary_accreditation_debt",
+      "original_term": "ديون الاعتمادات",
+      "simple_term": "مستحقات على الاعتمادات (التزامات)",
+      "description": "جانب «علينا» في اعتمادات المعتمدين ضمن تجميع الديون.",
+      "category": "balance",
+      "example": "«مستحقات» أنعم من «ديون الاعتمادات» وحده."
+    },
+    {
+      "id": "kv_item_value",
+      "original_term": "البند",
+      "simple_term": "البند",
+      "description": "عمود عناوين الملخص.",
+      "category": "invoice",
+      "example": "يُبقى «البند» لأنه مفهوم عام."
+    },
+    {
+      "id": "kv_value",
+      "original_term": "القيمة",
+      "simple_term": "المبلغ / القيمة",
+      "description": "العمود الرقمي في جدول الملخص.",
+      "category": "invoice",
+      "example": "«المبلغ» يوضّح أن الخانة أرقاماً."
+    },
+    {
+      "id": "report_title_comprehensive",
+      "original_term": "تقرير محاسبي شامل — LorkERP",
+      "simple_term": "تقرير مالي موحّد — LorkERP",
+      "description": "عنوان التقرير الشامل.",
+      "category": "invoice",
+      "example": "«مالي موحّد» أخف من «محاسبي شامل»."
+    },
+    {
+      "id": "section_financial_summary",
+      "original_term": "ملخص مالي",
+      "simple_term": "ملخص الأرقام المهمة",
+      "description": "قسم المؤشرات الرئيسية.",
+      "category": "balance",
+      "example": "«الأرقام المهمة» للقراءة السريعة."
+    },
+    {
+      "id": "section_sub_agencies_overview",
+      "original_term": "نظرة على الوكالات الفرعية",
+      "simple_term": "وكالات فرعية — نظرة سريعة",
+      "description": "جدول الوكالات الفرعية والنسب والأرصدة.",
+      "category": "balance",
+      "example": "أسلوب أبسط دون كلمة «نظرة» الرسمية."
+    },
+    {
+      "id": "section_accreditations_entities",
+      "original_term": "الاعتمادات — الجهات",
+      "simple_term": "المعتمدون والجهات",
+      "description": "قائمة جهات الاعتماد.",
+      "category": "balance",
+      "example": "«المعتمدون» مفهوم للعميل أكثر من «اعتمادات — جهات»."
+    },
+    {
+      "id": "section_transfer_companies",
+      "original_term": "شركات التحويل",
+      "simple_term": "شركات تحويل الأموال",
+      "description": "شركات التحويل والأرصدة لكل شركة.",
+      "category": "payment",
+      "example": "إضافة «الأموال» توضّح الغرض."
+    },
+    {
+      "id": "section_movements_snippet",
+      "original_term": "ملخص الحركات (أحدث سجلات مختارة)",
+      "simple_term": "آخر الحركات المختارة (مختصر)",
+      "description": "عينة من أحدث السجلات.",
+      "category": "advanced",
+      "example": "«آخر الحركات» أوضح من «ملخص الحركات»."
+    },
+    {
+      "id": "h3_ledger_entries",
+      "original_term": "ledger_entries",
+      "simple_term": "سجل تفاصيل الأرباح",
+      "description": "عنوان فرعي تقني في التقرير.",
+      "category": "advanced",
+      "example": "استبدال الاسم الإنجليزي بعنوان عربي مفهوم."
+    },
+    {
+      "id": "h2_ledger_entries_book",
+      "original_term": "دفتر ledger_entries",
+      "simple_term": "سجل تفاصيل الأرباح",
+      "description": "قسم حركات دفتر صافي الربح.",
+      "category": "advanced",
+      "example": "إزالة المصطلح الإنجليزي من العنوان."
+    },
+    {
+      "id": "h2_accreditation_ledger",
+      "original_term": "دفتر الاعتمادات",
+      "simple_term": "سجل حركات المعتمدين",
+      "description": "دفتر حركات جهات الاعتماد.",
+      "category": "balance",
+      "example": "«سجل حركات» أبسط من «دفتر»."
+    },
+    {
+      "id": "h2_transfer_company_ledger",
+      "original_term": "دفتر شركات التحويل",
+      "simple_term": "سجل حركات شركات التحويل",
+      "description": "حركات الأموال مع شركات التحويل.",
+      "category": "payment",
+      "example": "نفس أسلوب «سجل» بدل «دفتر»."
+    },
+    {
+      "id": "h2_fund_ledger_section",
+      "original_term": "دفتر الصناديق",
+      "simple_term": "سجل حركات الصناديق",
+      "description": "حركات الصناديق النقدية.",
+      "category": "balance",
+      "example": "«صناديق» تبقى مع «سجل» بدل «دفتر»."
+    },
+    {
+      "id": "h2_movements_all_ledgers",
+      "original_term": "تقرير الحركات — جميع الدفاتر",
+      "simple_term": "تقرير الحركات — كل السجلات",
+      "description": "عنوان تقرير الحركات المجمّع.",
+      "category": "advanced",
+      "example": "«كل السجلات» بدل «جميع الدفاتر»."
+    },
+    {
+      "id": "col_bucket",
+      "original_term": "الدلو",
+      "simple_term": "تصنيف الحركة",
+      "description": "عمود bucket في دفتر الأرباح.",
+      "category": "advanced",
+      "example": "«تصنيف» أوضح من «دلو» للمستخدم العام."
+    },
+    {
+      "id": "col_source",
+      "original_term": "المصدر",
+      "simple_term": "مصدر الربح أو الحركة",
+      "description": "نوع مصدر الربح في الدفتر.",
+      "category": "advanced",
+      "example": "توسيع العنوان قليلاً للوضوح."
+    },
+    {
+      "id": "col_direction",
+      "original_term": "اتجاه",
+      "simple_term": "الاتجاه (زيادة/نقصان)",
+      "description": "اتجاه تأثير الحركة في الدفتر.",
+      "category": "advanced",
+      "example": "توضيح معنى العمود للقارئ."
+    },
+    {
+      "id": "title_acc_report",
+      "original_term": "تقرير الاعتمادات",
+      "simple_term": "تقرير المعتمدين والحركات",
+      "description": "تقرير جهات الاعتماد.",
+      "category": "balance",
+      "example": "ربط التقرير ب«المعتمدين» مباشرة."
+    },
+    {
+      "id": "title_fund_ledger",
+      "original_term": "تقرير حركات صندوق",
+      "simple_term": "تقرير حركات الصندوق النقدي",
+      "description": "حركات صندوق محدد.",
+      "category": "balance",
+      "example": "إضافة «نقدي» حيث يناسب السياق."
+    },
+    {
+      "id": "title_transfer_companies_report",
+      "original_term": "تقرير شركات التحويل",
+      "simple_term": "تقرير شركات تحويل الأموال",
+      "description": "تقرير مجمّع لشركات التحويل.",
+      "category": "payment",
+      "example": "نفس صياغة القسم في التقرير الشامل."
+    },
+    {
+      "id": "note_transfer_fund_no_cycle",
+      "original_term": "دفتا شركات التحويل والصناديق لا يحتويان عمود دورة؛ تُعرض أحدث الحركات بغض النظر عن الدورة.",
+      "simple_term": "حركات شركات التحويل والصناديق لا تُفلتر حسب الدورة المالية؛ يظهر أحدث السجل دائماً.",
+      "description": "ملاحظة تقرير الحركات.",
+      "category": "advanced",
+      "example": "شرح أبسط لغياب ربط الدورة."
+    },
+    {
+      "id": "note_transfer_companies_no_cycle",
+      "original_term": "دفتر شركات التحويل غير مرتبط بدورة مالية في قاعدة البيانات؛ تُعرض جميع الحركات.",
+      "simple_term": "حركات شركات التحويل غير مربوطة بفترة محددة؛ تُعرض كل الحركات.",
+      "description": "ملاحظة تقرير شركات التحويل.",
+      "category": "advanced",
+      "example": "استبدال «دفتر» و«قاعدة البيانات» بصياغة أخف."
+    },
+    {
+      "id": "section_sub_agency_transactions",
+      "original_term": "حركات الوكالات الفرعية",
+      "simple_term": "حركات الوكالات الفرعية (أرباح وخصومات)",
+      "description": "حركات الوكالات الفرعية.",
+      "category": "balance",
+      "example": "توضيح أن الحركة قد تكون خصماً أو ربحاً."
+    },
+    {
+      "id": "h3_accreditations_sub",
+      "original_term": "الاعتمادات",
+      "simple_term": "المعتمدون",
+      "description": "عنوان فرعي في التقرير الشامل.",
+      "category": "balance",
+      "example": "في سياق جدول مختصر."
+    }
+  ],
+  "code_maps": {
+    "ledger_bucket": {
+      "net_profit": "صافي الأرباح المسجّل",
+      "main_cash": "الصندوق النقدي الرئيسي",
+      "expense": "مصاريف",
+      "payable": "مستحقات / التزامات"
+    },
+    "accreditation_entry_type": {
+      "debt_to_us": "مستحق لنا",
+      "debt_to_them": "مستحق علينا",
+      "debt_to_them_no_fund": "مستحق علينا — يحتاج دفعاً مباشراً",
+      "salary": "راتب",
+      "payable_discount_profit": "ربح من خصومات مستحقة"
+    },
+    "sub_agency_transaction_type": {
+      "profit": "ربح للوكالة",
+      "reward": "مكافأة",
+      "deduction": "خصم",
+      "due": "مستحق سابق"
+    }
+  },
+  "net_profit_source_client": {
+    "fx_spread_profit": "ربح من فرق سعر التصريف",
+    "audit_cycle_profits": "مكافآت وإجراءات الدورة",
+    "audit_management_yz": "مكافآت شهرية",
+    "audit_management_w": "أرباح إدارية مسجّلة سابقاً",
+    "transfer_discount_profit": "ربح من خصم على التحويل",
+    "cycle_creation_discount_profit": "ربح خصم عند إنشاء دورة",
+    "accreditation_brokerage": "عمولة وساطة معتمدين",
+    "accreditation_payable_discount": "ربح من تخفيض مستحق علينا",
+    "admin_brokerage": "عمولة إدارية",
+    "shipping_sale_profit": "ربح بيع شحن",
+    "sub_agency_share": "حصة وكالة فرعية",
+    "sub_agency_company_profit": "ربح الشركة من الوكالات",
+    "manual_expense": "مصروف مُدخل يدوياً",
+    "sub_agency_reward": "مكافأة وكالة فرعية",
+    "agent_table_primary_seed": "بداية من جدول الوكيل",
+    "primary_agent_seed": "رأس مال أولي من جدول الوكيل",
+    "profit_transfer": "ترحيل أرباح بين الحسابات",
+    "fx_spread_disbursement": "صرف عملات (تصريف)",
+    "company_payout": "دفع لشركة تحويل",
+    "fund_allocation": "توجيه مبلغ لصندوق",
+    "shipping_sale_cash": "بيع شحن نقداً",
+    "shipping_buy_cash": "شراء شحن نقداً"
+  },
+  "fund_ledger_type_client": {
+    "return_in": "مرتجع وارد",
+    "return_out": "مرتجع صادر",
+    "return_recorded": "مرتجع مسجّل",
+    "audit_profit_credit": "إيداع أرباح من التدقيق",
+    "expense": "مصروف",
+    "transfer_in": "تحويل داخل إلى الصندوق",
+    "transfer_out": "تحويل خارج من الصندوق",
+    "opening_reference": "رصيد بداية الفترة",
+    "loan_cash_in": "سلفة نقدية واردة",
+    "salary_swap_cash": "تبديل راتب (نقدي)",
+    "salary_swap_installment": "تبديل راتب (تقسيط)",
+    "shipping_sale_cash": "بيع شحن نقداً",
+    "shipping_buy_cash": "شراء شحن نقداً",
+    "company_payout": "دفع لشركة تحويل",
+    "fund_allocation": "توجيه لصندوق",
+    "fund_receive_from_main": "وارد من الصندوق الرئيسي",
+    "accreditation_bulk": "إدخال أرصدة معتمدين دفعة واحدة",
+    "accreditation_debt_payable": "التزام علينا تجاه معتمد",
+    "accreditation_remainder": "المتبقي بعد خصم الوساطة"
+  }
+}

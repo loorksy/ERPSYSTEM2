@@ -3,7 +3,19 @@
  */
 
 const puppeteer = require('puppeteer');
-const { labelNetProfitSource } = require('../accountingLabelsAr');
+const {
+  MODES,
+  translatePhrase: trPhrase,
+  labelNetProfitSourceMode,
+  labelFundLedgerTypeMode,
+  labelLedgerBucket,
+  labelAccreditationEntryType,
+  labelSubAgencyTxType,
+} = require('../financialTerminology');
+
+function tr(s, mode) {
+  return trPhrase(s, mode);
+}
 
 function escapeHtml(s) {
   if (s == null) return '';
@@ -67,77 +79,89 @@ function tableHtml(headers, rows) {
   return h;
 }
 
-function renderSummaryBlock(s) {
+function renderSummaryBlock(s, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
   const rows = [
-    ['إجمالي الإيرادات', fmtNum(s.totalRevenue)],
-    ['الربح الصافي', fmtNum(s.netProfit)],
-    ['المصاريف (مجمّع)', fmtNum(s.totalExpenses)],
-    ['إجمالي الديون', fmtNum(s.totalDebts)],
-    ['رصيد الصندوق (تقدير)', fmtNum(s.cashBalance)],
-    ['رصيد المؤجل', fmtNum(s.deferredBalance)],
-    ['رأس المال المسترد', fmtNum(s.capitalRecovered)],
-    ['ربح الشحن', fmtNum(s.shippingProfit)],
-    ['صافي الربح من الدفتر', fmtNum(s.ledgerNetProfit)],
-    ['ديون الشحن', fmtNum(s.shippingDebt)],
-    ['ديون الاعتمادات', fmtNum(s.accreditationDebtTotal)],
+    [tr('إجمالي الإيرادات', m), fmtNum(s.totalRevenue)],
+    [tr('الربح الصافي', m), fmtNum(s.netProfit)],
+    [tr('المصاريف (مجمّع)', m), fmtNum(s.totalExpenses)],
+    [tr('إجمالي الديون', m), fmtNum(s.totalDebts)],
+    [tr('رصيد الصندوق (تقدير)', m), fmtNum(s.cashBalance)],
+    [tr('رصيد المؤجل', m), fmtNum(s.deferredBalance)],
+    [tr('رأس المال المسترد', m), fmtNum(s.capitalRecovered)],
+    [tr('ربح الشحن', m), fmtNum(s.shippingProfit)],
+    [tr('صافي الربح من الدفتر', m), fmtNum(s.ledgerNetProfit)],
+    [tr('ديون الشحن', m), fmtNum(s.shippingDebt)],
+    [tr('ديون الاعتمادات', m), fmtNum(s.accreditationDebtTotal)],
   ];
-  return tableHtml(['البند', 'القيمة'], rows);
+  return tableHtml([tr('البند', m), tr('القيمة', m)], rows);
 }
 
-function renderSubAgency(data) {
+function renderSubAgency(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
   const a = data.agency;
-  let inner = `<div class="meta">تاريخ التقرير: ${escapeHtml(new Date().toLocaleString('ar-SY'))}</div>`;
+  let inner = `<div class="meta">${escapeHtml(tr('تاريخ التقرير', m))}: ${escapeHtml(new Date().toLocaleString('ar-SY'))}</div>`;
   inner += `<div class="kv">
-    <div><strong>الاسم:</strong> ${escapeHtml(a.name)}</div>
-    <div><strong>نسبة الوكالة:</strong> ${fmtNum(a.commission_percent)}%</div>
-    <div><strong>الرصيد:</strong> ${fmtNum(data.balance)}</div>
-    ${data.cycleName ? `<div><strong>الدورة:</strong> ${escapeHtml(data.cycleName)}</div>` : ''}
+    <div><strong>${escapeHtml(tr('الاسم', m))}:</strong> ${escapeHtml(a.name)}</div>
+    <div><strong>${escapeHtml(tr('نسبة الوكالة', m))}:</strong> ${fmtNum(a.commission_percent)}%</div>
+    <div><strong>${escapeHtml(tr('الرصيد', m))}:</strong> ${fmtNum(data.balance)}</div>
+    ${data.cycleName ? `<div><strong>${escapeHtml(tr('الدورة', m))}:</strong> ${escapeHtml(data.cycleName)}</div>` : ''}
   </div>`;
-  inner += '<h2>الحركات</h2>';
-  if (data.truncated) inner += '<p class="muted">تم اقتطاع القائمة — أحدث ' + data.transactions.length + ' حركة.</p>';
-  const headers = ['#', 'النوع', 'المبلغ', 'الدورة', 'ملاحظات', 'التاريخ'];
+  inner += `<h2>${tr('الحركات', m)}</h2>`;
+  if (data.truncated) {
+    inner +=
+      '<p class="muted">' +
+      escapeHtml(tr('تم اقتطاع القائمة — أحدث ' + data.transactions.length + ' حركة.', m)) +
+      '</p>';
+  }
+  const headers = ['#', tr('النوع', m), tr('المبلغ', m), tr('الدورة', m), tr('ملاحظات', m), tr('التاريخ', m)];
   const rows = data.transactions.map((t) => [
     String(t.id),
-    t.type,
+    labelSubAgencyTxType(t.type, m),
     fmtNum(t.amount),
     t.cycle_id != null ? String(t.cycle_id) : '—',
     t.notes || '—',
     t.created_at ? new Date(t.created_at).toLocaleString('ar-SY') : '',
   ]);
   inner += tableHtml(headers, rows);
-  return docShell('تقرير وكالة فرعية: ' + a.name, inner);
+  return docShell(tr('تقرير وكالة فرعية:', m) + ' ' + a.name, inner);
 }
 
-function renderAccreditations(data) {
-  let inner = `<div class="meta">${data.cycleName ? 'الدورة: ' + escapeHtml(data.cycleName) : 'كل الدورات (الحركات غير المفلترة بالدورة إن لم تُختر دورة)'}</div>`;
-  inner += '<h2>الجهات</h2>';
+function renderAccreditations(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
+  let inner = `<div class="meta">${data.cycleName ? escapeHtml(tr('الدورة', m)) + ': ' + escapeHtml(data.cycleName) : tr('كل الدورات (الحركات غير المفلترة بالدورة إن لم تُختر دورة)', m)}</div>`;
+  inner += `<h2>${tr('الجهات', m)}</h2>`;
   const entRows = data.entities.map((e) => [
     String(e.id),
     e.name,
     e.code || '—',
     fmtNum(e.balance_amount),
   ]);
-  inner += tableHtml(['المعرف', 'الاسم', 'الكود', 'الرصيد'], entRows);
-  inner += '<h2>دفتر الاعتمادات</h2>';
-  if (data.truncated) inner += '<p class="muted">تم اقتطاع الحركات.</p>';
+  inner += tableHtml([tr('المعرف', m), tr('الاسم', m), tr('الكود', m), tr('الرصيد', m)], entRows);
+  inner += `<h2>${tr('دفتر الاعتمادات', m)}</h2>`;
+  if (data.truncated) inner += '<p class="muted">' + escapeHtml(tr('تم اقتطاع الحركات.', m)) + '</p>';
   const lr = data.ledger.map((l) => [
     String(l.id),
     l.entity_name,
-    l.entry_type,
+    labelAccreditationEntryType(l.entry_type, m),
     fmtNum(l.amount),
     l.currency || 'USD',
     l.cycle_id != null ? String(l.cycle_id) : '—',
     (l.notes || '').slice(0, 80),
     l.created_at ? new Date(l.created_at).toLocaleString('ar-SY') : '',
   ]);
-  inner += tableHtml(['#', 'الجهة', 'النوع', 'المبلغ', 'العملة', 'الدورة', 'ملاحظات', 'التاريخ'], lr);
-  return docShell('تقرير الاعتمادات', inner);
+  inner += tableHtml(
+    ['#', tr('الجهة', m), tr('النوع', m), tr('المبلغ', m), tr('العملة', m), tr('الدورة', m), tr('ملاحظات', m), tr('التاريخ', m)],
+    lr
+  );
+  return docShell(tr('تقرير الاعتمادات', m), inner);
 }
 
-function renderTransferCompanyLedger(data) {
-  if (!data || !data.company) return docShell('حركات شركة تحويل', '<p class="muted">لا توجد بيانات.</p>');
+function renderTransferCompanyLedger(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
+  if (!data || !data.company) return docShell(tr('حركات شركة تحويل', m), '<p class="muted">' + escapeHtml(tr('لا توجد بيانات.', m)) + '</p>');
   const c = data.company;
-  let inner = `<h2>${escapeHtml(c.name)} — رصيد: ${fmtNum(c.balance_amount)} ${escapeHtml(c.balance_currency || 'USD')}</h2>`;
+  let inner = `<h2>${escapeHtml(c.name)} — ${escapeHtml(tr('رصيد', m))}: ${fmtNum(c.balance_amount)} ${escapeHtml(c.balance_currency || 'USD')}</h2>`;
   const rows = (data.rows || []).map((r) => [
     String(r.id),
     fmtNum(r.amount),
@@ -145,33 +169,35 @@ function renderTransferCompanyLedger(data) {
     (r.notes || '').slice(0, 120),
     r.created_at ? new Date(r.created_at).toLocaleString('ar-SY') : '',
   ]);
-  inner += tableHtml(['#', 'المبلغ', 'العملة', 'ملاحظات', 'التاريخ'], rows);
-  return docShell('تقرير حركات شركة تحويل', inner);
+  inner += tableHtml(['#', tr('المبلغ', m), tr('العملة', m), tr('ملاحظات', m), tr('التاريخ', m)], rows);
+  return docShell(tr('تقرير حركات شركة تحويل', m), inner);
 }
 
-function renderFundLedger(data) {
-  if (!data || !data.fund) return docShell('حركات صندوق', '<p class="muted">لا توجد بيانات.</p>');
+function renderFundLedger(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
+  if (!data || !data.fund) return docShell(tr('حركات صندوق', m), '<p class="muted">' + escapeHtml(tr('لا توجد بيانات.', m)) + '</p>');
   const f = data.fund;
   const title = [f.name, f.fund_number].filter(Boolean).join(' — ');
-  let inner = `<h2>${escapeHtml(title || 'صندوق')}</h2>`;
+  let inner = `<h2>${escapeHtml(title || tr('صندوق', m))}</h2>`;
   const rows = (data.rows || []).map((r) => [
     String(r.id),
-    String(r.type || ''),
+    labelFundLedgerTypeMode(r.type, m),
     fmtNum(r.amount),
     r.currency || 'USD',
     (r.displayNotes || r.notes || '').slice(0, 100),
     r.created_at ? new Date(r.created_at).toLocaleString('ar-SY') : '',
   ]);
-  inner += tableHtml(['#', 'النوع', 'المبلغ', 'العملة', 'ملاحظات', 'التاريخ'], rows);
-  return docShell('تقرير حركات صندوق', inner);
+  inner += tableHtml(['#', tr('النوع', m), tr('المبلغ', m), tr('العملة', m), tr('ملاحظات', m), tr('التاريخ', m)], rows);
+  return docShell(tr('تقرير حركات صندوق', m), inner);
 }
 
-function renderTransferCompanies(data) {
-  let inner = `<p class="muted">${escapeHtml(data.noteNoCycle)}</p>`;
+function renderTransferCompanies(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
+  let inner = `<p class="muted">${escapeHtml(tr(data.noteNoCycle || '', m))}</p>`;
   for (const block of data.ledgersByCompany) {
     const c = block.company;
-    inner += `<h2>${escapeHtml(c.name)} — رصيد: ${fmtNum(c.balance_amount)} ${escapeHtml(c.balance_currency || 'USD')}</h2>`;
-    if (block.truncated) inner += '<p class="muted">تم اقتطاع حركات هذه الشركة.</p>';
+    inner += `<h2>${escapeHtml(c.name)} — ${escapeHtml(tr('رصيد', m))}: ${fmtNum(c.balance_amount)} ${escapeHtml(c.balance_currency || 'USD')}</h2>`;
+    if (block.truncated) inner += '<p class="muted">' + escapeHtml(tr('تم اقتطاع حركات هذه الشركة.', m)) + '</p>';
     const rows = block.rows.map((r) => [
       String(r.id),
       fmtNum(r.amount),
@@ -179,23 +205,24 @@ function renderTransferCompanies(data) {
       (r.notes || '').slice(0, 100),
       r.created_at ? new Date(r.created_at).toLocaleString('ar-SY') : '',
     ]);
-    inner += tableHtml(['#', 'المبلغ', 'العملة', 'ملاحظات', 'التاريخ'], rows);
+    inner += tableHtml(['#', tr('المبلغ', m), tr('العملة', m), tr('ملاحظات', m), tr('التاريخ', m)], rows);
   }
-  if (!data.ledgersByCompany.length) inner += '<p class="muted">لا توجد شركات أو حركات.</p>';
-  return docShell('تقرير شركات التحويل', inner);
+  if (!data.ledgersByCompany.length) inner += '<p class="muted">' + escapeHtml(tr('لا توجد شركات أو حركات.', m)) + '</p>';
+  return docShell(tr('تقرير شركات التحويل', m), inner);
 }
 
-function renderMovements(data) {
-  let inner = `<div class="meta">${data.cycleName ? 'الدورة: ' + escapeHtml(data.cycleName) : '—'} — ${escapeHtml(data.noteTransferAndFundNoCycle)}</div>`;
+function renderMovements(data, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
+  let inner = `<div class="meta">${data.cycleName ? escapeHtml(tr('الدورة', m)) + ': ' + escapeHtml(data.cycleName) : '—'} — ${escapeHtml(tr(data.noteTransferAndFundNoCycle || '', m))}</div>`;
 
-  inner += '<h2>دفتر ledger_entries</h2>';
-  if (data.ledgerEntriesTruncated) inner += '<p class="muted">مقتطع.</p>';
+  inner += `<h2>${tr('دفتر ledger_entries', m)}</h2>`;
+  if (data.ledgerEntriesTruncated) inner += '<p class="muted">' + escapeHtml(tr('مقتطع.', m)) + '</p>';
   inner += tableHtml(
-    ['#', 'الدلو', 'المصدر', 'المبلغ', 'عملة', 'اتجاه', 'دورة', 'ملاحظات', 'تاريخ'],
+    ['#', tr('الدلو', m), tr('المصدر', m), tr('المبلغ', m), tr('عملة', m), tr('اتجاه', m), tr('دورة', m), tr('ملاحظات', m), tr('تاريخ', m)],
     data.ledgerEntries.map((r) => [
       String(r.id),
-      r.bucket,
-      r.source_type,
+      labelLedgerBucket(r.bucket, m),
+      labelNetProfitSourceMode(r.source_type, m),
       fmtNum(r.amount),
       r.currency,
       String(r.direction),
@@ -205,14 +232,14 @@ function renderMovements(data) {
     ])
   );
 
-  inner += '<h2>دفتر الاعتمادات</h2>';
-  if (data.accreditationLedgerTruncated) inner += '<p class="muted">مقتطع.</p>';
+  inner += `<h2>${tr('دفتر الاعتمادات', m)}</h2>`;
+  if (data.accreditationLedgerTruncated) inner += '<p class="muted">' + escapeHtml(tr('مقتطع.', m)) + '</p>';
   inner += tableHtml(
-    ['#', 'الجهة', 'النوع', 'المبلغ', 'دورة', 'ملاحظات', 'تاريخ'],
+    ['#', tr('الجهة', m), tr('النوع', m), tr('المبلغ', m), tr('دورة', m), tr('ملاحظات', m), tr('تاريخ', m)],
     data.accreditationLedger.map((r) => [
       String(r.id),
       r.entity_name,
-      r.entry_type,
+      labelAccreditationEntryType(r.entry_type, m),
       fmtNum(r.amount),
       r.cycle_id != null ? String(r.cycle_id) : '—',
       (r.notes || '').slice(0, 60),
@@ -220,10 +247,10 @@ function renderMovements(data) {
     ])
   );
 
-  inner += '<h2>دفتر شركات التحويل</h2>';
-  if (data.transferCompanyLedgerTruncated) inner += '<p class="muted">مقتطع.</p>';
+  inner += `<h2>${tr('دفتر شركات التحويل', m)}</h2>`;
+  if (data.transferCompanyLedgerTruncated) inner += '<p class="muted">' + escapeHtml(tr('مقتطع.', m)) + '</p>';
   inner += tableHtml(
-    ['#', 'الشركة', 'المبلغ', 'ملاحظات', 'تاريخ'],
+    ['#', tr('الشركة', m), tr('المبلغ', m), tr('ملاحظات', m), tr('تاريخ', m)],
     data.transferCompanyLedger.map((r) => [
       String(r.id),
       r.company_name,
@@ -233,14 +260,14 @@ function renderMovements(data) {
     ])
   );
 
-  inner += '<h2>حركات الوكالات الفرعية</h2>';
-  if (data.subAgencyTransactionsTruncated) inner += '<p class="muted">مقتطع.</p>';
+  inner += `<h2>${tr('حركات الوكالات الفرعية', m)}</h2>`;
+  if (data.subAgencyTransactionsTruncated) inner += '<p class="muted">' + escapeHtml(tr('مقتطع.', m)) + '</p>';
   inner += tableHtml(
-    ['#', 'الوكالة', 'النوع', 'المبلغ', 'دورة', 'ملاحظات', 'تاريخ'],
+    ['#', tr('الوكالة', m), tr('النوع', m), tr('المبلغ', m), tr('دورة', m), tr('ملاحظات', m), tr('تاريخ', m)],
     data.subAgencyTransactions.map((r) => [
       String(r.id),
       r.agency_name,
-      r.type,
+      labelSubAgencyTxType(r.type, m),
       fmtNum(r.amount),
       r.cycle_id != null ? String(r.cycle_id) : '—',
       (r.notes || '').slice(0, 60),
@@ -248,14 +275,14 @@ function renderMovements(data) {
     ])
   );
 
-  inner += '<h2>دفتر الصناديق</h2>';
-  if (data.fundLedgerTruncated) inner += '<p class="muted">مقتطع.</p>';
+  inner += `<h2>${tr('دفتر الصناديق', m)}</h2>`;
+  if (data.fundLedgerTruncated) inner += '<p class="muted">' + escapeHtml(tr('مقتطع.', m)) + '</p>';
   inner += tableHtml(
-    ['#', 'الصندوق', 'النوع', 'المبلغ', 'عملة', 'ملاحظات', 'تاريخ'],
+    ['#', tr('الصندوق', m), tr('النوع', m), tr('المبلغ', m), tr('عملة', m), tr('ملاحظات', m), tr('تاريخ', m)],
     data.fundLedger.map((r) => [
       String(r.id),
       r.fund_name,
-      r.type,
+      labelFundLedgerTypeMode(r.type, m),
       fmtNum(r.amount),
       r.currency || 'USD',
       (r.notes || '').slice(0, 60),
@@ -263,48 +290,51 @@ function renderMovements(data) {
     ])
   );
 
-  return docShell('تقرير الحركات — جميع الدفاتر', inner);
+  return docShell(tr('تقرير الحركات — جميع الدفاتر', m), inner);
 }
 
-function renderComprehensive(d) {
+function renderComprehensive(d, terminologyMode = MODES.ACCOUNTANT) {
+  const m = terminologyMode;
   const s = d.summary;
-  let inner = `<div class="meta">تاريخ: ${escapeHtml(new Date().toLocaleString('ar-SY'))} — الدورة في الملخص: ${escapeHtml(s.cycleName || 'الافتراضي')}</div>`;
-  inner += '<h2>ملخص مالي</h2>';
-  inner += renderSummaryBlock(s);
+  let inner = `<div class="meta">${escapeHtml(tr('تاريخ', m))}: ${escapeHtml(new Date().toLocaleString('ar-SY'))} — ${escapeHtml(tr('الدورة في الملخص', m))}: ${escapeHtml(s.cycleName || tr('الافتراضي', m))}</div>`;
+  inner += `<h2>${tr('ملخص مالي', m)}</h2>`;
+  inner += renderSummaryBlock(s, m);
 
-  inner += '<h2>نظرة على الوكالات الفرعية</h2>';
+  inner += `<h2>${tr('نظرة على الوكالات الفرعية', m)}</h2>`;
   inner += tableHtml(
-    ['المعرف', 'الاسم', 'النسبة %', 'الرصيد'],
+    [tr('المعرف', m), tr('الاسم', m), tr('النسبة %', m), tr('الرصيد', m)],
     d.subAgenciesOverview.map((a) => [String(a.id), a.name, fmtNum(a.commission_percent), fmtNum(a.balance)])
   );
 
-  inner += '<h2>الاعتمادات — الجهات</h2>';
+  inner += `<h2>${tr('الاعتمادات — الجهات', m)}</h2>`;
   inner += tableHtml(
-    ['المعرف', 'الاسم', 'الرصيد'],
+    [tr('المعرف', m), tr('الاسم', m), tr('الرصيد', m)],
     d.accreditations.entities.map((e) => [String(e.id), e.name, fmtNum(e.balance_amount)])
   );
 
-  inner += '<h2>شركات التحويل</h2>';
-  inner += '<p class="muted">' + escapeHtml(d.transferCompanies.noteNoCycle) + '</p>';
+  inner += `<h2>${tr('شركات التحويل', m)}</h2>`;
+  inner += '<p class="muted">' + escapeHtml(tr(d.transferCompanies.noteNoCycle || '', m)) + '</p>';
   inner += tableHtml(
-    ['المعرف', 'الاسم', 'الرصيد', 'العملة'],
+    [tr('المعرف', m), tr('الاسم', m), tr('الرصيد', m), tr('العملة', m)],
     d.transferCompanies.companies.map((c) => [String(c.id), c.name, fmtNum(c.balance_amount), c.balance_currency || 'USD'])
   );
 
-  inner += '<h2>ملخص الحركات (أحدث سجلات مختارة)</h2>';
-  inner += '<p class="muted">' + escapeHtml(d.movements.noteTransferAndFundNoCycle) + '</p>';
-  inner += '<h3>ledger_entries</h3>';
+  inner += `<h2>${tr('ملخص الحركات (أحدث سجلات مختارة)', m)}</h2>`;
+  inner += '<p class="muted">' + escapeHtml(tr(d.movements.noteTransferAndFundNoCycle || '', m)) + '</p>';
+  inner += `<h3>${tr('ledger_entries', m)}</h3>`;
   inner += tableHtml(
-    ['#', 'دلو', 'مصدر', 'مبلغ'],
-    d.movements.ledgerEntries.slice(0, 80).map((r) => [String(r.id), r.bucket, labelNetProfitSource(r.source_type), fmtNum(r.amount)])
+    ['#', tr('دلو', m), tr('مصدر', m), tr('مبلغ', m)],
+    d.movements.ledgerEntries
+      .slice(0, 80)
+      .map((r) => [String(r.id), labelLedgerBucket(r.bucket, m), labelNetProfitSourceMode(r.source_type, m), fmtNum(r.amount)])
   );
-  inner += '<h3>الاعتمادات</h3>';
+  inner += `<h3>${tr('الاعتمادات', m)}</h3>`;
   inner += tableHtml(
-    ['#', 'جهة', 'مبلغ'],
+    ['#', tr('جهة', m), tr('مبلغ', m)],
     d.movements.accreditationLedger.slice(0, 80).map((r) => [String(r.id), r.entity_name, fmtNum(r.amount)])
   );
 
-  return docShell('تقرير محاسبي شامل — LorkERP', inner);
+  return docShell(tr('تقرير محاسبي شامل — LorkERP', m), inner);
 }
 
 let browserSingleton = null;

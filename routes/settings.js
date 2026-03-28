@@ -26,13 +26,20 @@ router.get('/', requireAuth, async (req, res) => {
     const sheetsConfig = (await db.query('SELECT * FROM google_sheets_config WHERE id = 1')).rows[0];
     const currencyRow = (await db.query('SELECT value FROM settings WHERE key = $1', ['currency'])).rows[0];
     const currency = currencyRow?.value || 'USD';
+    const prefRow = (await db.query(
+      'SELECT COALESCE(use_simple_financial_terms, false) AS use_simple_financial_terms FROM users WHERE id = $1',
+      [req.session.userId]
+    )).rows[0];
+    const useSimpleFinancialTerms = !!prefRow?.use_simple_financial_terms;
+    if (req.session.user) req.session.user.useSimpleFinancialTerms = useSimpleFinancialTerms;
     res.render('dashboard', {
       title: 'الإعدادات',
       page: 'settings',
       user: req.session.user,
       sheetsConfig: sheetsConfig || null,
       currency,
-      currencyOptions: CURRENCY_OPTIONS
+      currencyOptions: CURRENCY_OPTIONS,
+      useSimpleFinancialTerms,
     });
   } catch (e) {
     console.error('[settings] Error:', e.message);
@@ -49,6 +56,26 @@ router.get('/currency', requireAuth, async (req, res) => {
     res.json({ success: true, currency, symbol });
   } catch (e) {
     res.json({ success: false, currency: 'USD', symbol: '$' });
+  }
+});
+
+router.post('/simple-financial-terms', requireAuth, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const on =
+      body.useSimpleTerms === true ||
+      body.useSimpleTerms === 'true' ||
+      body.useSimpleTerms === '1' ||
+      body.useSimpleTerms === 1;
+    const db = getDb();
+    await db.query(
+      'UPDATE users SET use_simple_financial_terms = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [!!on, req.session.userId]
+    );
+    if (req.session.user) req.session.user.useSimpleFinancialTerms = !!on;
+    res.json({ success: true, message: 'تم حفظ التفضيل', useSimpleTerms: !!on });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل الحفظ' });
   }
 });
 
