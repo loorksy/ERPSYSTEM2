@@ -18,23 +18,25 @@
 
   function statCard(iconClass, iconBg, label, value, valueClass) {
     return (
-      '<div class="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-indigo-200/70 hover:shadow-md">' +
-      '<div class="pointer-events-none absolute -left-6 -top-6 h-20 w-20 rounded-full bg-indigo-400/[0.06] blur-2xl"></div>' +
-      '<div class="relative flex flex-col gap-3">' +
-      '<div class="flex items-start justify-between gap-2">' +
-      '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-inner ' +
+      '<div class="group relative rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-indigo-200/70 hover:shadow-md min-w-0">' +
+      '<div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">' +
+      '<span class="absolute -left-6 -top-6 h-20 w-20 rounded-full bg-indigo-400/[0.06] blur-2xl"></span>' +
+      '</div>' +
+      '<div class="relative z-[1] flex flex-col gap-2.5 p-3 sm:p-4 min-w-0">' +
+      '<div class="flex items-start gap-2.5 min-w-0">' +
+      '<span class="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl shadow-inner ' +
       iconBg +
       '"><i class="' +
       iconClass +
-      ' text-base"></i></span>' +
-      '<p class="font-mono text-lg sm:text-xl font-bold tabular-nums text-left ' +
+      ' text-sm sm:text-base"></i></span>' +
+      '<p class="flex-1 min-w-0 text-[0.7rem] sm:text-xs font-semibold text-slate-500 leading-snug pt-0.5">' +
+      esc(label) +
+      '</p>' +
+      '</div>' +
+      '<p class="font-mono text-sm sm:text-base lg:text-lg font-bold tabular-nums text-right w-full min-w-0 break-words leading-snug py-0.5 ' +
       (valueClass || 'text-slate-900') +
       '">' +
       fmt(value) +
-      '</p>' +
-      '</div>' +
-      '<p class="text-xs font-semibold text-slate-500 leading-snug">' +
-      esc(label) +
       '</p>' +
       '</div></div>'
     );
