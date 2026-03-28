@@ -15,6 +15,75 @@
     if (typeof window.closeSidebar === 'function') window.closeSidebar();
   }
 
+  var accConfirmCallback = null;
+
+  function wireAccConfirmModal() {
+    var modal = document.getElementById('accConfirmModal');
+    if (!modal || modal.dataset.accConfirmBound) return;
+    modal.dataset.accConfirmBound = '1';
+    var ok = document.getElementById('accConfirmOk');
+    var cancel = document.getElementById('accConfirmCancel');
+    if (ok) ok.addEventListener('click', function() { accConfirmFinish(true); });
+    if (cancel) cancel.addEventListener('click', function() { accConfirmFinish(false); });
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) accConfirmFinish(false);
+    });
+  }
+
+  function accConfirmFinish(confirmed) {
+    var cb = accConfirmCallback;
+    accConfirmCallback = null;
+    var modal = document.getElementById('accConfirmModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex', 'flex-col');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    if (typeof cb === 'function') cb(confirmed);
+  }
+
+  function accConfirmOpen(opts, callback) {
+    opts = opts || {};
+    accConfirmCallback = callback;
+    wireAccConfirmModal();
+    var titleEl = document.getElementById('accConfirmTitle');
+    var msgEl = document.getElementById('accConfirmMessage');
+    var iconWrap = document.getElementById('accConfirmIcon');
+    var okBtn = document.getElementById('accConfirmOk');
+    var cancelBtn = document.getElementById('accConfirmCancel');
+    if (titleEl) titleEl.textContent = opts.title || 'تأكيد';
+    if (msgEl) msgEl.textContent = opts.message || '';
+    var danger = opts.variant === 'danger';
+    var save = opts.variant === 'save' || opts.variant === 'primary';
+    if (iconWrap) {
+      iconWrap.className =
+        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ' +
+        (danger
+          ? 'bg-red-50 text-red-600 border-red-100'
+          : save
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+            : 'bg-indigo-50 text-indigo-600 border-indigo-100');
+      var ic = iconWrap.querySelector('i');
+      if (ic) {
+        ic.setAttribute('aria-hidden', 'true');
+        ic.className = danger ? 'fas fa-trash-alt text-lg' : save ? 'fas fa-save text-lg' : 'fas fa-circle-question text-lg';
+      }
+    }
+    if (okBtn) {
+      okBtn.className =
+        'w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-colors ' +
+        (danger ? 'bg-red-600 hover:bg-red-700 shadow-red-200/50' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200/50');
+      okBtn.textContent = opts.okText || 'نعم';
+    }
+    if (cancelBtn) cancelBtn.textContent = opts.cancelText || 'لا';
+    var modal = document.getElementById('accConfirmModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex', 'flex-col');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
   var agencyCardColors = [
     'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 50%, #a5b4fc 100%)',
     'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%)',
@@ -151,15 +220,6 @@
     });
   }
 
-  function accSyncBulkSelectAllCheckbox() {
-    var el = document.getElementById('accBulkSelectAll');
-    if (!el || !accBulkStagingItems.length) return;
-    var n = accBulkStagingItems.length;
-    var c = accBulkStagingItems.filter(function(r) { return r.selected !== false; }).length;
-    el.checked = c === n && n > 0;
-    el.indeterminate = c > 0 && c < n;
-  }
-
   function accRenderStagingTable() {
     var tb = document.getElementById('accBulkStagingTable');
     if (!tb) return;
@@ -178,13 +238,10 @@
 
     var rows = accBulkStagingItems.map(function(row, idx) {
       var ln = lineNum(row, idx);
-      var isSel = row.selected !== false;
       var discVal = row.discountPct !== '' && row.discountPct != null && row.discountPct !== undefined ? escHtml(String(row.discountPct)) : '';
       var rowBg = agencyCardColors[idx % agencyCardColors.length];
       return (
         '<tr class="acc-bulk-tr acc-bulk-tr-palette transition-colors relative" style="background:' + rowBg + '">' +
-        '<td class="acc-bulk-td acc-bulk-cell-sel p-2 align-middle text-center" data-label="تحديد">' +
-        '<input type="checkbox" class="acc-bulk-row-cb h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" data-idx="' + idx + '"' + (isSel ? ' checked' : '') + '></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-num p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(ln) + '</span></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-name p-3 align-middle" data-label="المعتمد">' +
           '<div class="acc-bulk-val acc-bulk-card-main">' +
@@ -209,19 +266,16 @@
     }).join('');
 
     var colgroup =
-      '<colgroup><col style="width:3%"><col style="width:5%"><col style="width:30%"><col style="width:14%"><col style="width:12%"><col style="width:10%"></colgroup>';
+      '<colgroup><col style="width:6%"><col style="width:32%"><col style="width:16%"><col style="width:14%"><col style="width:12%"></colgroup>';
 
     var thead =
       '<thead class="acc-bulk-thead">' +
       '<tr class="border-b border-slate-200 bg-slate-50 text-slate-600">' +
-      '<th class="p-2 w-10 text-center">' +
-      '<input type="checkbox" id="accBulkSelectAll" class="acc-bulk-select-all h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" title="تحديد الكل" aria-label="تحديد الكل">' +
-      '</th>' +
       '<th class="p-3 text-xs font-bold text-center">#</th>' +
       '<th class="p-3 text-xs font-bold text-right">المعتمد</th>' +
       '<th class="p-3 text-xs font-bold text-right">المبلغ</th>' +
-      '<th class="p-3 text-xs font-bold text-center">خصم %</th>' +
-      '<th class="p-3 text-xs font-bold text-center"></th>' +
+      '<th class="p-3 text-xs font-extrabold text-slate-800 text-center">خصم %</th>' +
+      '<th class="p-3 text-xs font-extrabold text-slate-800 text-center">إجراء</th>' +
       '</tr></thead>';
 
     var rk = document.getElementById('accBulkReviewKind');
@@ -233,7 +287,6 @@
       colgroup +
       thead +
       '<tbody class="acc-bulk-tbody">' + rows + '</tbody></table></div>';
-    accSyncBulkSelectAllCheckbox();
   }
 
   function wireAccBulkStagingDelegation() {
@@ -247,27 +300,6 @@
       if (isNaN(idx) || !accBulkStagingItems[idx]) return;
       accBulkStagingItems[idx].discountPct = t.value;
     });
-    c.addEventListener('change', function(e) {
-      var t = e.target;
-      if (t.id === 'accBulkSelectAll') {
-        var on = t.checked;
-        accBulkStagingItems.forEach(function(row) {
-          row.selected = on;
-        });
-        c.querySelectorAll('.acc-bulk-row-cb').forEach(function(cb) {
-          cb.checked = on;
-        });
-        t.indeterminate = false;
-        return;
-      }
-      if (t.classList.contains('acc-bulk-row-cb')) {
-        var idx = parseInt(t.getAttribute('data-idx'), 10);
-        if (!isNaN(idx) && accBulkStagingItems[idx]) {
-          accBulkStagingItems[idx].selected = t.checked;
-          accSyncBulkSelectAllCheckbox();
-        }
-      }
-    });
     c.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-acc-delete]');
       if (!btn) return;
@@ -279,9 +311,18 @@
       var cd = row.code != null ? String(row.code).trim() : '';
       var display = nm || cd || 'هذا الصف';
       display = display.replace(/«/g, '\u2039').replace(/»/g, '\u203a');
-      var msg = 'هل أنت متأكد من حذف المعتمد «' + display + '»؟';
-      if (!window.confirm(msg)) return;
-      window.accRemoveStagingRow(idx);
+      accConfirmOpen(
+        {
+          title: 'حذف معتمد',
+          message: 'هل أنت متأكد من حذف المعتمد «' + display + '»؟',
+          variant: 'danger',
+          okText: 'نعم، احذف',
+          cancelText: 'لا',
+        },
+        function(confirmed) {
+          if (confirmed) window.accRemoveStagingRow(idx);
+        }
+      );
     });
   }
 
@@ -303,17 +344,10 @@
     accSyncBulkStep();
   };
 
-  window.accCommitBulk = function() {
-    if (!accBulkStagingItems.length) {
-      toast('لا توجد صفوف', 'error');
-      return;
-    }
+  function accCommitBulkExecute() {
     accApplyBulkReviewKindToItems();
-    var picked = accBulkStagingItems.filter(function(r) { return r.selected !== false; });
-    if (!picked.length) {
-      toast('حدّد صفاً واحداً على الأقل', 'error');
-      return;
-    }
+    var picked = accBulkStagingItems;
+    if (!picked.length) return;
     var rk = document.getElementById('accBulkReviewKind');
     var skipDisc = rk && rk.value === 'debt_receivable';
     var cid = document.getElementById('accBulkCycle').value;
@@ -349,6 +383,32 @@
         accLoad();
       }
     });
+  }
+
+  window.accCommitBulk = function() {
+    if (!accBulkStagingItems.length) {
+      toast('لا توجد صفوف', 'error');
+      return;
+    }
+    accApplyBulkReviewKindToItems();
+    var n = accBulkStagingItems.length;
+    accConfirmOpen(
+      {
+        title: 'تأكيد الحفظ',
+        message:
+          'هل أنت متأكد من حفظ الأرصدة واعتمادها؟\n\n' +
+          'سيتم تنفيذ العملية على ' +
+          (n === 1 ? 'صف واحد' : n + ' صفوف') +
+          '. لن تُعاد مراجعة الملف أو الملفات المستوردة بعد التنفيذ.',
+        variant: 'save',
+        okText: 'نعم، احفظ',
+        cancelText: 'لا',
+      },
+      function(confirmed) {
+        if (!confirmed) return;
+        accCommitBulkExecute();
+      }
+    );
   };
 
   function apiCall(url, opts) {

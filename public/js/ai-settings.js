@@ -67,12 +67,14 @@ function populateModels(provider, models) {
 
 async function loadAIStatus() {
   try {
+    if (!document.getElementById('openaiStatusBadge')) return;
     const data = await apiCall('/ai/status');
 
     ['openai', 'gemini'].forEach(p => {
       const badge = document.getElementById(p + 'StatusBadge');
       const section = document.getElementById(p + 'ModelsSection');
       const select = document.getElementById(p + 'ModelSelect');
+      if (!badge) return;
 
       if (data[p]?.configured) {
         badge.textContent = data[p].selectedModel ? '✓ ' + data[p].selectedModel : '✓ مُعدّ';

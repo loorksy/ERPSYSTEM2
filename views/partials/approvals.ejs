@@ -211,13 +211,13 @@
     }
     .acc-bulk-review tbody tr.acc-bulk-tr {
       display: grid;
-      grid-template-columns: auto 1fr;
+      grid-template-columns: 1fr;
       grid-template-areas:
-        "sel num"
-        "name name"
-        "amount amount"
-        "disc disc"
-        "action action";
+        "num"
+        "name"
+        "amount"
+        "disc"
+        "action";
       gap: 0.5rem;
       padding: 0.625rem 0.75rem;
       border: 1px solid rgb(255 255 255 / 0.55);
@@ -232,21 +232,21 @@
     }
     .acc-bulk-review.acc-bulk-debt-mode tbody tr.acc-bulk-tr {
       grid-template-areas:
-        "sel num"
-        "name name"
-        "amount amount"
-        "disc disc"
-        "action action";
+        "num"
+        "name"
+        "amount"
+        "disc"
+        "action";
     }
     .acc-bulk-review.acc-bulk-debt-mode.acc-bulk-no-disc tbody tr.acc-bulk-tr {
       grid-template-areas:
-        "sel num"
-        "name name"
-        "amount amount"
-        "action action";
+        "num"
+        "name"
+        "amount"
+        "action";
     }
     .acc-bulk-review.acc-bulk-no-disc .acc-bulk-cell-disc,
-    .acc-bulk-review.acc-bulk-no-disc thead th:nth-child(5) {
+    .acc-bulk-review.acc-bulk-no-disc thead th:nth-child(4) {
       display: none !important;
     }
     .acc-bulk-review tbody td.acc-bulk-td {
@@ -280,14 +280,6 @@
     .acc-bulk-review tbody td.acc-bulk-td .acc-bulk-val {
       text-align: right;
     }
-    .acc-bulk-review tbody td.acc-bulk-cell-sel {
-      grid-area: sel;
-      flex-direction: row;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 0.125rem !important;
-    }
-    .acc-bulk-review tbody td.acc-bulk-cell-sel::before { display: none !important; }
     .acc-bulk-review tbody td.acc-bulk-cell-num {
       grid-area: num;
       align-items: center;
@@ -380,6 +372,13 @@
     }
     .acc-bulk-review tbody td.acc-bulk-cell-disc {
       grid-area: disc;
+    }
+    .acc-bulk-review tbody td.acc-bulk-cell-disc::before,
+    .acc-bulk-review tbody td.acc-bulk-cell-act::before {
+      color: rgb(30 41 59);
+      font-size: 0.6875rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-act {
       grid-area: action;
@@ -493,7 +492,8 @@
     #accBulkModal,
     #accDeliveryModal,
     #accAddModal,
-    #accDetailModal {
+    #accDetailModal,
+    #accConfirmModal {
       top: calc(60px + env(safe-area-inset-top, 0px));
       right: 0;
       bottom: calc(65px + env(safe-area-inset-bottom, 0px));
@@ -524,6 +524,14 @@
       max-height: 100%;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+    }
+    #accConfirmModal {
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    #accConfirmModal > div {
+      max-height: 100%;
+      overflow-y: auto;
     }
   }
   /* قائمة تسليم المعتمدين: عمود متراصّ ومحاذاة وسط على الموبايل */
@@ -715,6 +723,25 @@
     <div class="px-4 sm:px-6 py-4 border-t border-slate-100 bg-white sm:bg-slate-50/50 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
       <button type="button" onclick="accCloseDelivery()" class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition-colors text-sm flex items-center justify-center gap-2">إلغاء</button>
       <button type="button" onclick="accSubmitDelivery()" class="w-full sm:flex-1 px-8 py-3 sm:py-2.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md shadow-emerald-200 hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2"><i class="fas fa-check"></i> تسليم</button>
+    </div>
+  </div>
+</div>
+
+<!-- تأكيد بنمط النظام (فوق نافذة رفع الأرصدة z-[10050]) -->
+<div id="accConfirmModal" class="fixed inset-0 z-[10060] hidden items-center justify-center p-4 sm:p-6 max-lg:p-2 bg-slate-900/60 backdrop-blur-sm" dir="rtl" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="accConfirmTitle">
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xl max-w-md w-full p-5 sm:p-6 max-lg:my-auto">
+    <div class="flex items-start gap-3 mb-5">
+      <span id="accConfirmIcon" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+        <i class="fas fa-circle-question text-lg" aria-hidden="true"></i>
+      </span>
+      <div class="min-w-0 flex-1">
+        <h4 id="accConfirmTitle" class="text-lg font-bold text-slate-900 leading-snug">تأكيد</h4>
+        <p id="accConfirmMessage" class="text-sm text-slate-600 mt-2 leading-relaxed whitespace-pre-wrap"></p>
+      </div>
+    </div>
+    <div class="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end sm:gap-3">
+      <button type="button" id="accConfirmCancel" class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold hover:bg-slate-50 transition-colors text-sm">لا</button>
+      <button type="button" id="accConfirmOk" class="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm text-white shadow-md transition-colors bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200/50">نعم</button>
     </div>
   </div>
 </div>
