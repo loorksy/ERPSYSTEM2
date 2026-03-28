@@ -176,14 +176,21 @@
         return;
       }
       list.innerHTML += users.map(function(u) {
+        var mid = String(u.member_user_id || '').trim();
+        var profileUrl = '/member-directory/member/' + encodeURIComponent(mid);
         var cycleInfo = u.cycle_name ? (' · ' + (u.cycle_name || '') + ' #' + (u.cycle_id || '')) : '';
         var before = u.salary_before_discount != null ? (' · قبل الخصم: ' + fmt(u.salary_before_discount)) : '';
-        return '<article class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm hover:shadow transition-shadow">' +
+        return '<a href="' + profileUrl + '" class="group block rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md hover:bg-indigo-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">' +
           '<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-y-2">' +
-          '<div class="min-w-0"><span class="font-bold text-slate-900">مستخدم: ' + (u.member_user_id || '') + '</span><span class="text-slate-500 text-sm">' + cycleInfo + '</span></div>' +
-          '<div class="text-sm text-slate-600 break-words">معرف: ' + (u.extra_id_c || '-') + before + '</div>' +
-          '<div class="text-base font-bold text-sky-600 tabular-nums shrink-0">بعد الخصم: ' + fmt(u.balance_d || 0) + '</div>' +
-          '</div></article>';
+          '<div class="min-w-0 flex-1">' +
+          '<span class="font-bold text-slate-900 group-hover:text-indigo-900">مستخدم: ' + (u.member_user_id || '') + '</span>' +
+          '<span class="text-slate-500 text-sm">' + cycleInfo + '</span>' +
+          '<p class="text-[0.65rem] text-slate-400 mt-1">ملف العضو في بيانات المستخدمين</p></div>' +
+          '<div class="text-sm text-slate-600 break-words sm:text-right">معرف: ' + (u.extra_id_c || '-') + before + '</div>' +
+          '<div class="flex items-center gap-2 shrink-0">' +
+          '<span class="text-base font-bold text-sky-600 tabular-nums">بعد الخصم: ' + fmt(u.balance_d || 0) + '</span>' +
+          '<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition group-hover:bg-indigo-100 group-hover:text-indigo-600" aria-hidden="true"><i class="fas fa-chevron-left text-sm"></i></span>' +
+          '</div></div></a>';
       }).join('');
     });
   };

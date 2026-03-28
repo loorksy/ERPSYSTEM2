@@ -18,23 +18,25 @@
 
   function statCard(iconClass, iconBg, label, value, valueClass) {
     return (
-      '<div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md">' +
+      '<div class="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-indigo-200/70 hover:shadow-md">' +
+      '<div class="pointer-events-none absolute -left-6 -top-6 h-20 w-20 rounded-full bg-indigo-400/[0.06] blur-2xl"></div>' +
+      '<div class="relative flex flex-col gap-3">' +
       '<div class="flex items-start justify-between gap-2">' +
-      '<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ' +
+      '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-inner ' +
       iconBg +
       '"><i class="' +
       iconClass +
-      ' text-sm"></i></span>' +
-      '<p class="font-mono text-lg font-bold tabular-nums ' +
+      ' text-base"></i></span>' +
+      '<p class="font-mono text-lg sm:text-xl font-bold tabular-nums text-left ' +
       (valueClass || 'text-slate-900') +
       '">' +
       fmt(value) +
       '</p>' +
       '</div>' +
-      '<p class="mt-3 text-xs font-semibold text-slate-500 leading-snug">' +
+      '<p class="text-xs font-semibold text-slate-500 leading-snug">' +
       esc(label) +
       '</p>' +
-      '</div>'
+      '</div></div>'
     );
   }
 
@@ -71,14 +73,14 @@
                   return (
                     '<a href="/debts/company/' +
                     c.id +
-                    '" class="group flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-red-50/80">' +
+                    '" class="group flex items-center justify-between gap-3 px-4 py-4 transition hover:bg-gradient-to-l hover:from-red-50/90 hover:to-transparent">' +
                     '<div class="flex min-w-0 items-center gap-3">' +
-                    '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700 transition group-hover:bg-red-600 group-hover:text-white"><i class="fas fa-building"></i></span>' +
+                    '<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-700 shadow-sm transition group-hover:bg-red-600 group-hover:text-white"><i class="fas fa-building"></i></span>' +
                     '<div class="min-w-0">' +
-                    '<p class="font-semibold text-slate-900 truncate">' +
+                    '<p class="font-bold text-slate-900 truncate">' +
                     esc(c.name || '') +
                     '</p>' +
-                    '<p class="text-xs text-slate-500">شركة تحويل</p>' +
+                    '<p class="text-xs text-slate-500 mt-0.5">شركة تحويل</p>' +
                     '</div></div>' +
                     '<div class="flex shrink-0 items-center gap-2">' +
                     '<span class="font-mono text-sm font-bold tabular-nums text-rose-700">' +
@@ -86,7 +88,7 @@
                     ' ' +
                     esc(c.balance_currency || 'USD') +
                     '</span>' +
-                    '<i class="fas fa-chevron-left text-xs text-slate-400 transition group-hover:text-red-600"></i>' +
+                    '<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition group-hover:bg-red-100 group-hover:text-red-600"><i class="fas fa-chevron-left text-xs"></i></span>' +
                     '</div></a>'
                   );
                 })
@@ -101,14 +103,14 @@
                   return (
                     '<a href="/debts/fund/' +
                     f.id +
-                    '" class="group flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-amber-50/80">' +
+                    '" class="group flex items-center justify-between gap-3 px-4 py-4 transition hover:bg-gradient-to-l hover:from-amber-50/90 hover:to-transparent">' +
                     '<div class="flex min-w-0 items-center gap-3">' +
-                    '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 transition group-hover:bg-amber-600 group-hover:text-white"><i class="fas fa-piggy-bank"></i></span>' +
+                    '<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 shadow-sm transition group-hover:bg-amber-600 group-hover:text-white"><i class="fas fa-piggy-bank"></i></span>' +
                     '<div class="min-w-0">' +
-                    '<p class="font-semibold text-slate-900 truncate">' +
+                    '<p class="font-bold text-slate-900 truncate">' +
                     esc(f.name || '') +
                     '</p>' +
-                    '<p class="text-xs text-slate-500">صندوق</p>' +
+                    '<p class="text-xs text-slate-500 mt-0.5">صندوق</p>' +
                     '</div></div>' +
                     '<div class="flex shrink-0 items-center gap-2">' +
                     '<span class="font-mono text-sm font-bold tabular-nums text-amber-800">' +
@@ -116,7 +118,7 @@
                     ' ' +
                     esc(f.currency || '') +
                     '</span>' +
-                    '<i class="fas fa-chevron-left text-xs text-slate-400 transition group-hover:text-amber-600"></i>' +
+                    '<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition group-hover:bg-amber-100 group-hover:text-amber-700"><i class="fas fa-chevron-left text-xs"></i></span>' +
                     '</div></a>'
                   );
                 })
@@ -130,21 +132,21 @@
                 .map(function(p) {
                   var kind = p.entity_type === 'fund' ? 'صندوق' : 'شركة تحويل';
                   return (
-                    '<div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-gradient-to-l from-slate-50/80 to-white p-4 sm:flex-row sm:items-center sm:justify-between">' +
+                    '<div class="flex flex-col gap-3 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/40 via-white to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">' +
                     '<div class="flex items-start gap-3 min-w-0">' +
-                    '<span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-800 text-xs font-bold">#' +
+                    '<span class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-800 text-xs font-bold shadow-sm">#' +
                     esc(String(p.entity_id)) +
                     '</span>' +
                     '<div class="min-w-0">' +
-                    '<p class="text-sm font-semibold text-slate-900">' +
+                    '<p class="text-sm font-bold text-slate-900">' +
                     kind +
                     '</p>' +
                     (p.notes
-                      ? '<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">' + esc(p.notes) + '</p>'
+                      ? '<p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">' + esc(p.notes) + '</p>'
                       : '') +
                     '</div></div>' +
                     '<div class="flex shrink-0 items-center justify-end sm:pl-4">' +
-                    '<span class="inline-flex items-center rounded-lg bg-violet-600/10 px-3 py-1.5 font-mono text-sm font-bold tabular-nums text-violet-900">' +
+                    '<span class="inline-flex items-center rounded-xl border border-violet-200/80 bg-violet-50 px-3 py-2 font-mono text-sm font-bold tabular-nums text-violet-900">' +
                     fmt(p.amount) +
                     ' ' +
                     esc(p.currency || '') +

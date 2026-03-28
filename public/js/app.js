@@ -68,9 +68,8 @@ window.homeDownloadReportPdf = function() {
   window.open(path + (q.length ? '?' + q.join('&') : ''), '_blank');
 };
 
-/** تنسيق أرقام لوحة التحكم: سالب = أحمر، دين/مطلوب دفع/إجمالي ديون = أحمر عند وجود مبلغ، ربح أخضر/أحمر */
-var HOME_METRIC_CLASS =
-  'home-dash-metric font-mono text-base sm:text-lg lg:text-xl font-bold tabular-nums tracking-tight transition-colors duration-200';
+/** تنسيق أرقام لوحة التحكم — أحجام الخط في src/input.css (.home-dash-metric) */
+var HOME_METRIC_CLASS = 'home-dash-metric transition-colors duration-200';
 
 function homeApplyMetric(el, rawVal, kind) {
   if (!el) return;

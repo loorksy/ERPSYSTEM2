@@ -1,36 +1,73 @@
-<div class="max-w-5xl mx-auto space-y-6 pb-8" dir="rtl" id="mdDetailRoot"
+<div class="max-w-6xl mx-auto px-4 sm:px-0 pb-10 min-w-0" dir="rtl" id="mdDetailRoot"
   data-member-id="<%= typeof memberUserId !== 'undefined' ? memberUserId : '' %>">
-  <div class="flex flex-wrap items-center gap-3">
-    <a href="/member-directory" class="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800">
-      <i class="fas fa-arrow-right"></i>
-      العودة للقائمة
-    </a>
+
+  <a href="/member-directory" class="mb-5 sm:mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/80 hover:text-indigo-800">
+    <i class="fas fa-arrow-right text-xs opacity-70" aria-hidden="true"></i>
+    العودة إلى بيانات المستخدمين
+  </a>
+
+  <!-- رأس الملف -->
+  <header class="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl sm:rounded-3xl border border-indigo-200/50 bg-gradient-to-bl from-indigo-50/95 via-white to-slate-50 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <div class="absolute top-0 left-0 h-32 w-32 rounded-full bg-violet-400/10 blur-3xl pointer-events-none" aria-hidden="true"></div>
+    <div class="relative flex flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:gap-6 sm:px-8 sm:py-8">
+      <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg shadow-indigo-500/25 ring-4 ring-white/90">
+        <i class="fas fa-user text-3xl" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-xs font-bold uppercase tracking-wide text-indigo-700">ملف عضو</p>
+        <h1 class="mt-1 break-all font-mono text-xl font-bold tracking-tight text-slate-900 sm:text-2xl" id="mdDetailMemberId">—</h1>
+        <p class="mt-1 text-sm text-slate-600">ملخص من التدقيق، المؤجل، والأحداث المرتبطة بهذا الرقم.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ملخص سريع -->
+  <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm" aria-labelledby="md-summary-heading">
+    <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5">
+      <h2 id="md-summary-heading" class="text-sm font-bold text-slate-800">ملخص</h2>
+    </div>
+    <div id="mdDetailSummary" class="p-4 sm:p-6"></div>
+  </section>
+
+  <div class="space-y-6">
+    <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700"><i class="fas fa-clock-rotate-left text-sm"></i></span>
+        <h2 class="text-sm font-bold text-slate-800">المؤجل (الدورات)</h2>
+      </div>
+      <div id="mdDeferredBlock" class="p-4 sm:p-5 text-sm text-slate-700"></div>
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><i class="fas fa-clipboard-check text-sm"></i></span>
+        <h2 class="text-sm font-bold text-slate-800">سجل التدقيق</h2>
+      </div>
+      <div id="mdAuditBlock" class="p-4 sm:p-5 text-sm overflow-x-auto"></div>
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><i class="fas fa-bolt text-sm"></i></span>
+        <h2 class="text-sm font-bold text-slate-800">أحداث الملف</h2>
+      </div>
+      <div id="mdEventsBlock" class="p-4 sm:p-5 text-sm space-y-2"></div>
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-800"><i class="fas fa-sliders text-sm"></i></span>
+        <h2 class="text-sm font-bold text-slate-800">إضافات وخصومات</h2>
+      </div>
+      <div id="mdAdjBlock" class="p-4 sm:p-5 text-sm space-y-2"></div>
+    </section>
+
+    <section class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+      <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 flex items-center gap-2">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-800"><i class="fas fa-truck-fast text-sm"></i></span>
+        <h2 class="text-sm font-bold text-slate-800">الشحن (مبيعات للمستخدم)</h2>
+      </div>
+      <div id="mdShippingBlock" class="p-4 sm:p-5 text-sm overflow-x-auto"></div>
+    </section>
   </div>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2" id="mdDetailTitle">
-      <i class="fas fa-user text-indigo-600"></i>
-      <span id="mdDetailMemberId">—</span>
-    </h2>
-    <div id="mdDetailSummary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm"></div>
-  </section>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h3 class="text-base font-bold text-slate-800 mb-3">المؤجل (الدورات)</h3>
-    <div id="mdDeferredBlock" class="text-sm text-slate-700 space-y-2"></div>
-  </section>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h3 class="text-base font-bold text-slate-800 mb-3">سجل التدقيق</h3>
-    <div id="mdAuditBlock" class="text-sm overflow-x-auto"></div>
-  </section>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h3 class="text-base font-bold text-slate-800 mb-3">أحداث الملف</h3>
-    <div id="mdEventsBlock" class="text-sm space-y-2"></div>
-  </section>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h3 class="text-base font-bold text-slate-800 mb-3">إضافات وخصومات</h3>
-    <div id="mdAdjBlock" class="text-sm space-y-2"></div>
-  </section>
-  <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6">
-    <h3 class="text-base font-bold text-slate-800 mb-3">الشحن (مبيعات للمستخدم)</h3>
-    <div id="mdShippingBlock" class="text-sm overflow-x-auto"></div>
-  </section>
 </div>

@@ -51,34 +51,58 @@
       .replace(/"/g, '&quot;');
   }
 
+  function amountClass(n) {
+    var v = parseFloat(n);
+    if (isNaN(v)) return 'text-slate-800';
+    if (v < 0) return 'text-red-600';
+    if (v > 0) return 'text-emerald-700';
+    return 'text-slate-600';
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     var box = document.getElementById('profitSourcesBox');
     if (!box) return;
     apiCall('/api/expenses/net-profit-by-source').then(function(res) {
       if (!res.success) {
-        box.innerHTML = '<p class="p-8 text-center text-sm text-red-600">' + (res.message || 'فشل') + '</p>';
+        box.innerHTML =
+          '<div class="rounded-2xl border border-red-100 bg-red-50/80 px-6 py-10 text-center">' +
+          '<i class="fas fa-circle-exclamation text-2xl text-red-500 mb-2 block" aria-hidden="true"></i>' +
+          '<p class="text-sm font-medium text-red-800">' + escapeHtml(res.message || 'فشل التحميل') + '</p></div>';
         return;
       }
       var rows = res.rows || [];
       if (!rows.length) {
-        box.innerHTML = '<p class="p-8 text-center text-sm text-slate-400">لا توجد قيود صافي ربح بعد</p>';
+        box.innerHTML =
+          '<div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-14 text-center">' +
+          '<span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200/80 text-slate-400 mb-3"><i class="fas fa-inbox text-2xl"></i></span>' +
+          '<p class="text-sm font-medium text-slate-600">لا توجد قيود صافي ربح بعد</p>' +
+          '<p class="text-xs text-slate-400 mt-1">ستظهر المصادر هنا عند تسجيل عمليات في الدفتر.</p></div>';
         return;
       }
+      var items = rows.map(function(r) {
+        var code = r.source_type || '';
+        var title = labelForSourceType(code);
+        var detailUrl = '/profit-sources/' + encodeURIComponent(code) + '/detail';
+        var ac = amountClass(r.total);
+        return (
+          '<li class="border-b border-slate-100/90 last:border-0">' +
+          '<a href="' + detailUrl + '" class="flex items-start sm:items-center justify-between gap-3 px-3 py-3.5 sm:px-5 sm:py-4 transition-colors hover:bg-indigo-50/50 active:bg-indigo-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 group">' +
+          '<div class="min-w-0 flex-1 text-right">' +
+          '<p class="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-indigo-950 leading-snug">' + escapeHtml(title) + '</p>' +
+          '<p class="mt-1 font-mono text-[0.65rem] sm:text-xs text-slate-400 truncate" title="' + escapeHtml(code) + '">' + escapeHtml(code) + '</p>' +
+          '</div>' +
+          '<div class="flex shrink-0 items-center gap-2 sm:gap-3">' +
+          '<span class="font-mono text-sm sm:text-base font-bold tabular-nums ' + ac + '">' + fmt(r.total) + '</span>' +
+          '<span class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400 transition group-hover:bg-indigo-100 group-hover:text-indigo-600" aria-hidden="true"><i class="fas fa-chevron-left text-xs"></i></span>' +
+          '</div></a></li>'
+        );
+      }).join('');
       box.innerHTML =
-        '<div class="rounded-xl border border-slate-200 overflow-hidden bg-slate-50/50">' +
-        '<table class="w-full text-right text-sm">' +
-        '<thead><tr class="bg-slate-100/90 text-slate-700 border-b border-slate-200">' +
-        '<th class="px-4 py-2.5 font-semibold text-xs">اسم العملية</th>' +
-        '<th class="px-4 py-2.5 font-semibold text-xs">الإجمالي</th></tr></thead><tbody class="bg-white">' +
-        rows.map(function(r) {
-          var code = r.source_type || '';
-          var title = labelForSourceType(code);
-          var detailUrl = '/profit-sources/' + encodeURIComponent(code) + '/detail';
-          return '<tr class="border-b border-slate-100 hover:bg-slate-50/80 cursor-pointer mv-border-balance" onclick="window.location.href=\'' + detailUrl + '\'">' +
-            '<td class="px-4 py-2.5 text-sm text-indigo-800 underline-offset-2 hover:underline" title="' + escapeHtml(code) + '">' + escapeHtml(title) + '</td>' +
-            '<td class="px-4 py-2.5 font-semibold tabular-nums text-indigo-700">' + fmt(r.total) + '</td></tr>';
-        }).join('') +
-        '</tbody></table></div>';
+        '<div class="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06),0_4px_14px_-4px_rgba(15,23,42,0.08)]">' +
+        '<div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5">' +
+        '<h2 class="text-xs font-bold uppercase tracking-wide text-slate-500">السجل</h2>' +
+        '<p class="mt-0.5 text-[0.65rem] text-slate-400">' + rows.length + ' مصدر</p></div>' +
+        '<ul class="divide-y divide-slate-100">' + items + '</ul></div>';
     });
   });
 })();

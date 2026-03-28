@@ -1,13 +1,29 @@
-<div class="w-full max-w-4xl mx-auto space-y-4" dir="rtl" id="profitDetailRoot"
+<div class="w-full max-w-6xl mx-auto px-4 sm:px-0 pb-10 min-w-0" dir="rtl" id="profitDetailRoot"
   data-source="<%= typeof profitSourceType !== 'undefined' ? profitSourceType : '' %>">
-  <div class="flex flex-wrap items-center gap-3">
-    <a href="/profit-sources" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">← مصادر الربح</a>
-  </div>
-  <header>
-    <h2 class="text-xl sm:text-2xl font-bold text-slate-900" id="profitDetailTitle">تفاصيل المصدر</h2>
-    <p class="text-xs text-slate-500 mt-1 font-mono" id="profitDetailCode"></p>
-  </header>
-  <div id="profitDetailBox" class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden min-h-[120px]">
-    <p class="p-8 text-slate-400 text-center text-sm">جاري التحميل…</p>
+
+  <a href="/profit-sources" class="inline-flex items-center gap-2 mb-5 sm:mb-6 rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/80 hover:text-indigo-800">
+    <i class="fas fa-arrow-right text-xs opacity-70" aria-hidden="true"></i>
+    العودة إلى مصادر الربح
+  </a>
+
+  <section class="relative mb-6 sm:mb-8 rounded-2xl sm:rounded-3xl overflow-hidden border border-violet-200/50 bg-gradient-to-br from-violet-50/90 via-white to-slate-50 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <div class="absolute bottom-0 right-0 w-40 h-40 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" aria-hidden="true"></div>
+    <div class="relative px-4 py-6 sm:px-8 sm:py-8 flex flex-col sm:flex-row sm:items-start gap-4">
+      <div class="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg shadow-violet-500/20 ring-4 ring-white/90">
+        <i class="fas fa-list-ul text-2xl sm:text-[1.65rem]" aria-hidden="true"></i>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-xs font-semibold text-violet-700 uppercase tracking-wide">تفاصيل المصدر</p>
+        <h1 class="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight leading-tight" id="profitDetailTitle">—</h1>
+        <p class="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg bg-slate-100/90 px-2.5 py-1.5 font-mono text-[0.65rem] sm:text-xs text-slate-600 break-all" id="profitDetailCode"></p>
+      </div>
+    </div>
+  </section>
+
+  <div id="profitDetailBox" class="min-h-[120px]">
+    <div class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 py-14 px-4">
+      <i class="fas fa-circle-notch fa-spin text-2xl text-violet-400" aria-hidden="true"></i>
+      <p class="text-sm text-slate-500">جاري التحميل…</p>
+    </div>
   </div>
 </div>

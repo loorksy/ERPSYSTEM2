@@ -16,56 +16,118 @@
     return d.innerHTML;
   }
 
+  function moneyTone(n, kind) {
+    const v = Number(n);
+    if (isNaN(v)) return 'text-slate-800';
+    if (kind === 'debt') return v > 0 ? 'text-red-600' : 'text-slate-600';
+    if (v < 0) return 'text-red-600';
+    if (v > 0) return 'text-sky-700';
+    return 'text-slate-600';
+  }
+
+  function profitTone(n) {
+    const v = Number(n);
+    if (isNaN(v)) return 'text-slate-800';
+    if (v < 0) return 'text-red-600';
+    if (v > 0) return 'text-emerald-700';
+    return 'text-slate-600';
+  }
+
+  function summaryCard(label, valueHtml, hint) {
+    return (
+      '<div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/90 p-3.5 sm:p-4 shadow-sm">' +
+      '<div class="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">' +
+      esc(label) +
+      '</div>' +
+      '<div class="mt-1.5 font-mono text-base font-bold tabular-nums sm:text-lg">' +
+      valueHtml +
+      '</div>' +
+      (hint
+        ? '<div class="mt-1.5 text-[0.65rem] leading-snug text-slate-400">' + esc(hint) + '</div>'
+        : '') +
+      '</div>'
+    );
+  }
+
   async function load() {
     const url = '/api/member-directory/member/' + encodeURIComponent(memberUserId);
     const res = await fetch(url, { credentials: 'same-origin' });
     const data = await res.json();
     if (!data.success) {
-      summary.innerHTML = '<p class="text-red-600">' + esc(data.message || 'فشل') + '</p>';
+      summary.innerHTML =
+        '<div class="rounded-xl border border-red-100 bg-red-50/90 px-4 py-3 text-sm text-red-800">' +
+        esc(data.message || 'فشل التحميل') +
+        '</div>';
       return;
     }
     const p = data.profile;
     titleEl.textContent = p ? p.member_user_id : memberUserId;
     if (p) {
+      const def = Number(p.deferred_balance_usd || 0);
+      const debt = Number(p.debt_to_company_usd || 0);
       summary.innerHTML =
-        '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">الاسم</div><div class="font-medium">' +
-        esc(p.display_name || p.last_seen_name || '—') +
-        '</div></div>' +
-        '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">آخر راتب (تدقيق)</div><div class="font-mono">' +
-        esc(Number(p.total_salary_audited_usd || 0).toFixed(2)) +
-        ' USD</div><div class="text-[0.65rem] text-slate-400 mt-1">يُحدَّد من آخر تدقيق يتضمّن مبلغ الراتب</div></div>' +
-        '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">رصيد مؤجل</div><div class="font-mono">' +
-        esc(Number(p.deferred_balance_usd || 0).toFixed(2)) +
-        ' USD</div></div>' +
-        '<div class="rounded-xl border border-slate-100 bg-slate-50/80 p-3"><div class="text-xs text-slate-500">دين على العضو</div><div class="font-mono">' +
-        esc(Number(p.debt_to_company_usd || 0).toFixed(2)) +
-        ' USD</div></div>';
+        '<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">' +
+        summaryCard('الاسم', '<span class="text-slate-900 font-sans font-semibold">' + esc(p.display_name || p.last_seen_name || '—') + '</span>', '') +
+        summaryCard(
+          'آخر راتب (تدقيق)',
+          '<span class="' + moneyTone(p.total_salary_audited_usd, 'balance') + '">' +
+            esc(Number(p.total_salary_audited_usd || 0).toFixed(2)) +
+            ' USD</span>',
+          'من آخر تدقيق يتضمّن مبلغ الراتب'
+        ) +
+        summaryCard(
+          'رصيد مؤجل',
+          '<span class="' + moneyTone(def, 'balance') + '">' + esc(def.toFixed(2)) + ' USD</span>',
+          ''
+        ) +
+        summaryCard(
+          'دين على العضو',
+          '<span class="' + moneyTone(debt, 'debt') + '">' + esc(debt.toFixed(2)) + ' USD</span>',
+          ''
+        ) +
+        '</div>';
     } else {
       summary.innerHTML =
-        '<p class="text-slate-600 col-span-full">لا يوجد ملف بعد — سيُنشأ عند أول تدقيق أو تعديل.</p>';
+        '<div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-600">لا يوجد ملف بعد — سيُنشأ عند أول تدقيق أو تعديل.</div>';
     }
 
     const dh = data.deferredHistory || [];
     deferredBlock.innerHTML = dh.length
-      ? '<ul class="list-disc list-inside space-y-1">' +
+      ? '<ul class="space-y-2">' +
         dh
-          .map(
-            (r) =>
-              '<li>دورة ' +
+          .map((r) => {
+            const bal = Number(r.balance_d || 0);
+            const tone = bal < 0 ? 'text-red-600' : 'text-sky-700';
+            return (
+              '<li class="flex flex-col gap-1 rounded-xl border border-slate-200/90 bg-slate-50/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">' +
+              '<span class="text-sm text-slate-700"><span class="font-semibold text-slate-900">دورة ' +
               esc(r.cycle_id) +
-              ' — ' +
-              esc(Number(r.balance_d || 0).toFixed(2)) +
-              ' — ' +
-              esc(r.cycle_name || '') +
-              '</li>'
-          )
+              '</span>' +
+              (r.cycle_name ? ' · ' + esc(r.cycle_name) : '') +
+              '</span>' +
+              '<span class="font-mono text-sm font-bold tabular-nums ' +
+              tone +
+              '">' +
+              esc(bal.toFixed(2)) +
+              ' USD</span></li>'
+            );
+          })
           .join('') +
         '</ul>'
-      : '<p class="text-slate-500">لا سجلات مؤجل.</p>';
+      : '<p class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-sm text-slate-500">لا سجلات مؤجل.</p>';
 
     const ar = data.auditRows || [];
     auditBlock.innerHTML = ar.length
-      ? '<table class="min-w-full text-xs"><thead><tr class="text-slate-500"><th class="py-1 px-2">الدورة</th><th class="py-1 px-2">راتب بعد الخصم</th><th class="py-1 px-2">قبل الخصم</th><th class="py-1 px-2">الحالة</th><th class="py-1 px-2">المصدر</th><th class="py-1 px-2">تاريخ</th></tr></thead><tbody>' +
+      ? '<div class="-mx-1 overflow-x-auto">' +
+        '<table class="min-w-[640px] w-full text-right text-sm">' +
+        '<thead><tr class="border-b border-slate-200 bg-slate-50/95 text-slate-600">' +
+        '<th class="whitespace-nowrap px-3 py-2.5 text-xs font-bold">الدورة</th>' +
+        '<th class="whitespace-nowrap px-3 py-2.5 text-xs font-bold">راتب بعد الخصم</th>' +
+        '<th class="whitespace-nowrap px-3 py-2.5 text-xs font-bold">قبل الخصم</th>' +
+        '<th class="px-3 py-2.5 text-xs font-bold">الحالة</th>' +
+        '<th class="px-3 py-2.5 text-xs font-bold">المصدر</th>' +
+        '<th class="whitespace-nowrap px-3 py-2.5 text-xs font-bold">تاريخ</th>' +
+        '</tr></thead><tbody class="divide-y divide-slate-100">' +
         ar
           .map((r) => {
             const sal =
@@ -78,85 +140,118 @@
                 : '—';
             const cname = r.cycle_name ? esc(r.cycle_name) + ' — ' : '';
             return (
-              '<tr><td class="py-1 px-2 whitespace-nowrap">' +
+              '<tr class="hover:bg-slate-50/80">' +
+              '<td class="whitespace-nowrap px-3 py-2.5 text-slate-800">' +
               cname +
               '#' +
               esc(r.cycle_id) +
-              '</td><td class="py-1 px-2 font-mono">' +
+              '</td>' +
+              '<td class="px-3 py-2.5 font-mono tabular-nums text-slate-900">' +
               esc(sal) +
-              '</td><td class="py-1 px-2 font-mono">' +
+              '</td>' +
+              '<td class="px-3 py-2.5 font-mono tabular-nums text-slate-600">' +
               esc(before) +
-              '</td><td class="py-1 px-2">' +
+              '</td>' +
+              '<td class="px-3 py-2.5">' +
               esc(r.audit_status) +
-              '</td><td class="py-1 px-2">' +
+              '</td>' +
+              '<td class="px-3 py-2.5 text-slate-600">' +
               esc(r.audit_source || '') +
-              '</td><td class="py-1 px-2 whitespace-nowrap">' +
+              '</td>' +
+              '<td class="whitespace-nowrap px-3 py-2.5 text-xs text-slate-500">' +
               esc(r.updated_at ? new Date(r.updated_at).toLocaleString('ar') : '') +
               '</td></tr>'
             );
           })
           .join('') +
-        '</tbody></table>'
-      : '<p class="text-slate-500">لا سجلات تدقيق لهذا الرقم — تأكد من التدقيق من الرواتب أو البحث.</p>';
+        '</tbody></table></div>'
+      : '<p class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-sm text-slate-500">لا سجلات تدقيق لهذا الرقم — تأكد من التدقيق من الرواتب أو البحث.</p>';
 
     const ev = data.events || [];
     eventsBlock.innerHTML = ev.length
       ? ev
           .map(
             (e) =>
-              '<div class="border border-slate-100 rounded-lg p-2"><span class="font-semibold">' +
+              '<div class="rounded-xl border border-slate-200/90 bg-slate-50/40 px-3 py-2.5">' +
+              '<span class="font-semibold text-slate-900">' +
               esc(e.event_type) +
-              '</span> — ' +
+              '</span>' +
+              '<p class="mt-1 text-sm text-slate-600">' +
               esc(e.notes || '') +
-              ' <span class="text-slate-400 text-xs">' +
+              '</p>' +
+              '<p class="mt-1 text-[0.65rem] text-slate-400">' +
               esc(e.created_at ? new Date(e.created_at).toLocaleString('ar') : '') +
-              '</span></div>'
+              '</p></div>'
           )
           .join('')
-      : '<p class="text-slate-500">لا أحداث.</p>';
+      : '<p class="text-sm text-slate-500">لا أحداث مسجّلة.</p>';
 
     const adj = data.adjustments || [];
     adjBlock.innerHTML = adj.length
       ? adj
           .map(
             (a) =>
-              '<div class="border border-slate-100 rounded-lg p-2"><span class="font-semibold">' +
+              '<div class="rounded-xl border border-slate-200/90 bg-white px-3 py-2.5 shadow-sm">' +
+              '<span class="font-semibold text-amber-900">' +
               esc(a.kind) +
-              '</span> ' +
+              '</span>' +
+              ' <span class="font-mono tabular-nums text-slate-800">' +
               esc(Number(a.amount || 0).toFixed(2)) +
-              ' — ' +
+              '</span>' +
+              ' <span class="text-slate-500">' +
               esc(a.status || '') +
-              ' — ' +
+              '</span>' +
+              '<p class="mt-1 text-xs text-slate-600">' +
               esc(a.notes || '') +
-              '</div>'
+              '</p></div>'
           )
           .join('')
-      : '<p class="text-slate-500">لا تعديلات بعد.</p>';
+      : '<p class="text-sm text-slate-500">لا تعديلات بعد.</p>';
 
     const ship = data.shippingTransactions || [];
     if (shippingBlock) {
       shippingBlock.innerHTML = ship.length
-        ? '<table class="min-w-full text-xs"><thead><tr class="text-slate-500"><th class="py-1 px-2">#</th><th class="py-1 px-2">الصنف</th><th class="py-1 px-2">الكمية</th><th class="py-1 px-2">الإجمالي</th><th class="py-1 px-2">الربح</th><th class="py-1 px-2">الحالة</th></tr></thead><tbody>' +
+        ? '<div class="-mx-1 overflow-x-auto">' +
+          '<table class="min-w-[560px] w-full text-right text-sm">' +
+          '<thead><tr class="border-b border-slate-200 bg-slate-50/95 text-slate-600">' +
+          '<th class="px-3 py-2.5 text-xs font-bold">#</th>' +
+          '<th class="px-3 py-2.5 text-xs font-bold">الصنف</th>' +
+          '<th class="px-3 py-2.5 text-xs font-bold">الكمية</th>' +
+          '<th class="px-3 py-2.5 text-xs font-bold">الإجمالي</th>' +
+          '<th class="px-3 py-2.5 text-xs font-bold">الربح</th>' +
+          '<th class="px-3 py-2.5 text-xs font-bold">الحالة</th>' +
+          '</tr></thead><tbody class="divide-y divide-slate-100">' +
           ship
-            .map(
-              (s) =>
-                '<tr><td class="py-1 px-2 font-mono">' +
+            .map((s) => {
+              const prof = s.profit_amount != null ? Number(s.profit_amount).toFixed(2) : '—';
+              const pCls = s.profit_amount != null ? profitTone(s.profit_amount) : 'text-slate-500';
+              return (
+                '<tr class="hover:bg-slate-50/80">' +
+                '<td class="px-3 py-2 font-mono text-xs text-slate-500">' +
                 esc(s.id) +
-                '</td><td class="py-1 px-2">' +
+                '</td>' +
+                '<td class="px-3 py-2 text-slate-800">' +
                 esc(s.item_type) +
-                '</td><td class="py-1 px-2 font-mono">' +
+                '</td>' +
+                '<td class="px-3 py-2 font-mono tabular-nums">' +
                 esc(s.quantity) +
-                '</td><td class="py-1 px-2 font-mono">' +
+                '</td>' +
+                '<td class="px-3 py-2 font-mono tabular-nums">' +
                 esc(Number(s.total || 0).toFixed(2)) +
-                '</td><td class="py-1 px-2 font-mono text-emerald-700">' +
-                esc(s.profit_amount != null ? Number(s.profit_amount).toFixed(2) : '—') +
-                '</td><td class="py-1 px-2">' +
+                '</td>' +
+                '<td class="px-3 py-2 font-mono tabular-nums font-semibold ' +
+                pCls +
+                '">' +
+                esc(prof) +
+                '</td>' +
+                '<td class="px-3 py-2 text-slate-600">' +
                 esc(s.status || '') +
                 '</td></tr>'
-            )
+              );
+            })
             .join('') +
-          '</tbody></table>'
-        : '<p class="text-slate-500">لا مبيعات شحن مسجّلة لهذا الرقم كمستخدم.</p>';
+          '</tbody></table></div>'
+        : '<p class="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center text-sm text-slate-500">لا مبيعات شحن مسجّلة لهذا الرقم كمستخدم.</p>';
     }
   }
 
