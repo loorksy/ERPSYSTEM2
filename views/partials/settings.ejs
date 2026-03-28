@@ -1,3 +1,71 @@
+<style>
+  /* نافذة حذف البيانات — نفس منطق نافذة تسليم الاعتمادات */
+  #resetDataModal {
+    overscroll-behavior: contain;
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    isolation: isolate;
+  }
+  .reset-data-modal-shell {
+    max-height: min(92vh, calc(100vh - 1.25rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    max-width: min(100%, 28rem);
+  }
+  @supports (height: 100dvh) {
+    .reset-data-modal-shell {
+      max-height: min(92dvh, calc(100dvh - 1.25rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+    }
+  }
+  #resetDataModalBody {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+  }
+  @media (max-width: 1023px) {
+    #resetDataModal {
+      top: calc(60px + env(safe-area-inset-top, 0px));
+      right: 0;
+      bottom: calc(65px + env(safe-area-inset-bottom, 0px));
+      left: 0;
+      width: 100%;
+      height: auto;
+      max-height: none;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0.5rem;
+      padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+      box-sizing: border-box;
+    }
+    #resetDataModal .reset-data-modal-shell {
+      width: 100%;
+      max-width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      min-height: 0 !important;
+      max-height: 100% !important;
+      flex: 1 1 auto;
+      border-radius: 1rem;
+    }
+  }
+  @media (max-width: 639px) {
+    #resetDataCategories .reset-cat-row {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.75rem;
+      position: relative;
+      padding-top: 2.25rem;
+    }
+    #resetDataCategories .reset-cat-row .reset-cat-cb {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+    #resetDataCategories .reset-cat-row > span.flex-1 {
+      width: 100%;
+    }
+  }
+</style>
 <div class="max-w-5xl">
   <div id="settingsCard" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden" data-tabs-container="settings">
     <div class="flex items-center gap-3 py-5 px-6 border-b border-slate-100">
@@ -222,50 +290,58 @@
     </div>
   </div>
 
-  <!-- Modal: حذف البيانات — تذييل ثابت يظهر على الموبايل فوق الشريط السفلي -->
-  <!-- z أعلى من الشريط السفلي (z-[999]) وأقل من التوست (z-[9999]) -->
-  <div id="resetDataModal" class="fixed inset-0 z-[5000] hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-labelledby="resetDataModalTitle">
-    <div class="bg-white rounded-t-[1.25rem] sm:rounded-2xl shadow-2xl border border-slate-200/90 max-w-lg w-full max-h-[min(92dvh,100vh)] flex flex-col min-h-0 sm:max-h-[90vh]">
-      <div class="shrink-0 px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3 bg-gradient-to-l from-white to-slate-50/90">
+  <!-- Modal: حذف البيانات — نفس نمط نافذة «تسليم» في الاعتمادات -->
+  <div id="resetDataModal" class="fixed inset-0 z-[10050] hidden items-center justify-center p-4 sm:p-6 md:p-8 max-lg:p-2 max-lg:items-stretch max-lg:justify-start bg-slate-900/60 backdrop-blur-sm transition-opacity" dir="rtl" role="dialog" aria-modal="true" aria-labelledby="resetDataModalTitle">
+    <div class="reset-data-modal-shell bg-white rounded-2xl sm:rounded-[2rem] max-lg:rounded-xl shadow-2xl w-full flex flex-col min-h-0 overflow-hidden mx-auto">
+      <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-start sm:items-center bg-white/80 backdrop-blur-md z-10 shrink-0">
         <div class="flex items-center gap-3 min-w-0">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
-            <i class="fas fa-database"></i>
-          </span>
-          <h3 id="resetDataModalTitle" class="text-lg font-bold text-slate-900 truncate">حذف البيانات من الخادم</h3>
-        </div>
-        <button type="button" onclick="closeResetDataModal()" class="p-2 rounded-xl text-slate-500 hover:bg-slate-100 shrink-0" aria-label="إغلاق">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
-        <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-red-200/90 bg-gradient-to-br from-red-50/95 to-white cursor-pointer shadow-sm">
-          <input type="checkbox" id="resetWipeAll" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500" onchange="onResetWipeAllChange()">
-          <span>
-            <span class="font-bold text-red-900 block">حذف كل شيء (البيانات التشغيلية)</span>
-            <span class="text-sm text-red-800/90 leading-relaxed">يشمل جميع الفئات أدناه دفعة واحدة، ما عدا ربط Google Sheets والذكاء الاصطناعي (يُحفظان). لحذفهما اختر الفئتين من القائمة يدوياً.</span>
-          </span>
-        </label>
-        <div>
-          <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">فئات يمكن اختيارها</p>
-          <div id="resetDataCategories" class="space-y-2 text-sm text-slate-700 rounded-2xl border border-slate-200/90 bg-slate-50/50 p-2 max-h-[38vh] sm:max-h-[40vh] overflow-y-auto">
-            <p class="text-slate-500 text-xs px-2 py-2">جاري التحميل…</p>
+          <div class="h-10 w-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 shrink-0 border border-red-100">
+            <i class="fas fa-trash-alt text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 id="resetDataModalTitle" class="text-base sm:text-lg font-bold text-slate-800 leading-tight">حذف البيانات من الخادم</h3>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">اختر الفئات أو «حذف كل شيء»، ثم أكّد بعبارة الحذف</p>
           </div>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <button type="button" onclick="resetSelectAllCats(true)" class="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-indigo-200">تحديد الكل</button>
-          <button type="button" onclick="resetSelectAllCats(false)" class="text-xs font-semibold px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50">إلغاء التحديد</button>
+        <button type="button" onclick="closeResetDataModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors shrink-0" aria-label="إغلاق"><i class="fas fa-times text-lg"></i></button>
+      </div>
+
+      <div id="resetDataModalBody" class="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 overscroll-contain bg-slate-50/30">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mb-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" id="resetWipeAll" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500" onchange="onResetWipeAllChange()">
+            <span>
+              <span class="font-bold text-red-900 block text-sm">حذف كل شيء (البيانات التشغيلية)</span>
+              <span class="text-xs text-red-800/90 leading-relaxed mt-1 block">يشمل جميع الفئات أدناه دفعة واحدة، ما عدا ربط Google Sheets والذكاء الاصطناعي (يُحفظان). لحذفهما اختر الفئتين من القائمة يدوياً.</span>
+            </span>
+          </label>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <label for="resetConfirmPhrase" class="block text-sm font-semibold text-slate-800 mb-1">تأكيد نهائي</label>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2 px-1">
+          <span class="text-xs font-semibold text-slate-600">فئات البيانات</span>
+          <label class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" id="resetCatSelectAll" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+            <span>تحديد الكل</span>
+          </label>
+        </div>
+        <div id="resetDataCategories" class="space-y-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm max-h-[min(42vh,22rem)] sm:max-h-[min(48vh,26rem)] overflow-y-auto">
+          <p class="text-slate-500 text-xs py-8 text-center">جاري التحميل…</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm mt-4">
+          <label for="resetConfirmPhrase" class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-2">
+            <i class="fas fa-key text-red-500"></i> تأكيد نهائي
+          </label>
           <p class="text-xs text-slate-500 mb-2">اكتب بالضبط: <strong dir="ltr">حذف نهائي</strong> أو <strong dir="ltr">DELETE</strong></p>
           <input type="text" id="resetConfirmPhrase" dir="ltr" autocomplete="off"
-            class="w-full py-3 px-3 border-2 border-slate-200 rounded-xl text-sm bg-slate-50/50 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/15"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all outline-none"
             placeholder="حذف نهائي">
         </div>
       </div>
-      <div class="shrink-0 px-4 sm:px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-slate-200 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
-        <button type="button" onclick="closeResetDataModal()" class="w-full sm:w-auto px-4 py-3.5 sm:py-2.5 rounded-xl font-semibold text-sm bg-slate-100 text-slate-800 hover:bg-slate-200">إلغاء</button>
-        <button type="button" id="resetDataSubmitBtn" onclick="submitResetData()" class="w-full sm:w-auto px-4 py-3.5 sm:py-2.5 rounded-xl font-semibold text-sm bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-600/20">تنفيذ الحذف على الخادم</button>
+
+      <div class="px-4 sm:px-6 py-4 border-t border-slate-100 bg-white sm:bg-slate-50/50 flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0">
+        <button type="button" onclick="closeResetDataModal()" class="w-full sm:w-auto px-6 py-3 sm:py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition-colors text-sm flex items-center justify-center gap-2">إلغاء</button>
+        <button type="button" id="resetDataSubmitBtn" onclick="submitResetData()" class="w-full sm:flex-1 px-8 py-3 sm:py-2.5 rounded-xl bg-red-600 text-white font-bold shadow-md shadow-red-200 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2 max-w-md sm:max-w-none"><i class="fas fa-exclamation-triangle"></i> تنفيذ الحذف على الخادم</button>
       </div>
     </div>
   </div>
@@ -440,6 +516,54 @@ async function saveCurrency(e) {
 
 var resetDataCategoriesCache = null;
 
+function resetSyncCatSelectAll() {
+  var boxes = document.querySelectorAll('#resetDataCategories [data-reset-cat]');
+  var sa = document.getElementById('resetCatSelectAll');
+  if (!sa) return;
+  var wipe = document.getElementById('resetWipeAll');
+  if (wipe && wipe.checked) {
+    sa.checked = true;
+    sa.indeterminate = false;
+    sa.disabled = true;
+    return;
+  }
+  if (!boxes.length) {
+    sa.checked = false;
+    sa.indeterminate = false;
+    sa.disabled = true;
+    return;
+  }
+  sa.disabled = false;
+  var n = boxes.length;
+  var c = document.querySelectorAll('#resetDataCategories [data-reset-cat]:checked').length;
+  sa.checked = c === n && n > 0;
+  sa.indeterminate = c > 0 && c < n;
+}
+
+function wireResetCatSelectAll() {
+  var sa = document.getElementById('resetCatSelectAll');
+  if (!sa || sa.dataset.resetSaBound) return;
+  sa.dataset.resetSaBound = '1';
+  sa.addEventListener('change', function () {
+    var wipe = document.getElementById('resetWipeAll');
+    if (wipe && wipe.checked) return;
+    if (sa.disabled) return;
+    document.querySelectorAll('#resetDataCategories [data-reset-cat]').forEach(function (cb) {
+      cb.checked = sa.checked;
+    });
+  });
+}
+
+function wireResetCategoriesDelegation() {
+  var box = document.getElementById('resetDataCategories');
+  if (!box || box.dataset.resetDelegBound) return;
+  box.dataset.resetDelegBound = '1';
+  box.addEventListener('change', function (e) {
+    if (!e.target || !e.target.getAttribute || !e.target.getAttribute('data-reset-cat')) return;
+    resetSyncCatSelectAll();
+  });
+}
+
 function renderResetCategories() {
   var box = document.getElementById('resetDataCategories');
   if (!box || !resetDataCategoriesCache) return;
@@ -449,20 +573,22 @@ function renderResetCategories() {
   resetDataCategoriesCache.forEach(function (cat) {
     var id = 'resetCat_' + cat.id;
     var wrap = document.createElement('label');
-    wrap.className = 'flex items-start gap-3 p-3 rounded-xl cursor-pointer border border-slate-200/80 bg-white shadow-sm hover:border-indigo-300/80 hover:bg-indigo-50/30 transition-colors';
+    wrap.className =
+      'reset-cat-row flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 p-3 rounded-xl border border-slate-100 bg-white cursor-pointer hover:border-indigo-100 hover:bg-indigo-50/40 transition-colors shadow-sm text-center sm:text-right';
     var cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.id = id;
     cb.setAttribute('data-reset-cat', cat.id);
-    cb.className = 'mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500';
+    cb.className = 'reset-cat-cb h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500';
     cb.disabled = wipeOn;
-    cb.checked = wipeOn;
+    cb.checked = true;
     var span = document.createElement('span');
+    span.className = 'flex-1 min-w-0 text-sm text-slate-800';
     var title = document.createElement('span');
-    title.className = 'font-bold text-slate-900 block text-[0.9rem]';
+    title.className = 'font-bold block';
     title.textContent = cat.label || '';
     var desc = document.createElement('span');
-    desc.className = 'text-slate-600 text-xs block mt-1 leading-relaxed';
+    desc.className = 'text-slate-500 text-xs block mt-1 leading-relaxed';
     desc.textContent = cat.description || '';
     span.appendChild(title);
     span.appendChild(desc);
@@ -470,23 +596,19 @@ function renderResetCategories() {
     wrap.appendChild(span);
     box.appendChild(wrap);
   });
+  resetSyncCatSelectAll();
 }
 
 function onResetWipeAllChange() {
   renderResetCategories();
 }
 
-function resetSelectAllCats(val) {
-  var wipe = document.getElementById('resetWipeAll');
-  if (wipe && wipe.checked) return;
-  document.querySelectorAll('[data-reset-cat]').forEach(function (cb) {
-    cb.checked = !!val;
-  });
-}
-
 function closeResetDataModal() {
   var modal = document.getElementById('resetDataModal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
   var phrase = document.getElementById('resetConfirmPhrase');
   if (phrase) phrase.value = '';
 }
@@ -495,17 +617,21 @@ async function openResetDataModal() {
   var modal = document.getElementById('resetDataModal');
   if (!modal) return;
   modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  wireResetCatSelectAll();
+  wireResetCategoriesDelegation();
   var box = document.getElementById('resetDataCategories');
   resetDataCategoriesCache = null;
   if (box) {
-    box.innerHTML = '<p class="text-slate-500 text-xs">جاري التحميل…</p>';
+    box.innerHTML = '<p class="py-10 text-center text-sm text-slate-500">جاري التحميل…</p>';
     try {
       var res = await fetch('/settings/reset-data-options', { credentials: 'same-origin' });
       var data = await res.json();
       if (data.success && data.categories) resetDataCategoriesCache = data.categories;
-      else box.innerHTML = '<p class="text-red-600 text-sm">تعذر تحميل القائمة.</p>';
+      else box.innerHTML = '<p class="py-10 text-center text-sm text-red-600">تعذر تحميل القائمة.</p>';
     } catch (e) {
-      if (box) box.innerHTML = '<p class="text-red-600 text-sm">خطأ في الاتصال.</p>';
+      if (box) box.innerHTML = '<p class="py-10 text-center text-sm text-red-600">خطأ في الاتصال.</p>';
+      resetSyncCatSelectAll();
       return;
     }
   }
@@ -536,7 +662,10 @@ async function submitResetData() {
     return;
   }
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'جاري الحذف…'; }
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف…';
+    }
     var res = await fetch('/settings/reset-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -553,7 +682,10 @@ async function submitResetData() {
   } catch (e) {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'تنفيذ الحذف على الخادم'; }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> تنفيذ الحذف على الخادم';
+    }
   }
 }
 </script>
