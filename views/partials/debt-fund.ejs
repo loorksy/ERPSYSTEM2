@@ -1,10 +1,19 @@
-<div class="max-w-3xl mx-auto" dir="rtl">
-  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <a href="/debts" class="text-sm text-indigo-600 font-semibold hover:underline">← الديون</a>
-    <h2 class="text-xl font-bold text-slate-800" id="debtFundTitle">صندوق</h2>
-  </div>
-  <div id="debtFundBody" class="space-y-4">
-    <p class="text-slate-400">جاري التحميل...</p>
+<div class="max-w-5xl mx-auto px-4 sm:px-0 pb-10" dir="rtl">
+  <header class="mb-6 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 p-5 sm:p-6 shadow-sm">
+    <a href="/debts" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-amber-200 hover:bg-amber-50 hover:text-amber-900">
+      <i class="fas fa-arrow-right text-xs opacity-70"></i>
+      العودة للديون
+    </a>
+    <h2 class="mt-5 text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3 min-w-0">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 shadow-sm"><i class="fas fa-piggy-bank"></i></span>
+      <span class="min-w-0 truncate" id="debtFundTitle">صندوق</span>
+    </h2>
+  </header>
+  <div id="debtFundBody" class="space-y-6">
+    <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-14 text-slate-500">
+      <i class="fas fa-circle-notch fa-spin text-2xl text-indigo-500 mb-3"></i>
+      <span class="text-sm font-medium">جاري التحميل…</span>
+    </div>
   </div>
 </div>
 <script>window.__DEBT_PAGE__ = { mode: 'fund', id: <%= typeof debtEntityId !== 'undefined' ? debtEntityId : 'null' %> };</script>

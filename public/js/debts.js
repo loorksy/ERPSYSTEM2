@@ -7,55 +7,160 @@
     if (typeof window.showToast === 'function') window.showToast(m, t);
     else alert(m);
   }
+  function esc(s) {
+    if (s == null || s === '') return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function statCard(iconClass, iconBg, label, value, valueClass) {
+    return (
+      '<div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md">' +
+      '<div class="flex items-start justify-between gap-2">' +
+      '<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ' +
+      iconBg +
+      '"><i class="' +
+      iconClass +
+      ' text-sm"></i></span>' +
+      '<p class="font-mono text-lg font-bold tabular-nums ' +
+      (valueClass || 'text-slate-900') +
+      '">' +
+      fmt(value) +
+      '</p>' +
+      '</div>' +
+      '<p class="mt-3 text-xs font-semibold text-slate-500 leading-snug">' +
+      esc(label) +
+      '</p>' +
+      '</div>'
+    );
+  }
 
   function loadOverview() {
     fetch('/api/debts/overview', { credentials: 'same-origin' })
-      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        return r.json();
+      })
       .then(function(d) {
         if (!d.success) {
-          document.getElementById('debtsSummary').innerHTML = '<p class="text-red-500">' + (d.message || 'فشل') + '</p>';
+          document.getElementById('debtsSummary').innerHTML =
+            '<div class="col-span-full rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">' +
+            esc(d.message || 'فشل التحميل') +
+            '</div>';
           return;
         }
+        var totalEl = document.getElementById('debtsTotalObligations');
+        if (totalEl) totalEl.textContent = fmt(d.totalDebts);
+
         var sum = document.getElementById('debtsSummary');
         sum.innerHTML =
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">إجمالي</p><p class="text-lg font-bold text-red-600">' + fmt(d.totalDebts) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">شحن</p><p class="text-lg font-bold">' + fmt(d.shippingDebt) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">اعتمادات</p><p class="text-lg font-bold">' + fmt(d.accreditationDebtTotal) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">مسجّل يدوياً</p><p class="text-lg font-bold">' + fmt(d.payablesSumUsd) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">فرق تصريف</p><p class="text-lg font-bold">' + fmt(d.fxSpreadSumUsd) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">شركات (سالب)</p><p class="text-lg font-bold">' + fmt(d.companyDebtFromBalance) + '</p></div>' +
-          '<div class="bg-white rounded-xl p-4 border border-slate-100"><p class="text-xs text-slate-500">صناديع (سالب)</p><p class="text-lg font-bold">' + fmt(d.fundDebtFromBalance) + '</p></div>';
+          statCard('fas fa-truck-fast', 'bg-sky-100 text-sky-700', 'شحن (بيع دين)', d.shippingDebt, 'text-sky-800') +
+          statCard('fas fa-certificate', 'bg-violet-100 text-violet-800', 'اعتمادات (دين لنا عليهم)', d.accreditationDebtTotal, 'text-violet-900') +
+          statCard('fas fa-pen-fancy', 'bg-slate-100 text-slate-700', 'مسجّل يدوياً (USD)', d.payablesSumUsd, 'text-slate-900') +
+          statCard('fas fa-chart-line', 'bg-teal-100 text-teal-800', 'فرق تصريف', d.fxSpreadSumUsd, 'text-teal-900') +
+          statCard('fas fa-building', 'bg-red-100 text-red-700', 'شركات (رصيد سالب)', d.companyDebtFromBalance, 'text-red-800') +
+          statCard('fas fa-piggy-bank', 'bg-amber-100 text-amber-800', 'صناديق (رصيد سالب)', d.fundDebtFromBalance, 'text-amber-900');
 
         var comp = document.getElementById('debtsCompanies');
         if (comp) {
           comp.innerHTML = (d.negativeCompanies || []).length
-            ? (d.negativeCompanies || []).map(function(c) {
-              return '<a href="/debts/company/' + c.id + '" class="block p-3 rounded-xl bg-red-50 border border-red-100 hover:border-red-200">' +
-                '<span class="font-semibold">' + (c.name || '') + '</span> — ' + fmt(c.balance_amount) + ' ' + (c.balance_currency || 'USD') + '</a>';
-            }).join('')
-            : '<p class="text-slate-400 text-sm">لا يوجد</p>';
+            ? (d.negativeCompanies || [])
+                .map(function(c) {
+                  return (
+                    '<a href="/debts/company/' +
+                    c.id +
+                    '" class="group flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-red-50/80">' +
+                    '<div class="flex min-w-0 items-center gap-3">' +
+                    '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700 transition group-hover:bg-red-600 group-hover:text-white"><i class="fas fa-building"></i></span>' +
+                    '<div class="min-w-0">' +
+                    '<p class="font-semibold text-slate-900 truncate">' +
+                    esc(c.name || '') +
+                    '</p>' +
+                    '<p class="text-xs text-slate-500">شركة تحويل</p>' +
+                    '</div></div>' +
+                    '<div class="flex shrink-0 items-center gap-2">' +
+                    '<span class="font-mono text-sm font-bold tabular-nums text-rose-700">' +
+                    fmt(c.balance_amount) +
+                    ' ' +
+                    esc(c.balance_currency || 'USD') +
+                    '</span>' +
+                    '<i class="fas fa-chevron-left text-xs text-slate-400 transition group-hover:text-red-600"></i>' +
+                    '</div></a>'
+                  );
+                })
+                .join('')
+            : '<p class="px-4 py-8 text-center text-sm text-slate-400">لا توجد شركات برصيد سالب حالياً</p>';
         }
         var fd = document.getElementById('debtsFunds');
         if (fd) {
           fd.innerHTML = (d.negativeFunds || []).length
-            ? (d.negativeFunds || []).map(function(f) {
-              return '<a href="/debts/fund/' + f.id + '" class="block p-3 rounded-xl bg-amber-50 border border-amber-100 hover:border-amber-200">' +
-                '<span class="font-semibold">' + (f.name || '') + '</span> — ' + fmt(f.amount) + ' ' + (f.currency || '') + '</a>';
-            }).join('')
-            : '<p class="text-slate-400 text-sm">لا يوجد</p>';
+            ? (d.negativeFunds || [])
+                .map(function(f) {
+                  return (
+                    '<a href="/debts/fund/' +
+                    f.id +
+                    '" class="group flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-amber-50/80">' +
+                    '<div class="flex min-w-0 items-center gap-3">' +
+                    '<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 transition group-hover:bg-amber-600 group-hover:text-white"><i class="fas fa-piggy-bank"></i></span>' +
+                    '<div class="min-w-0">' +
+                    '<p class="font-semibold text-slate-900 truncate">' +
+                    esc(f.name || '') +
+                    '</p>' +
+                    '<p class="text-xs text-slate-500">صندوق</p>' +
+                    '</div></div>' +
+                    '<div class="flex shrink-0 items-center gap-2">' +
+                    '<span class="font-mono text-sm font-bold tabular-nums text-amber-800">' +
+                    fmt(f.amount) +
+                    ' ' +
+                    esc(f.currency || '') +
+                    '</span>' +
+                    '<i class="fas fa-chevron-left text-xs text-slate-400 transition group-hover:text-amber-600"></i>' +
+                    '</div></a>'
+                  );
+                })
+                .join('')
+            : '<p class="px-4 py-8 text-center text-sm text-slate-400">لا توجد صناديق برصيد سالب</p>';
         }
         var pay = document.getElementById('debtsPayables');
         if (pay) {
           pay.innerHTML = (d.payablesList || []).length
-            ? (d.payablesList || []).map(function(p) {
-              return '<div class="p-2 rounded-lg bg-slate-50 border border-slate-100">' + (p.entity_type === 'fund' ? 'صندوق' : 'شركة') + ' #' + p.entity_id + ' — ' + fmt(p.amount) + ' ' + (p.currency || '') + (p.notes ? ' — ' + p.notes : '') + '</div>';
-            }).join('')
-            : '<p class="text-slate-400 text-sm">لا يوجد</p>';
+            ? (d.payablesList || [])
+                .map(function(p) {
+                  var kind = p.entity_type === 'fund' ? 'صندوق' : 'شركة تحويل';
+                  return (
+                    '<div class="flex flex-col gap-2 rounded-xl border border-slate-100 bg-gradient-to-l from-slate-50/80 to-white p-4 sm:flex-row sm:items-center sm:justify-between">' +
+                    '<div class="flex items-start gap-3 min-w-0">' +
+                    '<span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-800 text-xs font-bold">#' +
+                    esc(String(p.entity_id)) +
+                    '</span>' +
+                    '<div class="min-w-0">' +
+                    '<p class="text-sm font-semibold text-slate-900">' +
+                    kind +
+                    '</p>' +
+                    (p.notes
+                      ? '<p class="text-xs text-slate-500 mt-0.5 line-clamp-2">' + esc(p.notes) + '</p>'
+                      : '') +
+                    '</div></div>' +
+                    '<div class="flex shrink-0 items-center justify-end sm:pl-4">' +
+                    '<span class="inline-flex items-center rounded-lg bg-violet-600/10 px-3 py-1.5 font-mono text-sm font-bold tabular-nums text-violet-900">' +
+                    fmt(p.amount) +
+                    ' ' +
+                    esc(p.currency || '') +
+                    '</span>' +
+                    '</div></div>'
+                  );
+                })
+                .join('')
+            : '<p class="py-8 text-center text-sm text-slate-400">لا توجد مديونيات يدوية مسجّلة</p>';
         }
       })
       .catch(function() {
         var sum = document.getElementById('debtsSummary');
-        if (sum) sum.innerHTML = '<p class="text-red-500">فشل التحميل</p>';
+        if (sum)
+          sum.innerHTML =
+            '<div class="col-span-full rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">فشل التحميل</div>';
       });
   }
 
@@ -67,12 +172,16 @@
       var t = typeSel.value;
       idSel.innerHTML = '<option value="">— اختر —</option>';
       var url = t === 'fund' ? '/api/funds/list' : '/api/transfer-companies/list';
-      fetch(url, { credentials: 'same-origin' }).then(function(r) { return r.json(); }).then(function(d) {
-        var arr = t === 'fund' ? (d.funds || []) : (d.companies || []);
-        arr.forEach(function(x) {
-          idSel.innerHTML += '<option value="' + x.id + '">' + (x.name || '') + '</option>';
+      fetch(url, { credentials: 'same-origin' })
+        .then(function(r) {
+          return r.json();
+        })
+        .then(function(d) {
+          var arr = t === 'fund' ? d.funds || [] : d.companies || [];
+          arr.forEach(function(x) {
+            idSel.innerHTML += '<option value="' + x.id + '">' + esc(x.name || '') + '</option>';
+          });
         });
-      });
     }
     typeSel.addEventListener('change', refill);
     refill();
@@ -101,15 +210,21 @@
             amount: amt,
             currency: document.getElementById('debtRegCurrency').value,
             notes: document.getElementById('debtRegNotes').value,
-            settlementMode: document.getElementById('debtRegSettlement') ? document.getElementById('debtRegSettlement').value : 'payable',
+            settlementMode: document.getElementById('debtRegSettlement')
+              ? document.getElementById('debtRegSettlement').value
+              : 'payable',
           }),
-        }).then(function(r) { return r.json(); }).then(function(d) {
-          if (d.success) {
-            toast(d.message || 'تم', 'success');
-            loadOverview();
-            document.getElementById('debtRegAmount').value = '';
-          } else toast(d.message || 'فشل', 'error');
-        });
+        })
+          .then(function(r) {
+            return r.json();
+          })
+          .then(function(d) {
+            if (d.success) {
+              toast(d.message || 'تم', 'success');
+              loadOverview();
+              document.getElementById('debtRegAmount').value = '';
+            } else toast(d.message || 'فشل', 'error');
+          });
       });
     }
   }
@@ -118,70 +233,166 @@
     var id = window.__DEBT_PAGE__ && window.__DEBT_PAGE__.id;
     if (!id) return;
     var body = document.getElementById('debtCompanyBody');
+    if (!body) return;
     var title = document.getElementById('debtCompanyTitle');
     Promise.all([
-      fetch('/api/transfer-companies/' + id, { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
-      fetch('/api/returns/for-entity?entityType=transfer_company&entityId=' + id, { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
+      fetch('/api/transfer-companies/' + id, { credentials: 'same-origin' }).then(function(r) {
+        return r.json();
+      }),
+      fetch('/api/returns/for-entity?entityType=transfer_company&entityId=' + id, { credentials: 'same-origin' }).then(
+        function(r) {
+          return r.json();
+        }
+      ),
     ]).then(function(results) {
       var res = results[0];
       var ret = results[1];
       if (!res.success || !res.company) {
-        body.innerHTML = '<p class="text-red-500">غير موجود</p>';
+        body.innerHTML =
+          '<div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">غير موجود</div>';
         return;
       }
       var c = res.company;
       if (title) title.textContent = c.name || 'شركة';
-      var html = '<p class="text-lg font-bold text-indigo-700">' + fmt(c.balance_amount) + ' ' + (c.balance_currency || 'USD') + '</p>';
-      html += '<h4 class="font-bold mt-4">سجل الشركة</h4><div class="space-y-2 text-sm">';
+      var html =
+        '<div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm">' +
+        '<p class="text-xs font-semibold text-slate-500 mb-1">الرصيد الحالي</p>' +
+        '<p class="font-mono text-3xl font-bold tabular-nums text-indigo-700">' +
+        fmt(c.balance_amount) +
+        ' ' +
+        esc(c.balance_currency || 'USD') +
+        '</p></div>';
+
+      html +=
+        '<div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">' +
+        '<div class="border-b border-slate-100 bg-slate-50 px-5 py-3"><h4 class="text-sm font-bold text-slate-800">سجل الشركة</h4></div>' +
+        '<div class="divide-y divide-slate-100 max-h-96 overflow-y-auto">';
       (res.ledger || []).forEach(function(l) {
-        html += '<div class="flex justify-between py-2 border-b border-slate-100"><span>' + (l.notes || '') + '</span><span>' + fmt(l.amount) + ' ' + (l.currency || '') + '</span></div>';
+        html +=
+          '<div class="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">' +
+          '<span class="text-sm text-slate-700 min-w-0">' +
+          esc(l.notes || '—') +
+          '</span>' +
+          '<span class="font-mono text-sm font-semibold tabular-nums text-slate-900 shrink-0">' +
+          fmt(l.amount) +
+          ' ' +
+          esc(l.currency || '') +
+          '</span></div>';
       });
-      html += '</div>';
-      html += '<h4 class="font-bold mt-4">المرتجعات</h4><div class="space-y-2 text-sm">';
+      if (!(res.ledger || []).length) {
+        html += '<p class="px-4 py-8 text-center text-sm text-slate-400">لا حركات</p>';
+      }
+      html += '</div></div>';
+
+      html +=
+        '<div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">' +
+        '<div class="border-b border-slate-100 bg-slate-50 px-5 py-3"><h4 class="text-sm font-bold text-slate-800">المرتجعات</h4></div>' +
+        '<div class="p-4 space-y-2">';
       if (ret.success && (ret.returns || []).length) {
         (ret.returns || []).forEach(function(rw) {
-          html += '<div class="p-2 rounded-lg bg-slate-50">' + fmt(rw.amount) + ' ' + (rw.currency || '') + ' — ' + (rw.disposition || '') + (rw.notes ? ' — ' + rw.notes : '') + '</div>';
+          html +=
+            '<div class="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm">' +
+            '<span class="font-mono font-semibold">' +
+            fmt(rw.amount) +
+            ' ' +
+            esc(rw.currency || '') +
+            '</span>' +
+            ' <span class="text-slate-600">' +
+            esc(rw.disposition || '') +
+            '</span>' +
+            (rw.notes ? ' <span class="text-slate-500">— ' + esc(rw.notes) + '</span>' : '') +
+            '</div>';
         });
-      } else html += '<p class="text-slate-400">لا سجلات</p>';
-      html += '</div>';
+      } else {
+        html += '<p class="text-center text-sm text-slate-400 py-4">لا سجلات</p>';
+      }
+      html += '</div></div>';
       body.innerHTML = html;
-    });
+    })
+      .catch(function() {
+        if (body)
+          body.innerHTML =
+            '<div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">فشل تحميل البيانات</div>';
+      });
   }
 
   function initFund() {
     var id = window.__DEBT_PAGE__ && window.__DEBT_PAGE__.id;
     if (!id) return;
     var body = document.getElementById('debtFundBody');
+    if (!body) return;
     var title = document.getElementById('debtFundTitle');
     Promise.all([
-      fetch('/api/funds/' + id, { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
-      fetch('/api/returns/for-entity?entityType=fund&entityId=' + id, { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
+      fetch('/api/funds/' + id, { credentials: 'same-origin' }).then(function(r) {
+        return r.json();
+      }),
+      fetch('/api/returns/for-entity?entityType=fund&entityId=' + id, { credentials: 'same-origin' }).then(function(r) {
+        return r.json();
+      }),
     ]).then(function(results) {
       var res = results[0];
       var ret = results[1];
       if (!res.success || !res.fund) {
-        body.innerHTML = '<p class="text-red-500">غير موجود</p>';
+        body.innerHTML =
+          '<div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">غير موجود</div>';
         return;
       }
       var f = res.fund;
       if (title) title.textContent = f.name || 'صندوق';
-      var html = '<div class="flex flex-wrap gap-2 mb-2">';
+      var html =
+        '<div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-indigo-50/40 p-5 shadow-sm mb-6">' +
+        '<p class="text-xs font-semibold text-slate-500 mb-3">أرصدة العملات</p>' +
+        '<div class="flex flex-wrap gap-2">';
       (res.balances || []).forEach(function(b) {
-        html += '<span class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 text-sm">' + fmt(b.amount) + ' ' + (b.currency || '') + '</span>';
+        html +=
+          '<span class="inline-flex items-center rounded-xl border border-indigo-200 bg-white px-4 py-2 font-mono text-sm font-semibold tabular-nums text-indigo-900 shadow-sm">' +
+          fmt(b.amount) +
+          ' ' +
+          esc(b.currency || '') +
+          '</span>';
       });
-      html += '</div><h4 class="font-bold mt-4">سجل الصندوق</h4><div class="space-y-2 text-sm max-h-80 overflow-y-auto">';
+      html +=
+        '</div></div><div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">' +
+        '<div class="border-b border-slate-100 bg-slate-50 px-5 py-3"><h4 class="text-sm font-bold text-slate-800">سجل الصندوق</h4></div>' +
+        '<div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">';
       (res.ledger || []).forEach(function(l) {
-        html += '<div class="flex justify-between py-2 border-b border-slate-100"><span>' + (l.type || '') + ' ' + (l.notes || '') + '</span><span>' + fmt(l.amount) + ' ' + (l.currency || '') + '</span></div>';
+        html +=
+          '<div class="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">' +
+          '<span class="text-sm text-slate-700">' +
+          esc((l.type || '') + ' ' + (l.notes || '')) +
+          '</span>' +
+          '<span class="font-mono text-sm font-semibold tabular-nums">' +
+          fmt(l.amount) +
+          ' ' +
+          esc(l.currency || '') +
+          '</span></div>';
       });
-      html += '</div><h4 class="font-bold mt-4">المرتجعات</h4><div class="space-y-2 text-sm">';
+      if (!(res.ledger || []).length) {
+        html += '<p class="px-4 py-8 text-center text-sm text-slate-400">لا حركات</p>';
+      }
+      html +=
+        '</div></div><div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">' +
+        '<div class="border-b border-slate-100 bg-slate-50 px-5 py-3"><h4 class="text-sm font-bold text-slate-800">المرتجعات</h4></div><div class="p-4 space-y-2">';
       if (ret.success && (ret.returns || []).length) {
         (ret.returns || []).forEach(function(rw) {
-          html += '<div class="p-2 rounded-lg bg-slate-50">' + fmt(rw.amount) + ' — ' + (rw.disposition || '') + '</div>';
+          html +=
+            '<div class="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm font-mono">' +
+            fmt(rw.amount) +
+            ' — ' +
+            esc(rw.disposition || '') +
+            '</div>';
         });
-      } else html += '<p class="text-slate-400">لا سجلات</p>';
-      html += '</div>';
+      } else {
+        html += '<p class="text-center text-sm text-slate-400 py-4">لا سجلات</p>';
+      }
+      html += '</div></div>';
       body.innerHTML = html;
-    });
+    })
+      .catch(function() {
+        if (body)
+          body.innerHTML =
+            '<div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">فشل تحميل البيانات</div>';
+      });
   }
 
   document.addEventListener('DOMContentLoaded', function() {
