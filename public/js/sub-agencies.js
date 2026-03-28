@@ -47,7 +47,7 @@
           '<button type="button" class="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-white/90 text-slate-700 text-xs font-bold shadow border border-slate-200 hover:bg-white" ' +
           'onclick="event.stopPropagation(); subAgenciesDownloadPdf(' + a.id + ')" title="تنزيل PDF"><i class="fas fa-file-pdf text-red-600"></i></button>' +
           '<h5>' + (a.name || '') + '</h5>' +
-          '<p class="agency-meta">نسبة الوكالة: ' + (a.commission_percent || 0) + '%</p>' +
+          '<p class="agency-meta">حصة الشركة من الو: ' + (a.company_percent != null ? a.company_percent : '—') + '% — حصة الوكالة: ' + (a.commission_percent != null ? a.commission_percent : '—') + '%</p>' +
           '<p class="agency-balance" style="color:' + textColor + '">رصيد: ' + (window.formatMoney ? window.formatMoney(bal) : bal.toLocaleString('en-US',{minimumFractionDigits:2}) + ' $') + ' (' + balLabel + ')</p>' +
           '</div>';
       }).join('');
@@ -111,7 +111,6 @@
       if (!res.success) return;
       const a = res.agency;
       document.getElementById('subAgencyDashboardTitle').textContent = a.name || 'لوحة الوكالة';
-      document.getElementById('subAgencyPercentInput').value = a.commission_percent || 0;
     });
     const cycleId = document.getElementById('subAgencyCycleSelect').value;
     apiCall('/api/sub-agencies/' + currentAgencyId + '/profit' + (cycleId ? '?cycleId=' + cycleId : '')).then(function(res) {
@@ -120,10 +119,12 @@
         if (el) el.textContent = (window.formatMoney ? window.formatMoney(res.profit || 0) : (res.profit || 0).toLocaleString('en-US',{minimumFractionDigits:2}) + ' $');
         const inp = document.getElementById('subAgencyPercentInput');
         if (inp) {
-          if (cycleId && res.cycleCommissionPercent != null && res.cycleCommissionPercent !== undefined) {
+          if (cycleId && res.cycleCompanyPercent != null && res.cycleCompanyPercent !== undefined) {
+            inp.value = res.cycleCompanyPercent;
+          } else if (cycleId && res.cycleCommissionPercent != null && res.cycleCommissionPercent !== undefined) {
             inp.value = res.cycleCommissionPercent;
-          } else if (!cycleId) {
-            inp.value = res.commissionPercent || 0;
+          } else {
+            inp.value = res.companyPercent != null ? res.companyPercent : 0;
           }
         }
       }

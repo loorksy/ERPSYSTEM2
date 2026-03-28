@@ -536,6 +536,7 @@ async function payrollExecute() {
         toastMsg = 'تمت مزامنة جداول الدورة من Google ثم ' + toastMsg;
       }
       if (typeof showToast === 'function') showToast(toastMsg, data.applied ? 'success' : 'warning');
+      if (typeof window.refreshDeferredBalanceCard === 'function') window.refreshDeferredBalanceCard();
     } else {
       if (typeof showToast === 'function') showToast(data.message || 'فشل التنفيذ', 'error');
     }

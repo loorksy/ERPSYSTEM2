@@ -201,9 +201,9 @@ router.post('/sub-agencies', requireAuth, async (req, res) => {
     if (!name || !String(name).trim()) return res.json({ success: false, message: 'الاسم مطلوب' });
     const db = getDb();
     const pct = parseFloat(commissionPercent);
-    const pctVal = (isNaN(pct) || pct < 0) ? 0 : Math.min(100, pct);
-    const companyPct = 100 - pctVal;
-    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), pctVal, companyPct]);
+    const companyPctFromW = (isNaN(pct) || pct < 0) ? 0 : Math.min(100, pct);
+    const agencyPctFromW = 100 - companyPctFromW;
+    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), agencyPctFromW, companyPctFromW]);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });

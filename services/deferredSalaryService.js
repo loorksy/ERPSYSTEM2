@@ -55,6 +55,17 @@ async function removeDeferredLineForAuditedUser(db, userId, cycleId, memberUserI
   );
 }
 
+/** إزالة أسطر المؤجل لعدة مستخدمين دفعة واحدة (بعد تدقيق جماعي) */
+async function removeDeferredLinesForAuditedUsers(db, userId, cycleId, memberUserIds) {
+  if (!memberUserIds || !memberUserIds.length) return;
+  const ids = memberUserIds.map((id) => String(id).trim()).filter(Boolean);
+  if (!ids.length) return;
+  await db.query(
+    'DELETE FROM deferred_salary_lines WHERE user_id = $1 AND cycle_id = $2 AND member_user_id = ANY($3::text[])',
+    [userId, cycleId, ids]
+  );
+}
+
 async function getMemberDeferredHistory(db, userId, memberUserId) {
   return (await db.query(
     `SELECT l.id, l.cycle_id, l.balance_d, l.salary_before_discount, l.extra_id_c, l.sheet_source, l.updated_at,
@@ -191,6 +202,7 @@ module.exports = {
   replaceDeferredLinesForCycle,
   sumDeferredTotalAllCycles,
   removeDeferredLineForAuditedUser,
+  removeDeferredLinesForAuditedUsers,
   getMemberDeferredHistory,
   mergeMemberDeferredIntoCycle,
   reduceDeferredLinesForMember,

@@ -103,7 +103,7 @@ function renderSubAgency(data, terminologyMode = MODES.ACCOUNTANT) {
   let inner = `<div class="meta">${escapeHtml(tr('تاريخ التقرير', m))}: ${escapeHtml(new Date().toLocaleString('ar-SY'))}</div>`;
   inner += `<div class="kv">
     <div><strong>${escapeHtml(tr('الاسم', m))}:</strong> ${escapeHtml(a.name)}</div>
-    <div><strong>${escapeHtml(tr('نسبة الوكالة', m))}:</strong> ${fmtNum(a.commission_percent)}%</div>
+    <div><strong>${escapeHtml(tr('حصة الشركة من الو', m))}:</strong> ${fmtNum(a.company_percent != null && !isNaN(a.company_percent) ? a.company_percent : (100 - (a.commission_percent || 0)))}% — ${escapeHtml(tr('حصة الوكالة', m))}: ${fmtNum(a.commission_percent != null && !isNaN(a.commission_percent) ? a.commission_percent : (100 - (a.company_percent || 0)))}%</div>
     <div><strong>${escapeHtml(tr('الرصيد', m))}:</strong> ${fmtNum(data.balance)}</div>
     ${data.cycleName ? `<div><strong>${escapeHtml(tr('الدورة', m))}:</strong> ${escapeHtml(data.cycleName)}</div>` : ''}
   </div>`;
@@ -302,8 +302,12 @@ function renderComprehensive(d, terminologyMode = MODES.ACCOUNTANT) {
 
   inner += `<h2>${tr('نظرة على الوكالات الفرعية', m)}</h2>`;
   inner += tableHtml(
-    [tr('المعرف', m), tr('الاسم', m), tr('النسبة %', m), tr('الرصيد', m)],
-    d.subAgenciesOverview.map((a) => [String(a.id), a.name, fmtNum(a.commission_percent), fmtNum(a.balance)])
+    [tr('المعرف', m), tr('الاسم', m), tr('شركة/وكالة %', m), tr('الرصيد', m)],
+    d.subAgenciesOverview.map((a) => {
+      const co = a.company_percent != null && !isNaN(a.company_percent) ? a.company_percent : (100 - (a.commission_percent || 0));
+      const ag = a.commission_percent != null && !isNaN(a.commission_percent) ? a.commission_percent : (100 - (a.company_percent || 0));
+      return [String(a.id), a.name, fmtNum(co) + ' / ' + fmtNum(ag), fmtNum(a.balance)];
+    })
   );
 
   inner += `<h2>${tr('الاعتمادات — الجهات', m)}</h2>`;

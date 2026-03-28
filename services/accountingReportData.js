@@ -434,7 +434,7 @@ async function getComprehensiveReportData(db, userId, cycleId) {
   const companies = await getTransferCompaniesReportData(db, userId);
   const movements = await getMovementsReportData(db, userId, cycleId || summary.cycleId);
 
-  const agencies = (await db.query(`SELECT id, name, commission_percent FROM shipping_sub_agencies ORDER BY name`)).rows;
+  const agencies = (await db.query(`SELECT id, name, commission_percent, company_percent FROM shipping_sub_agencies ORDER BY name`)).rows;
   const agencySnapshots = [];
   for (const ag of agencies.slice(0, 50)) {
     const bal = await calculateSubAgencyBalance(db, ag.id);

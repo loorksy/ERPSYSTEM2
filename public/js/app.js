@@ -100,6 +100,21 @@ function homeApplyMetric(el, rawVal, kind) {
   el.className = HOME_METRIC_CLASS + ' ' + tone;
 }
 
+/** يحدّث بطاقة رصيد المؤجل في لوحة التحكم بعد التدقيق أو إعادة احتساب المؤجل */
+window.refreshDeferredBalanceCard = function() {
+  fetch('/dashboard/stats', { credentials: 'same-origin' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.success) return;
+      var defEl = document.getElementById('deferredBalance');
+      if (defEl) {
+        var dv = data.deferredBalance;
+        homeApplyMetric(defEl, dv != null && dv !== 0 ? dv : 0, 'balance');
+      }
+    })
+    .catch(function() {});
+};
+
 function initHomeStats() {
   var cycleSel = document.getElementById('homeCycleSelect');
   if (!cycleSel) return;

@@ -20,7 +20,7 @@ router.get('/list', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const agencies = (await db.query(`
-      SELECT id, name, commission_percent, created_at
+      SELECT id, name, commission_percent, company_percent, created_at
       FROM shipping_sub_agencies
       ORDER BY name
     `)).rows;
@@ -44,7 +44,7 @@ router.get('/delivery-candidates', requireAuth, async (req, res) => {
     const cycleId = req.query.cycleId ? parseInt(req.query.cycleId, 10) : null;
     const db = getDb();
     const agencies = (await db.query(`
-      SELECT id, name, commission_percent, created_at
+      SELECT id, name, commission_percent, company_percent, created_at
       FROM shipping_sub_agencies
       ORDER BY name
     `)).rows;
@@ -84,25 +84,27 @@ async function calculateAgencyBalance(db, subAgencyId) {
   return balance;
 }
 
-/** إضافة وكالة */
+/** إضافة وكالة
+ * commissionPercent = حصة ربح الشركة من عمود W (مثال: 10 → شركة 10٪ ووكالة 90٪ من كل 100)
+ * commission_percent في الجدول = حصة الوكالة، company_percent = حصة الشركة
+ */
 router.post('/add', requireAuth, async (req, res) => {
   try {
     const { name, commissionPercent } = req.body || {};
     if (!name || !String(name).trim()) return res.json({ success: false, message: 'اسم الوكالة مطلوب' });
     const db = getDb();
     const pct = parseFloat(commissionPercent);
-    const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const companyPct = 100 - pctVal;
-    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), pctVal, companyPct]);
+    const companyPctFromW = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
+    const agencyPctFromW = 100 - companyPctFromW;
+    const r = await db.query('INSERT INTO shipping_sub_agencies (name, commission_percent, company_percent) VALUES ($1, $2, $3)', [String(name).trim(), agencyPctFromW, companyPctFromW]);
     res.json({ success: true, message: 'تم إضافة الوكالة', id: r.lastInsertRowid });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل الإضافة' });
   }
 });
 
-/** حفظ نسبة الوكالة للدورة المالية + إعادة احتساب أرباح المزامنة من عمود W
- * نسبة الوكالة (commissionPercent) = نسبة ربح الشركة من W
- * مثال: 10% → الشركة تأخذ 10% والوكالة تأخذ 90%
+/** حفظ حصة الشركة من عمود W لهذه الدورة + إعادة احتساب أرباح المزامنة
+ * commissionPercent = حصة ربح الشركة من W (مثال 10: ربح الشركة 10، ربح الوكالة 90 من كل 100)
  */
 router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
   try {
@@ -111,9 +113,8 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
     const cid = parseInt(cycleId, 10);
     if (!id || !cid) return res.json({ success: false, message: 'الوكالة والدورة مطلوبان' });
     const pct = parseFloat(commissionPercent);
-    const agencyPct = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    /** نفس منطق shipping_sub_agencies: نسبة الوكالة + نسبة الشركة = 100 */
-    const companyPct = 100 - agencyPct;
+    const companyPctFromW = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
+    const agencyPctFromW = 100 - companyPctFromW;
     const db = getDb();
     const cycle = (await db.query('SELECT id FROM financial_cycles WHERE id = $1 AND user_id = $2', [cid, req.session.userId])).rows[0];
     if (!cycle) return res.json({ success: false, message: 'الدورة غير موجودة' });
@@ -124,7 +125,7 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
          commission_percent = excluded.commission_percent,
          company_percent = excluded.company_percent,
          saved_at = CURRENT_TIMESTAMP`,
-      [cid, id, agencyPct, companyPct]
+      [cid, id, agencyPctFromW, companyPctFromW]
     );
     await recalculateSyncProfitsForCycle(db, cid, req.session.userId);
     res.json({ success: true, message: 'تم حفظ النسبة وإعادة احتساب أرباح المزامنة لهذه الدورة' });
@@ -133,17 +134,17 @@ router.post('/:id/cycle-percent', requireAuth, async (req, res) => {
   }
 });
 
-/** تحديث نسبة الوكالة (company_percent = 100 - commission_percent) */
+/** تحديث النسب الافتراضية للوكالة (نفس منطق الإضافة: المدخل = حصة الشركة من W) */
 router.post('/:id/update-percent', requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const { commissionPercent } = req.body || {};
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const pct = parseFloat(commissionPercent);
-    const pctVal = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
-    const companyPct = 100 - pctVal;
+    const companyPctFromW = isNaN(pct) || pct < 0 ? 0 : Math.min(100, pct);
+    const agencyPctFromW = 100 - companyPctFromW;
     const db = getDb();
-    await db.query('UPDATE shipping_sub_agencies SET commission_percent = $1, company_percent = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3', [pctVal, companyPct, id]);
+    await db.query('UPDATE shipping_sub_agencies SET commission_percent = $1, company_percent = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3', [agencyPctFromW, companyPctFromW, id]);
     res.json({ success: true, message: 'تم تحديث النسبة' });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل التحديث' });
@@ -222,26 +223,39 @@ router.get('/:id/profit', requireAuth, async (req, res) => {
     const { cycleId } = req.query || {};
     if (!id || isNaN(id)) return res.json({ success: false, message: 'معرف غير صالح' });
     const db = getDb();
-    const agency = (await db.query('SELECT commission_percent FROM shipping_sub_agencies WHERE id = $1', [id])).rows[0];
+    const agency = (await db.query('SELECT commission_percent, company_percent FROM shipping_sub_agencies WHERE id = $1', [id])).rows[0];
     if (!agency) return res.json({ success: false, message: 'الوكالة غير موجودة' });
     let sql = `SELECT SUM(amount) as total FROM sub_agency_transactions WHERE sub_agency_id = $1 AND type IN ('profit', 'reward')`;
     const params = [id];
     if (cycleId) { sql += ` AND cycle_id = $${params.length + 1}`; params.push(cycleId); }
     const row = (await db.query(sql, params)).rows[0];
     const profit = row?.total || 0;
-    let cycleCommissionPercent = null;
+    /** حصة الشركة من W للدورة (للحقل في الواجهة) */
+    let cycleCompanyPercent = null;
     if (cycleId) {
       const s = (await db.query(
-        'SELECT commission_percent FROM sub_agency_cycle_settings WHERE cycle_id = $1 AND sub_agency_id = $2',
+        'SELECT company_percent, commission_percent FROM sub_agency_cycle_settings WHERE cycle_id = $1 AND sub_agency_id = $2',
         [cycleId, id]
       )).rows[0];
-      cycleCommissionPercent = s?.commission_percent ?? null;
+      if (s) {
+        cycleCompanyPercent = s.company_percent != null && !isNaN(s.company_percent)
+          ? Number(s.company_percent)
+          : (100 - Number(s.commission_percent || 0));
+      }
     }
+    const companyPercentDefault = agency.company_percent != null && !isNaN(agency.company_percent)
+      ? Number(agency.company_percent)
+      : (100 - Number(agency.commission_percent || 0));
     res.json({
       success: true,
       profit,
+      /** حصة الوكالة من W (للعرض/التوافق) */
       commissionPercent: agency.commission_percent,
-      cycleCommissionPercent,
+      /** حصة الشركة من W (المدخل في النموذج) */
+      companyPercent: companyPercentDefault,
+      cycleCompanyPercent,
+      /** @deprecated استخدم cycleCompanyPercent */
+      cycleCommissionPercent: cycleCompanyPercent,
     });
   } catch (e) {
     res.json({ success: false, message: e.message || 'فشل جلب الربح' });

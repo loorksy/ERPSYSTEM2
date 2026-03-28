@@ -143,9 +143,12 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
 
       let companyPercent = 0;
       if (cycleSettings) {
-        companyPercent = (cycleSettings.company_percent != null && !isNaN(cycleSettings.company_percent))
-          ? Number(cycleSettings.company_percent)
-          : Number(cycleSettings.commission_percent || 0);
+        if (cycleSettings.company_percent != null && !isNaN(cycleSettings.company_percent)) {
+          companyPercent = Number(cycleSettings.company_percent);
+        } else if (cycleSettings.commission_percent != null && !isNaN(cycleSettings.commission_percent)) {
+          /** commission_percent = حصة الوكالة؛ حصة الشركة = 100 − ذلك */
+          companyPercent = 100 - Number(cycleSettings.commission_percent);
+        }
       }
 
       let rows = [];
@@ -203,7 +206,7 @@ async function syncAgenciesFromManagementTable(cycleId, userId, sheetsApi) {
           totalUsers++;
         }
 
-        if (cycleSettings && companyPercent > 0) {
+        if (cycleSettings) {
           const agencyShare = baseProfitW * ((100 - companyPercent) / 100);
           if (agencyShare > 0) {
             await db.query(
@@ -504,10 +507,14 @@ async function recalculateSyncProfitsForCycle(db, cycleId, userId) {
       [cycleId, sub_agency_id]
     )).rows[0];
     if (!settings) continue;
-    const companyPct = (settings.company_percent != null && !isNaN(settings.company_percent))
+    let companyPct = (settings.company_percent != null && !isNaN(settings.company_percent))
       ? Number(settings.company_percent)
-      : Number(settings.commission_percent || 0);
-    if (companyPct <= 0) continue;
+      : null;
+    if (companyPct == null || isNaN(companyPct)) {
+      const ag = Number(settings.commission_percent || 0);
+      companyPct = 100 - ag;
+    }
+    if (companyPct < 0 || companyPct > 100) continue;
     const agencyPct = 100 - companyPct;
     const users = (await db.query(
       `SELECT member_user_id, base_profit_w FROM agency_cycle_users WHERE cycle_id = $1 AND sub_agency_id = $2`,

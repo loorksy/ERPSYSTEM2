@@ -910,23 +910,30 @@ router.post('/payroll-audit-local', requireAuth, async (req, res) => {
     const cycleAgentSheetName = cycle.agent_sheet_name ? String(cycle.agent_sheet_name).trim() : null;
 
     try {
-      const { saveCycleCache, saveUserAuditStatus } = require('../services/payrollSearchService');
+      const { saveCycleCache, saveUserAuditStatusesBatch } = require('../services/payrollSearchService');
       const auditedAgentIdsSet = new Set();
       const auditedMgmtIdsSet = new Set();
+      const auditEntries = [];
       for (let i = 0; i < results.length; i++) {
         const r = results[i];
         if (r.type.startsWith('سحب وكالة') && r.userId) auditedAgentIdsSet.add(r.userId);
         if (r.type === 'سحب إدارة' && r.userId) auditedMgmtIdsSet.add(r.userId);
         if (r.userId && (r.type.startsWith('سحب وكالة') || r.type === 'سحب إدارة')) {
           const src = r.type.startsWith('سحب وكالة') ? 'تدقيق وكيل من النظام' : 'تدقيق ادارة من النظام';
-          await saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
-            type: r.type,
-            title: r.title,
-            localOnly: true,
-            salaryAfterDiscount: r.salaryValue,
+          auditEntries.push({
+            memberUserId: r.userId,
+            status: 'مدقق',
+            source: src,
+            details: {
+              type: r.type,
+              title: r.title,
+              localOnly: true,
+              salaryAfterDiscount: r.salaryValue,
+            },
           });
         }
       }
+      await saveUserAuditStatusesBatch(req.session.userId, cycleId, auditEntries);
       await saveCycleCache(req.session.userId, cycleId, {
         managementData: managementRows,
         agentData: agentRows,
@@ -1456,22 +1463,25 @@ router.post('/payroll-execute', requireAuth, async (req, res) => {
     const spreadsheetUrl = meta.data.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 
     try {
-      const { saveCycleCache, saveUserAuditStatus } = require('../services/payrollSearchService');
+      const { saveCycleCache, saveUserAuditStatusesBatch } = require('../services/payrollSearchService');
       const auditedAgentIdsSet = new Set();
       const auditedMgmtIdsSet = new Set();
+      const auditEntries = [];
       for (let i = 0; i < results.length; i++) {
         const r = results[i];
         if (r.type.startsWith('سحب وكالة') && r.userId) auditedAgentIdsSet.add(r.userId);
         if (r.type === 'سحب إدارة' && r.userId) auditedMgmtIdsSet.add(r.userId);
         if (r.userId && (r.type.startsWith('سحب وكالة') || r.type === 'سحب إدارة')) {
           const src = r.type.startsWith('سحب وكالة') ? 'تدقيق وكيل من النظام' : 'تدقيق ادارة من النظام';
-          await saveUserAuditStatus(req.session.userId, cycleId, r.userId, 'مدقق', src, {
-            type: r.type,
-            title: r.title,
-            salaryAfterDiscount: r.salaryValue,
+          auditEntries.push({
+            userId: r.userId,
+            status: 'مدقق',
+            source: src,
+            meta: { type: r.type, title: r.title, salaryAfterDiscount: r.salaryValue },
           });
         }
       }
+      await saveUserAuditStatusesBatch(req.session.userId, cycleId, auditEntries);
       await saveCycleCache(req.session.userId, cycleId, {
         managementData: managementRows,
         agentData: agentRows,

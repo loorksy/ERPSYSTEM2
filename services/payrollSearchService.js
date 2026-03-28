@@ -188,24 +188,68 @@ async function saveCycleCache(userId, cycleId, payload) {
 }
 
 async function saveUserAuditStatus(userId, cycleId, memberUserId, status, source, details) {
+  await saveUserAuditStatusesBatch(userId, cycleId, [
+    { memberUserId, status, source, details },
+  ]);
+}
+
+/**
+ * حفظ حالات تدقيق عدة مستخدمين دفعة واحدة (أسرع من await لكل صف عند التدقيق الجماعي).
+ * @param {Array<{ memberUserId: string, status: string, source?: string, details?: object }>} entries
+ */
+async function saveUserAuditStatusesBatch(userId, cycleId, entries) {
+  if (!entries || !entries.length) return;
   const db = getDb();
+  /** آخر فوز لنفس رقم المستخدم (تفادي تكرار في unnest) */
+  const byMid = new Map();
+  for (const e of entries) {
+    const mid = String(e.memberUserId || '').trim();
+    if (!mid) continue;
+    byMid.set(mid, e);
+  }
+  const merged = Array.from(byMid.values());
+  const mids = [];
+  const statuses = [];
+  const sources = [];
+  const detailStrs = [];
+  for (const e of merged) {
+    const mid = String(e.memberUserId || '').trim();
+    mids.push(mid);
+    statuses.push(e.status || 'مدقق');
+    sources.push(e.source || null);
+    detailStrs.push(e.details != null ? JSON.stringify(e.details) : null);
+  }
+  if (!mids.length) return;
+
   await db.query(
     `INSERT INTO payroll_user_audit_cache (user_id, cycle_id, member_user_id, audit_status, audit_source, details_json, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-     ON CONFLICT(user_id, cycle_id, member_user_id) DO UPDATE SET
-       audit_status = excluded.audit_status,
-       audit_source = excluded.audit_source,
-       details_json = excluded.details_json,
+     SELECT $1::int, $2::int, x.mid, x.status, x.src,
+            CASE WHEN x.det IS NULL OR btrim(x.det) = '' THEN NULL ELSE x.det::jsonb END,
+            CURRENT_TIMESTAMP
+     FROM unnest($3::text[], $4::text[], $5::text[], $6::text[]) AS x(mid, status, src, det)
+     ON CONFLICT (user_id, cycle_id, member_user_id) DO UPDATE SET
+       audit_status = EXCLUDED.audit_status,
+       audit_source = EXCLUDED.audit_source,
+       details_json = EXCLUDED.details_json,
        updated_at = CURRENT_TIMESTAMP`,
-    [userId, cycleId, String(memberUserId), status, source || null, details ? JSON.stringify(details) : null]
+    [userId, cycleId, mids, statuses, sources, detailStrs]
   );
-  try {
-    const { upsertMemberProfileFromAudit } = require('./memberDirectoryService');
-    await upsertMemberProfileFromAudit(db, userId, cycleId, String(memberUserId), status, source, details);
-  } catch (_) {}
-  if (status === 'مدقق') {
-    const { removeDeferredLineForAuditedUser } = require('./deferredSalaryService');
-    await removeDeferredLineForAuditedUser(db, userId, cycleId, String(memberUserId));
+
+  const auditedMids = mids.filter((_, i) => (statuses[i] || '') === 'مدقق');
+  if (auditedMids.length) {
+    const { removeDeferredLinesForAuditedUsers } = require('./deferredSalaryService');
+    await removeDeferredLinesForAuditedUsers(db, userId, cycleId, auditedMids);
+  }
+
+  const { upsertMemberProfileFromAudit } = require('./memberDirectoryService');
+  const chunk = 32;
+  for (let i = 0; i < merged.length; i += chunk) {
+    const slice = merged.slice(i, i + chunk);
+    await Promise.all(
+      slice.map((e) =>
+        upsertMemberProfileFromAudit(db, userId, cycleId, String(e.memberUserId), e.status || 'مدقق', e.source, e.details).catch(() => {})
+      )
+    );
   }
 }
 
@@ -237,6 +281,7 @@ module.exports = {
   getCycleCache,
   saveCycleCache,
   saveUserAuditStatus,
+  saveUserAuditStatusesBatch,
   getUserAuditStatus
 };
 
