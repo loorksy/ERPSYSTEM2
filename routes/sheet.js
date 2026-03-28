@@ -311,6 +311,87 @@ router.get('/cycles/:id/structure', requireAuth, async (req, res) => {
   }
 });
 
+/** لقطات الدورة للمعاينة المحلية (إدارة + وكيل + معلومات المستخدمين) */
+router.get('/cycles/:id/preview-snapshot', requireAuth, async (req, res) => {
+  try {
+    const cycleId = parseInt(req.params.id, 10);
+    if (!cycleId) return res.json({ success: false, message: 'معرّف الدورة غير صالح' });
+    const db = getDb();
+    const row = (
+      await db.query(
+        `SELECT id, name, management_data, agent_data, user_info_data,
+                management_sheet_name, agent_sheet_name, user_info_sheet_name, user_info_spreadsheet_id,
+                updated_at
+         FROM financial_cycles WHERE id = $1 AND user_id = $2`,
+        [cycleId, req.session.userId]
+      )
+    ).rows[0];
+    if (!row) return res.json({ success: false, message: 'الدورة غير موجودة' });
+    const managementRows = row.management_data ? JSON.parse(row.management_data) : [];
+    const agentRows = row.agent_data ? JSON.parse(row.agent_data) : [];
+    const userInfoRows = row.user_info_data ? JSON.parse(row.user_info_data) : [];
+    res.json({
+      success: true,
+      cycleId: row.id,
+      cycleName: row.name,
+      updatedAt: row.updated_at,
+      managementRows,
+      agentRows,
+      userInfoRows,
+      managementSheetName: row.management_sheet_name ? String(row.management_sheet_name).trim() : null,
+      agentSheetName: row.agent_sheet_name ? String(row.agent_sheet_name).trim() : null,
+      userInfoSheetName: row.user_info_sheet_name ? String(row.user_info_sheet_name).trim() : null,
+      userInfoSpreadsheetId: row.user_info_spreadsheet_id ? String(row.user_info_spreadsheet_id).trim() : null,
+      rowCounts: {
+        management: Array.isArray(managementRows) ? managementRows.length : 0,
+        agent: Array.isArray(agentRows) ? agentRows.length : 0,
+        userInfo: Array.isArray(userInfoRows) ? userInfoRows.length : 0,
+      },
+    });
+  } catch (e) {
+    res.json({ success: false, message: e.message || 'فشل جلب اللقطات' });
+  }
+});
+
+/** تصدير جداول الإدارة والوكيل من اللقطات المخزّنة (ملف واحد بورقتين أو ورقة واحدة) */
+router.get('/cycles/:id/export-tables', requireAuth, async (req, res) => {
+  try {
+    const cycleId = parseInt(req.params.id, 10);
+    if (!cycleId) return res.status(400).json({ success: false, message: 'معرّف الدورة غير صالح' });
+    const which = String(req.query.which || 'both').toLowerCase();
+    if (!['agent', 'management', 'both'].includes(which)) {
+      return res.status(400).json({ success: false, message: 'which يجب أن يكون agent أو management أو both' });
+    }
+    const db = getDb();
+    const row = (
+      await db.query(
+        'SELECT name, management_data, agent_data, management_sheet_name, agent_sheet_name FROM financial_cycles WHERE id = $1 AND user_id = $2',
+        [cycleId, req.session.userId]
+      )
+    ).rows[0];
+    if (!row) return res.status(404).json({ success: false, message: 'الدورة غير موجودة' });
+    const managementRows = row.management_data ? JSON.parse(row.management_data) : [];
+    const agentRows = row.agent_data ? JSON.parse(row.agent_data) : [];
+    const wb = XLSX.utils.book_new();
+    if (which === 'management' || which === 'both') {
+      const ws = XLSX.utils.aoa_to_sheet(Array.isArray(managementRows) ? managementRows : []);
+      XLSX.utils.book_append_sheet(wb, ws, 'الإدارة');
+    }
+    if (which === 'agent' || which === 'both') {
+      const ws = XLSX.utils.aoa_to_sheet(Array.isArray(agentRows) ? agentRows : []);
+      XLSX.utils.book_append_sheet(wb, ws, 'الوكيل');
+    }
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const base = (row.name || `cycle-${cycleId}`).replace(/[^\w\u0600-\u06FF\-]/g, '_').slice(0, 40);
+    const fname = encodeURIComponent(`${base}-${which === 'both' ? 'وكيل-وادارة' : which === 'agent' ? 'وكيل' : 'ادارة'}.xlsx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fname}`);
+    res.send(Buffer.from(buf));
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message || 'فشل التصدير' });
+  }
+});
+
 /** جلب بيانات ورقة من جدول Google مع استبدال ورقة بديلة إن فشل الاسم أو كانت فارغة.
  *  excludeSheetTitle: إن وُجد (نفس الملف للوكيل بعد الإدارة) نستبعد هذه الورقة من المحاولة. */
 async function fetchSheetWithFallback(sheets, spreadsheetId, preferredSheetName, excludeSheetTitle) {

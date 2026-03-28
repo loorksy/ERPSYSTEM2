@@ -42,7 +42,8 @@ router.get('/local-audit', requireAuth, (req, res) => {
 
 const pages = [
   { path: '/sheet', page: 'sheet', title: 'Sheet' },
-  { path: '/payroll', page: 'payroll-google', title: 'تدقيق الرواتب' },
+  { path: '/payroll', page: 'payroll-google', title: 'تدقيق الرواتب (مزامنة وتطبيق)' },
+  { path: '/payroll-local', page: 'payroll-local-preview', title: 'تدقيق محلي ومعاينة' },
   { path: '/expenses-manual', page: 'expenses-page', title: 'المصاريف' },
   { path: '/profit-sources', page: 'profit-sources', title: 'مصادر الربح' },
   { path: '/admin-brokerage', page: 'admin-brokerage', title: 'وساطة إدارية' },
