@@ -186,18 +186,24 @@
         '<input type="checkbox" class="acc-bulk-row-cb h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" data-idx="' + idx + '"' + (isSel ? ' checked' : '') + '></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-num p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(ln) + '</span></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-name p-3 align-middle" data-label="المعتمد">' +
-          '<div class="acc-bulk-val">' +
-            '<div class="font-bold text-slate-800 text-sm">' + escHtml(row.name) + '</div>' +
-            '<div class="font-mono text-slate-500 text-xs mt-0.5">' + escHtml(row.code) + '</div>' +
+          '<div class="acc-bulk-val acc-bulk-card-main">' +
+            '<div class="acc-bulk-card-title">' +
+            '<span class="acc-bulk-card-name">' +
+            escHtml(row.name) +
+            '</span>' +
+            (row.code
+              ? '<span class="acc-bulk-card-code">' + escHtml(row.code) + '</span>'
+              : '') +
+            '</div>' +
           '</div>' +
         '</td>' +
-        '<td class="acc-bulk-td acc-bulk-cell-amt p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val font-bold text-indigo-600 tabular-nums">' +
+        '<td class="acc-bulk-td acc-bulk-cell-amt p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val acc-bulk-amt-value font-semibold text-indigo-700 tabular-nums">' +
         escHtml(accFmtMoney(parseFloat(String(row.amount != null ? row.amount : '').replace(/,/g, '')) || 0)) +
         '</span></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-disc p-3 align-middle" data-label="خصم %">' +
         '<input type="number" min="0" max="100" step="0.1" class="acc-bulk-disc w-full sm:w-24 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" data-idx="' + idx + '" value="' + discVal + '" placeholder="—"></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-act p-3 align-middle text-left sm:w-12" data-label="إجراء">' +
-        '<button type="button" class="w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition-colors py-2 sm:py-0 text-sm font-semibold sm:font-normal" data-acc-delete="' + idx + '"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none"></i></button></td></tr>'
+        '<button type="button" class="acc-bulk-del-btn w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-red-600 bg-red-50/90 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors py-2 sm:py-0 text-sm font-medium sm:font-normal" data-acc-delete="' + idx + '" title="حذف الصف"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none text-sm"></i></button></td></tr>'
       );
     }).join('');
 

@@ -139,6 +139,36 @@
   .acc-bulk-review {
     table-layout: fixed;
   }
+  /* سطح المكتب: بطاقة المعتمد في المعاينة — مضغوط وواضح */
+  .acc-bulk-review .acc-bulk-card-title {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    max-width: 100%;
+  }
+  .acc-bulk-review .acc-bulk-card-name {
+    font-weight: 700;
+    font-size: 0.8125rem;
+    color: rgb(15 23 42);
+    line-height: 1.35;
+    word-break: break-word;
+  }
+  .acc-bulk-review .acc-bulk-card-code {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-family: ui-monospace, monospace;
+    color: rgb(100 116 139);
+    letter-spacing: 0.02em;
+  }
+  .acc-bulk-review tbody tr.acc-bulk-tr {
+    transition: background-color 0.15s ease;
+  }
+  @media (min-width: 768px) {
+    .acc-bulk-review tbody tr.acc-bulk-tr:hover {
+      background-color: rgb(248 250 252);
+    }
+  }
   @media (max-width: 767px) {
     .acc-bulk-scroll {
       overflow-x: hidden !important;
@@ -164,15 +194,15 @@
         "sel num"
         "name name"
         "amount amount"
-        "broker broker"
+        "disc disc"
         "action action";
-      gap: 0.75rem;
-      padding: 1rem;
+      gap: 0.5rem;
+      padding: 0.625rem 0.75rem;
       border: 1px solid rgb(226 232 240);
-      border-radius: 1rem;
-      margin-bottom: 1rem;
-      background: #fff;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      border-radius: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(165deg, rgb(255 255 255) 0%, rgb(248 250 252) 100%);
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
       position: relative;
     }
     .acc-bulk-review.acc-bulk-debt-mode tbody tr.acc-bulk-tr {
@@ -209,10 +239,11 @@
     .acc-bulk-review tbody td.acc-bulk-td::before {
       content: attr(data-label);
       flex-shrink: 0;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: rgb(100 116 139);
-      margin-bottom: 0.35rem;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: rgb(148 163 184);
+      margin-bottom: 0.25rem;
       text-align: right;
     }
     .acc-bulk-review tbody td.acc-bulk-td > *:last-child {
@@ -227,75 +258,106 @@
     .acc-bulk-review tbody td.acc-bulk-cell-sel {
       grid-area: sel;
       flex-direction: row;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 0.125rem !important;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-sel::before { display: none !important; }
     .acc-bulk-review tbody td.acc-bulk-cell-num {
       grid-area: num;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-num::before { display: none !important; }
     .acc-bulk-review tbody td.acc-bulk-cell-num .acc-bulk-val {
       background: rgb(241 245 249);
-      color: rgb(100 116 139);
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
+      color: rgb(71 85 105);
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.375rem;
+      font-size: 0.65rem;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-name {
       grid-area: name;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-name::before { display: none !important; }
-    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-val {
-      text-align: center !important;
-      align-items: center;
-    }
-    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-val > div {
-      text-align: center;
+    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-card-main {
       width: 100%;
+    }
+    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-card-title {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.35rem 0.5rem;
+      text-align: center;
+    }
+    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-card-name {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: rgb(15 23 42);
+      max-width: 100%;
+    }
+    .acc-bulk-review tbody td.acc-bulk-cell-name .acc-bulk-card-code {
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.25rem;
+      background: rgb(241 245 249);
+      border: 1px solid rgb(226 232 240);
+      font-size: 0.625rem;
+      color: rgb(100 116 139);
     }
     .acc-bulk-review tbody td.acc-bulk-cell-amt {
       grid-area: amount;
-      background: rgb(238 242 255);
-      padding: 0.75rem 1rem !important;
-      border-radius: 0.75rem;
-      flex-direction: column;
-      justify-content: center;
+      flex-direction: row;
       align-items: center;
-      margin-top: 0.25rem;
-      margin-bottom: 0.25rem;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.45rem 0.65rem !important;
+      border-radius: 0.5rem;
+      background: rgb(238 242 255);
+      border: 1px solid rgb(199 210 254 / 0.65);
+      margin: 0;
     }
-    .acc-bulk-review tbody td.acc-bulk-cell-amt::before { margin-bottom: 0.35rem; color: rgb(79 70 229); font-weight: 700; text-align: center; width: 100%; }
-    .acc-bulk-review tbody td.acc-bulk-cell-amt .acc-bulk-val { font-size: 1.125rem; font-weight: 800; color: rgb(67 56 202); text-align: center; }
-    .acc-bulk-review tbody td.acc-bulk-cell-broker { grid-area: broker; }
+    .acc-bulk-review tbody td.acc-bulk-cell-amt::before {
+      margin-bottom: 0;
+      color: rgb(79 70 229);
+      font-weight: 700;
+      font-size: 0.65rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .acc-bulk-review tbody td.acc-bulk-cell-amt .acc-bulk-amt-value {
+      font-size: 0.9375rem;
+      font-weight: 800;
+      color: rgb(67 56 202);
+      text-align: left;
+    }
     .acc-bulk-review tbody td.acc-bulk-cell-disc {
       grid-area: disc;
     }
     .acc-bulk-review tbody td.acc-bulk-cell-act {
       grid-area: action;
-      justify-content: center;
-      margin-top: 0.5rem;
+      justify-content: stretch;
+      margin-top: 0.125rem;
     }
-    
     .acc-bulk-review tbody td.acc-bulk-td select,
-    .acc-bulk-review tbody td.acc-bulk-td input {
-      min-height: 2.75rem !important;
+    .acc-bulk-review tbody td.acc-bulk-td input.acc-bulk-disc {
+      min-height: 2.25rem !important;
       width: 100% !important;
       max-width: none !important;
-      background-color: rgb(248 250 252) !important;
+      background-color: rgb(255 255 255) !important;
       border-color: rgb(226 232 240) !important;
-      text-align: right;
+      border-radius: 0.5rem !important;
+      text-align: center;
+      font-size: 0.8125rem !important;
     }
-    .acc-bulk-review tbody td.acc-bulk-td button {
-      min-height: 2.75rem !important;
+    .acc-bulk-review tbody td.acc-bulk-td button.acc-bulk-del-btn {
+      min-height: 2.25rem !important;
       width: 100% !important;
-      border-radius: 0.75rem !important;
-      font-weight: 700 !important;
-      background-color: rgb(254 242 242) !important;
-      color: rgb(220 38 38) !important;
+      border-radius: 0.5rem !important;
+      font-weight: 600 !important;
+      font-size: 0.75rem !important;
     }
   }
   /* موبايل: مسافة سفلية داخل الجسم فقط (النافذة لم تعد تغطي الشريط السفلي) */
