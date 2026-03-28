@@ -329,6 +329,15 @@ async function fetchDeferredBalanceUsers(cycleId, userId, sheetsApi) {
   )).rows;
   const auditedSet = new Set((audited || []).map(r => String(r.member_user_id)));
 
+  const hasAnyAuditCacheRow = (await db.query(
+    'SELECT EXISTS (SELECT 1 FROM payroll_user_audit_cache WHERE cycle_id = $1 AND user_id = $2) AS e',
+    [cycleId, userId]
+  )).rows[0];
+  if (hasAnyAuditCacheRow?.e !== true) {
+    await replaceDeferredLinesForCycle(db, userId, cycleId, []);
+    return [];
+  }
+
   let sheets = sheetsApi;
   if (!sheets) {
     const config = (await db.query('SELECT token, credentials FROM google_sheets_config WHERE id = 1')).rows[0];

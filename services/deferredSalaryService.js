@@ -40,8 +40,18 @@ async function replaceDeferredLinesForCycle(db, userId, cycleId, lineRows) {
 }
 
 async function sumDeferredTotalAllCycles(db, userId) {
+  /** لا نجمع أسطراً مبنية على جدول الوكيل لدورة لم يبدأ لها تدقيق بعد (تجنّب إظهار إجمالي الرواتب كمؤجل) */
   const row = (await db.query(
-    `SELECT COALESCE(SUM(balance_d), 0)::float AS t FROM deferred_salary_lines WHERE user_id = $1`,
+    `SELECT COALESCE(SUM(l.balance_d), 0)::float AS t
+     FROM deferred_salary_lines l
+     WHERE l.user_id = $1
+     AND (
+       EXISTS (
+         SELECT 1 FROM payroll_user_audit_cache p
+         WHERE p.user_id = l.user_id AND p.cycle_id = l.cycle_id
+       )
+       OR l.sheet_source = 'member_adjustment'
+     )`,
     [userId]
   )).rows[0];
   return row?.t ?? 0;

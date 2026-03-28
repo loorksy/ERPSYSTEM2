@@ -184,6 +184,13 @@ async function rebuildDeferredFromLocalAgentData(userId, cycleId) {
   )).rows;
   const auditedSet = new Set((audited || []).map(r => String(r.member_user_id)));
 
+  /** بدون أي سجل تدقيق للدورة يُعتبر «غير مدقق» = الجميع؛ لا نملأ المؤجل من الوكيل قبل أول تدقيق فعلي */
+  const hasAnyAuditCacheRow = (await db.query(
+    'SELECT EXISTS (SELECT 1 FROM payroll_user_audit_cache WHERE cycle_id = $1 AND user_id = $2) AS e',
+    [cycleId, userId]
+  )).rows[0];
+  const hasAnyAuditCache = hasAnyAuditCacheRow?.e === true;
+
   const dataRows = agentRows.slice(1);
   let totalDeferred = 0;
   const users = [];
@@ -195,6 +202,34 @@ async function rebuildDeferredFromLocalAgentData(userId, cycleId) {
     if (!uid) continue;
     const { before, after } = computeSalaryWithDiscount([row[agentSalaryIdx]], discountPct);
     transferDiscountProfit += Math.round((before - after) * 100) / 100;
+  }
+
+  if (!hasAnyAuditCache) {
+    await replaceDeferredLinesForCycle(db, userId, cycleId, []);
+    if (transferDiscountProfit > 0) {
+      const dup = (await db.query(
+        `SELECT id FROM ledger_entries WHERE user_id = $1 AND cycle_id = $2
+         AND source_type IN ('transfer_discount_profit', 'cycle_creation_discount_profit') LIMIT 1`,
+        [userId, cycleId]
+      )).rows[0];
+      if (!dup) {
+        await insertNetProfitLedgerAndMirrorFund(db, {
+          userId,
+          bucket: 'net_profit',
+          sourceType: 'transfer_discount_profit',
+          amount: transferDiscountProfit,
+          cycleId,
+          notes: 'ربح نسبة خصم التحويل (جدول الوكيل)',
+        });
+      }
+    }
+    return {
+      success: true,
+      deferredBalance: 0,
+      users: [],
+      transferDiscountProfit,
+      pendingAudit: true,
+    };
   }
 
   const { applyDebtAgainstCycleSalary } = require('./memberAdjustmentsService');

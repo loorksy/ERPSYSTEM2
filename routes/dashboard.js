@@ -357,6 +357,10 @@ router.get('/deferred-users', requireAuth, async (req, res) => {
          FROM deferred_salary_lines l
          JOIN financial_cycles c ON c.id = l.cycle_id AND c.user_id = l.user_id
          WHERE l.user_id = $1 AND l.cycle_id = $2
+         AND (
+           EXISTS (SELECT 1 FROM payroll_user_audit_cache p WHERE p.user_id = l.user_id AND p.cycle_id = l.cycle_id)
+           OR l.sheet_source = 'member_adjustment'
+         )
          ORDER BY l.member_user_id`,
         [userId, cid]
       )).rows;
@@ -368,6 +372,10 @@ router.get('/deferred-users', requireAuth, async (req, res) => {
        FROM deferred_salary_lines l
        JOIN financial_cycles c ON c.id = l.cycle_id AND c.user_id = l.user_id
        WHERE l.user_id = $1
+       AND (
+         EXISTS (SELECT 1 FROM payroll_user_audit_cache p WHERE p.user_id = l.user_id AND p.cycle_id = l.cycle_id)
+         OR l.sheet_source = 'member_adjustment'
+       )
        ORDER BY c.created_at DESC NULLS LAST, l.member_user_id`,
       [userId]
     )).rows;
