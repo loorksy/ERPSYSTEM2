@@ -180,8 +180,9 @@
       var ln = lineNum(row, idx);
       var isSel = row.selected !== false;
       var discVal = row.discountPct !== '' && row.discountPct != null && row.discountPct !== undefined ? escHtml(String(row.discountPct)) : '';
+      var rowBg = agencyCardColors[idx % agencyCardColors.length];
       return (
-        '<tr class="acc-bulk-tr border-b border-slate-100 hover:bg-slate-50 transition-colors relative">' +
+        '<tr class="acc-bulk-tr acc-bulk-tr-palette transition-colors relative" style="background:' + rowBg + '">' +
         '<td class="acc-bulk-td acc-bulk-cell-sel p-2 align-middle text-center" data-label="تحديد">' +
         '<input type="checkbox" class="acc-bulk-row-cb h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" data-idx="' + idx + '"' + (isSel ? ' checked' : '') + '></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-num p-3 align-middle text-slate-400 text-xs sm:w-10 text-center" data-label="#"><span class="acc-bulk-val">' + escHtml(ln) + '</span></td>' +
@@ -197,13 +198,13 @@
             '</div>' +
           '</div>' +
         '</td>' +
-        '<td class="acc-bulk-td acc-bulk-cell-amt p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val acc-bulk-amt-value font-semibold text-indigo-700 tabular-nums">' +
+        '<td class="acc-bulk-td acc-bulk-cell-amt p-3 align-middle" data-label="المبلغ"><span class="acc-bulk-val acc-bulk-amt-value tabular-nums">' +
         escHtml(accFmtMoney(parseFloat(String(row.amount != null ? row.amount : '').replace(/,/g, '')) || 0)) +
         '</span></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-disc p-3 align-middle" data-label="خصم %">' +
         '<input type="number" min="0" max="100" step="0.1" class="acc-bulk-disc w-full sm:w-24 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" data-idx="' + idx + '" value="' + discVal + '" placeholder="—"></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-act p-3 align-middle text-left sm:w-12" data-label="إجراء">' +
-        '<button type="button" class="acc-bulk-del-btn w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg text-red-600 bg-red-50/90 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors py-2 sm:py-0 text-sm font-medium sm:font-normal" data-acc-delete="' + idx + '" title="حذف الصف"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none text-sm"></i></button></td></tr>'
+        '<button type="button" class="acc-bulk-del-btn w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg py-2 sm:py-0 text-sm font-semibold sm:font-normal" data-acc-delete="' + idx + '" title="حذف الصف"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none text-sm"></i></button></td></tr>'
       );
     }).join('');
 
@@ -231,7 +232,7 @@
       '<table class="acc-bulk-review w-full min-w-0 sm:min-w-[640px] text-right border-collapse text-sm' + debtClass + '">' +
       colgroup +
       thead +
-      '<tbody class="bg-white">' + rows + '</tbody></table></div>';
+      '<tbody class="acc-bulk-tbody">' + rows + '</tbody></table></div>';
     accSyncBulkSelectAllCheckbox();
   }
 
@@ -272,7 +273,15 @@
       if (!btn) return;
       e.preventDefault();
       var idx = parseInt(btn.getAttribute('data-acc-delete'), 10);
-      if (!isNaN(idx)) window.accRemoveStagingRow(idx);
+      if (isNaN(idx) || !accBulkStagingItems[idx]) return;
+      var row = accBulkStagingItems[idx];
+      var nm = row.name != null ? String(row.name).trim() : '';
+      var cd = row.code != null ? String(row.code).trim() : '';
+      var display = nm || cd || 'هذا الصف';
+      display = display.replace(/«/g, '\u2039').replace(/»/g, '\u203a');
+      var msg = 'هل أنت متأكد من حذف المعتمد «' + display + '»؟';
+      if (!window.confirm(msg)) return;
+      window.accRemoveStagingRow(idx);
     });
   }
 
