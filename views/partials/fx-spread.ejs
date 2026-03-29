@@ -23,10 +23,10 @@
     </div>
 
     <div class="px-4 py-5 sm:px-7 sm:py-6 space-y-6">
-      <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 sm:p-5 text-sm text-indigo-900 leading-relaxed">
-        <p class="font-bold text-indigo-950 mb-2 flex items-center gap-2"><i class="fas fa-calculator text-indigo-600"></i> طريقة الحساب</p>
+      <div class="rounded-xl border border-sky-100 bg-sky-50/50 p-4 sm:p-5 text-sm text-sky-900 leading-relaxed">
+        <p class="font-bold text-sky-950 mb-2 flex items-center gap-2"><i class="fas fa-calculator text-sky-600"></i> طريقة الحساب</p>
         <p>أدخل <strong>المبلغ المراد تصريفه (بالدولار)</strong>، ثم <strong>السعر المثبت</strong> (السعر الذي تحاسب عليه)، ثم <strong>سعر الشراء</strong> (السعر الذي صرفت به فعلياً). الربح = المبلغ × (سعر الشراء − السعر المثبت) ÷ سعر الشراء.</p>
-        <p class="mt-2 text-xs text-indigo-800/90">مثال: 1000$ × (46 − 45) ÷ 46 ≈ 21.74$ ربح</p>
+        <p class="mt-2 text-xs text-sky-800/90">مثال: 1000$ × (46 − 45) ÷ 46 ≈ 21.74$ ربح</p>
       </div>
 
       <div class="rounded-xl border border-slate-200/90 bg-slate-50/40 overflow-hidden">
@@ -37,13 +37,13 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2 space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">الدورة المالية (اختياري)</label>
-              <select id="fxCycleId" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+              <select id="fxCycleId" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm transition focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15">
                 <option value="">— عام —</option>
               </select>
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">العملة</label>
-              <select id="fxCurrency" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+              <select id="fxCurrency" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15">
                 <option value="TRY">TRY</option>
                 <option value="SYP">SYP</option>
                 <option value="EGP">EGP</option>
@@ -52,19 +52,19 @@
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">المبلغ المراد تصريفه (بالدولار)</label>
-              <input type="number" id="fxAmountUsd" step="0.01" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="1000">
+              <input type="number" id="fxAmountUsd" step="0.01" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="1000">
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">السعر المثبت (وحدة/USD)</label>
-              <input type="number" id="fxInternal" step="0.0001" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="45">
+              <input type="number" id="fxInternal" step="0.0001" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="45">
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">سعر الشراء الفعلي (وحدة/USD)</label>
-              <input type="number" id="fxSettlement" step="0.0001" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="46">
+              <input type="number" id="fxSettlement" step="0.0001" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-mono tabular-nums focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="46">
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">الجهة (اختياري)</label>
-              <select id="fxEntityType" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+              <select id="fxEntityType" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15">
                 <option value="">— لا يوجد —</option>
                 <option value="transfer_company">شركة تحويل</option>
                 <option value="fund">صندوق</option>
@@ -72,15 +72,15 @@
             </div>
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">معرّف الكيان</label>
-              <input type="number" id="fxEntityId" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="رقم">
+              <input type="number" id="fxEntityId" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="رقم">
             </div>
             <div class="md:col-span-2 space-y-1.5">
               <label class="text-xs font-semibold text-slate-600">ملاحظات</label>
-              <input type="text" id="fxNotes" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="اختياري">
+              <input type="text" id="fxNotes" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="اختياري">
             </div>
           </div>
           <p id="fxPreview" class="text-sm text-slate-600 mt-4 min-h-[1.25rem]"></p>
-          <button type="button" id="fxSubmit" class="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-[0.99] transition">حفظ</button>
+          <button type="button" id="fxSubmit" class="mt-4 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 active:scale-[0.99] transition">حفظ</button>
         </div>
       </div>
 

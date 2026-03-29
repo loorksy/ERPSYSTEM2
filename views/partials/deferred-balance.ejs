@@ -2,7 +2,7 @@
   <!-- مقدمة الصفحة -->
   <section class="relative mb-6 sm:mb-8 rounded-2xl sm:rounded-3xl overflow-hidden border border-sky-200/60 bg-gradient-to-bl from-sky-50 via-white to-slate-50 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
     <div class="absolute top-0 right-0 w-40 h-40 sm:w-56 sm:h-56 rounded-full bg-sky-400/10 blur-3xl pointer-events-none" aria-hidden="true"></div>
-    <div class="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" aria-hidden="true"></div>
+    <div class="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-sky-400/10 blur-3xl pointer-events-none" aria-hidden="true"></div>
     <div class="relative px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
       <div class="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
         <div class="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 ring-4 ring-white/80">
@@ -24,7 +24,7 @@
     <!-- بحث -->
     <article class="group flex flex-col min-w-0 rounded-2xl border border-slate-200/90 bg-white shadow-sm hover:shadow-md transition-shadow duration-200 ring-1 ring-slate-900/[0.03]">
       <div class="flex items-center gap-3 px-4 pt-4 sm:px-5 sm:pt-5 pb-2 border-b border-slate-100/90">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 group-hover:bg-sky-600 group-hover:text-white transition-colors duration-200">
           <i class="fas fa-magnifying-glass text-sm" aria-hidden="true"></i>
         </span>
         <div class="min-w-0">
@@ -34,12 +34,12 @@
       </div>
       <div class="flex flex-col flex-1 p-4 sm:p-5 gap-3">
         <label for="deferredMemberSearch" class="sr-only">رقم المستخدم</label>
-        <input type="text" id="deferredMemberSearch" inputmode="numeric" autocomplete="off" placeholder="رقم المستخدم" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-shadow">
-        <button type="button" onclick="deferredLoadMemberHistory()" class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700 active:scale-[0.99] transition">
+        <input type="text" id="deferredMemberSearch" inputmode="numeric" autocomplete="off" placeholder="رقم المستخدم" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm text-slate-900 placeholder:text-slate-400 focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-sky-500/10 transition-shadow">
+        <button type="button" onclick="deferredLoadMemberHistory()" class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 active:scale-[0.99] transition">
           <i class="fas fa-list-ul text-xs opacity-90" aria-hidden="true"></i>
           عرض السجل
         </button>
-        <div id="deferredMemberHistory" class="hidden mt-1 text-sm text-slate-700 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 sm:p-4 max-h-56 overflow-y-auto overscroll-contain"></div>
+        <div id="deferredMemberHistory" class="hidden mt-1 text-sm text-slate-700 rounded-xl border border-sky-100 bg-sky-50/40 p-3 sm:p-4 max-h-56 overflow-y-auto overscroll-contain"></div>
       </div>
     </article>
 
@@ -180,16 +180,16 @@
         var profileUrl = '/member-directory/member/' + encodeURIComponent(mid);
         var cycleInfo = u.cycle_name ? (' · ' + (u.cycle_name || '') + ' #' + (u.cycle_id || '')) : '';
         var before = u.salary_before_discount != null ? (' · قبل الخصم: ' + fmt(u.salary_before_discount)) : '';
-        return '<a href="' + profileUrl + '" class="group block rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md hover:bg-indigo-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400">' +
+        return '<a href="' + profileUrl + '" class="group block rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm transition-all hover:border-sky-200 hover:shadow-md hover:bg-sky-50/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400">' +
           '<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-y-2">' +
           '<div class="min-w-0 flex-1">' +
-          '<span class="font-bold text-slate-900 group-hover:text-indigo-900">مستخدم: ' + (u.member_user_id || '') + '</span>' +
+          '<span class="font-bold text-slate-900 group-hover:text-sky-900">مستخدم: ' + (u.member_user_id || '') + '</span>' +
           '<span class="text-slate-500 text-sm">' + cycleInfo + '</span>' +
           '<p class="text-[0.65rem] text-slate-400 mt-1">ملف العضو في بيانات المستخدمين</p></div>' +
           '<div class="text-sm text-slate-600 break-words sm:text-right">معرف: ' + (u.extra_id_c || '-') + before + '</div>' +
           '<div class="flex items-center gap-2 shrink-0">' +
           '<span class="text-base font-bold text-sky-600 tabular-nums">بعد الخصم: ' + fmt(u.balance_d || 0) + '</span>' +
-          '<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition group-hover:bg-indigo-100 group-hover:text-indigo-600" aria-hidden="true"><i class="fas fa-chevron-left text-sm"></i></span>' +
+          '<span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition group-hover:bg-sky-100 group-hover:text-sky-600" aria-hidden="true"><i class="fas fa-chevron-left text-sm"></i></span>' +
           '</div></div></a>';
       }).join('');
     });
