@@ -237,14 +237,14 @@
     <button class="w-11 h-11 flex items-center justify-center rounded-xl text-slate-700 text-xl active:bg-slate-100 transition-all duration-200" id="menuToggle" aria-label="القائمة">
       <i class="fas fa-bars"></i>
     </button>
-    <div class="flex items-center gap-2.5 font-bold text-xl text-[#1e3a5f]">
-      <div class="w-9 h-9 bg-gradient-to-br from-[#1e3a5f] to-[#0f2744] rounded-xl flex items-center justify-center shadow-sm border border-[#c9a227]/20">
-        <i class="fas fa-chart-line text-[#c9a227] text-base"></i>
+    <div class="flex items-center gap-2.5 font-bold text-xl text-blue-900">
+      <div class="w-9 h-9 bg-gradient-to-br from-blue-900 to-slate-900 rounded-xl flex items-center justify-center shadow-sm border border-amber-500/20">
+        <i class="fas fa-chart-line text-amber-500 text-base"></i>
       </div>
       <span>LorkERP</span>
     </div>
     <div class="cursor-pointer" id="mobileUserBtn">
-      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#0f2744] text-white flex items-center justify-center font-bold text-sm shadow-md border-2 border-[#c9a227]/30">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-900 to-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-500/30">
         <%= user.displayName.charAt(0) %>
       </div>
     </div>
@@ -254,12 +254,12 @@
   <div class="hidden fixed inset-0 bg-slate-900/60 z-[1000] backdrop-blur-sm" id="sidebarOverlay"></div>
 
   <!-- Sidebar -->
-  <aside class="fixed top-0 right-0 w-[280px] h-screen bg-[#0f2744] z-[1001] flex flex-col transition-all duration-300 overflow-y-auto overflow-x-hidden" id="sidebar">
+  <aside class="fixed top-0 right-0 w-[280px] h-screen bg-slate-900 z-[1001] flex flex-col transition-all duration-300 overflow-y-auto overflow-x-hidden" id="sidebar">
     <!-- Logo -->
     <div class="p-6 flex items-center justify-between border-b border-white/[0.05]">
       <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 bg-gradient-to-br from-[#1e3a5f] to-[#2d5a87] rounded-[14px] flex items-center justify-center shrink-0 shadow-lg border border-[#c9a227]/20">
-          <i class="fas fa-chart-line text-[#c9a227] text-xl"></i>
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-900 to-blue-800 rounded-[14px] flex items-center justify-center shrink-0 shadow-lg border border-amber-500/20">
+          <i class="fas fa-chart-line text-amber-500 text-xl"></i>
         </div>
         <div>
           <h2 class="text-white text-xl font-bold leading-tight tracking-tight">LorkERP</h2>
@@ -273,7 +273,7 @@
 
     <!-- User -->
     <div class="py-4 px-4 mx-4 mt-5 bg-white/[0.03] rounded-2xl flex items-center gap-3.5 border border-white/[0.05]">
-      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#c9a227] to-[#a68621] text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
+      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
         <%= user.displayName.charAt(0) %>
       </div>
       <div>
@@ -287,25 +287,25 @@
       <ul class="px-3">
         <li class="pt-5 pb-2 px-4 text-[0.65rem] font-bold uppercase text-white/25 tracking-widest">الرئيسية</li>
         <li>
-          <a href="/dashboard" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'home' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <% if (page === 'home') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#c9a227] rounded-l-full"></span><% } %>
-            <i class="fas fa-home w-5 text-center <%= page === 'home' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/dashboard" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'home' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <% if (page === 'home') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-amber-500 rounded-l-full"></span><% } %>
+            <i class="fas fa-home w-5 text-center <%= page === 'home' ? 'text-amber-500' : '' %>"></i>
             <span>لوحة التحكم</span>
           </a>
         </li>
         <li>
-          <a href="/sheet" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'sheet' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <% if (page === 'sheet') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#c9a227] rounded-l-full"></span><% } %>
-            <i class="fas fa-file-excel w-5 text-center <%= page === 'sheet' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/sheet" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'sheet' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <% if (page === 'sheet') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-amber-500 rounded-l-full"></span><% } %>
+            <i class="fas fa-file-excel w-5 text-center <%= page === 'sheet' ? 'text-amber-500' : '' %>"></i>
             <span>Sheet</span>
           </a>
         </li>
 
         <li class="pt-5 pb-2 px-4 text-[0.65rem] font-bold uppercase text-white/25 tracking-widest">العمليات</li>
         <li>
-          <a href="/payroll" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'payroll-google' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <% if (page === 'payroll-google') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-[#c9a227] rounded-l-full"></span><% } %>
-            <i class="fas fa-money-check-alt w-5 text-center <%= page === 'payroll-google' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/payroll" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-200 mb-1 relative <%= page === 'payroll-google' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <% if (page === 'payroll-google') { %><span class="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-amber-500 rounded-l-full"></span><% } %>
+            <i class="fas fa-money-check-alt w-5 text-center <%= page === 'payroll-google' ? 'text-amber-500' : '' %>"></i>
             <span class="flex items-center gap-2 flex-wrap">
               <span>تدقيق الرواتب</span>
               <span id="navPayrollDraftBadge" class="hidden text-[0.65rem] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/90 text-amber-950">مسودة</span>
@@ -313,134 +313,134 @@
           </a>
         </li>
         <li>
-          <a href="/search" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'search' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-search w-5 text-center <%= page === 'search' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/search" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'search' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-search w-5 text-center <%= page === 'search' ? 'text-amber-500' : '' %>"></i>
             <span>البحث</span>
           </a>
         </li>
         <li>
-          <a href="/clients" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'clients' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-users w-5 text-center <%= page === 'clients' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/clients" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'clients' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-users w-5 text-center <%= page === 'clients' ? 'text-amber-500' : '' %>"></i>
             <span>بيانات العملاء</span>
           </a>
         </li>
         <li>
-          <a href="/member-directory" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-directory' || page === 'member-directory-detail' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-address-book w-5 text-center <%= page === 'member-directory' || page === 'member-directory-detail' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/member-directory" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-directory' || page === 'member-directory-detail' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-address-book w-5 text-center <%= page === 'member-directory' || page === 'member-directory-detail' ? 'text-amber-500' : '' %>"></i>
             <span>بيانات المستخدمين</span>
           </a>
         </li>
         <li>
-          <a href="/member-adjustments" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-adjustments' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-balance-scale w-5 text-center <%= page === 'member-adjustments' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/member-adjustments" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'member-adjustments' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-balance-scale w-5 text-center <%= page === 'member-adjustments' ? 'text-amber-500' : '' %>"></i>
             <span>إضافات وخصومات</span>
           </a>
         </li>
         <li>
-          <a href="/messages" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'messages' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-envelope-open-text w-5 text-center <%= page === 'messages' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/messages" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'messages' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-envelope-open-text w-5 text-center <%= page === 'messages' ? 'text-amber-500' : '' %>"></i>
             <span>ترتيب الرسائل</span>
           </a>
         </li>
         <li>
-          <a href="/approvals" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'approvals' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-clipboard-check w-5 text-center <%= page === 'approvals' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/approvals" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'approvals' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-clipboard-check w-5 text-center <%= page === 'approvals' ? 'text-amber-500' : '' %>"></i>
             <span>الاعتمادات</span>
           </a>
         </li>
 
         <li class="pt-5 pb-2 px-4 text-[0.65rem] font-bold uppercase text-white/25 tracking-widest">الوكالات والتحويل</li>
         <li>
-          <a href="/sub-agencies" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'sub-agencies' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-code-branch w-5 text-center <%= page === 'sub-agencies' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/sub-agencies" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'sub-agencies' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-code-branch w-5 text-center <%= page === 'sub-agencies' ? 'text-amber-500' : '' %>"></i>
             <span>الوكالات الفرعية</span>
           </a>
         </li>
         <li>
-          <a href="/main-agency" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'main-agency' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-building w-5 text-center <%= page === 'main-agency' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/main-agency" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'main-agency' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-building w-5 text-center <%= page === 'main-agency' ? 'text-amber-500' : '' %>"></i>
             <span>الوكالة الرئيسية</span>
           </a>
         </li>
         <li>
-          <a href="/transfer-companies" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'transfer-companies' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-exchange-alt w-5 text-center <%= page === 'transfer-companies' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/transfer-companies" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'transfer-companies' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-exchange-alt w-5 text-center <%= page === 'transfer-companies' ? 'text-amber-500' : '' %>"></i>
             <span>شركات التحويل</span>
           </a>
         </li>
         <li>
-          <a href="/funds" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'funds' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-vault w-5 text-center <%= page === 'funds' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/funds" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'funds' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-vault w-5 text-center <%= page === 'funds' ? 'text-amber-500' : '' %>"></i>
             <span>الصناديق</span>
           </a>
         </li>
         <li>
-          <a href="/debts" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'debts' || page === 'debt-company' || page === 'debt-fund' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-file-invoice-dollar w-5 text-center <%= page === 'debts' || page === 'debt-company' || page === 'debt-fund' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/debts" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'debts' || page === 'debt-company' || page === 'debt-fund' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-file-invoice-dollar w-5 text-center <%= page === 'debts' || page === 'debt-company' || page === 'debt-fund' ? 'text-amber-500' : '' %>"></i>
             <span>الديون</span>
           </a>
         </li>
         <li>
-          <a href="/payables-us" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payables-us' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-hand-holding-usd w-5 text-center <%= page === 'payables-us' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/payables-us" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payables-us' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-hand-holding-usd w-5 text-center <%= page === 'payables-us' ? 'text-amber-500' : '' %>"></i>
             <span>دين علينا</span>
           </a>
         </li>
         <li>
-          <a href="/receivables-to-us" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'receivables-to-us' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-hand-holding-heart w-5 text-center <%= page === 'receivables-to-us' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/receivables-to-us" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'receivables-to-us' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-hand-holding-heart w-5 text-center <%= page === 'receivables-to-us' ? 'text-amber-500' : '' %>"></i>
             <span>ديين لنا</span>
           </a>
         </li>
         <li>
-          <a href="/payment-due" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payment-due' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+          <a href="/payment-due" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payment-due' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
             <i class="fas fa-money-bill-wave w-5 text-center <%= page === 'payment-due' ? 'text-amber-400' : '' %>"></i>
             <span>مطلوب دفع</span>
           </a>
         </li>
         <li>
-          <a href="/fx-spread" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'fx-spread' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-chart-line w-5 text-center <%= page === 'fx-spread' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/fx-spread" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'fx-spread' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-chart-line w-5 text-center <%= page === 'fx-spread' ? 'text-amber-500' : '' %>"></i>
             <span>فرق التصريف</span>
           </a>
         </li>
         <li>
-          <a href="/shipping" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'shipping' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-truck w-5 text-center <%= page === 'shipping' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/shipping" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'shipping' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-truck w-5 text-center <%= page === 'shipping' ? 'text-amber-500' : '' %>"></i>
             <span>الشحن</span>
           </a>
         </li>
         <li>
-          <a href="/expenses-manual" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'expenses-manual' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-receipt w-5 text-center <%= page === 'expenses-manual' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/expenses-manual" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'expenses-manual' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-receipt w-5 text-center <%= page === 'expenses-manual' ? 'text-amber-500' : '' %>"></i>
             <span>المصاريف</span>
           </a>
         </li>
         <li>
-          <a href="/profit-sources" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'profit-sources' || page === 'profit-source-detail' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-chart-pie w-5 text-center <%= page === 'profit-sources' || page === 'profit-source-detail' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/profit-sources" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'profit-sources' || page === 'profit-source-detail' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-chart-pie w-5 text-center <%= page === 'profit-sources' || page === 'profit-source-detail' ? 'text-amber-500' : '' %>"></i>
             <span>مصادر الربح</span>
           </a>
         </li>
         <li>
-          <a href="/admin-brokerage" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'admin-brokerage' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-percent w-5 text-center <%= page === 'admin-brokerage' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/admin-brokerage" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'admin-brokerage' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-percent w-5 text-center <%= page === 'admin-brokerage' ? 'text-amber-500' : '' %>"></i>
             <span>وساطة إدارية</span>
           </a>
         </li>
 
         <li class="pt-5 pb-2 px-4 text-[0.65rem] font-bold uppercase text-white/25 tracking-widest">التواصل والعملاء</li>
         <li>
-          <a href="/client-portal" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'client-portal' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-headset w-5 text-center <%= page === 'client-portal' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/client-portal" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'client-portal' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-headset w-5 text-center <%= page === 'client-portal' ? 'text-amber-500' : '' %>"></i>
             <span>واجهة العملاء</span>
           </a>
         </li>
 
         <li class="pt-5 pb-2 px-4 text-[0.65rem] font-bold uppercase text-white/25 tracking-widest">النظام</li>
         <li>
-          <a href="/settings" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'settings' ? 'bg-[#c9a227]/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
-            <i class="fas fa-cog w-5 text-center <%= page === 'settings' ? 'text-[#c9a227]' : '' %>"></i>
+          <a href="/settings" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'settings' ? 'bg-amber-500/10 text-white' : 'text-slate-400 hover:bg-white/[0.06] hover:text-white' %>">
+            <i class="fas fa-cog w-5 text-center <%= page === 'settings' ? 'text-amber-500' : '' %>"></i>
             <span>الإعدادات</span>
           </a>
         </li>
@@ -527,12 +527,12 @@
   <div class="fixed top-5 left-5 z-[9999] flex flex-col gap-2 max-md:left-3 max-md:right-3 max-md:top-[72px]" id="toastContainer"></div>
 
   <!-- Mobile Bottom Nav -->
-  <nav id="mobileBottomNav" class="hidden max-lg:flex fixed bottom-0 left-0 right-0 min-h-[72px] backdrop-blur-xl items-end z-[999] pb-[env(safe-area-inset-bottom,0)] px-1 pt-1.5" style="background: rgba(255,255,255,0.98); border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);">
-    <a href="/dashboard" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'home' ? 'text-[#1e3a5f]' : 'text-slate-400' %>">
+  <nav id="mobileBottomNav" class="hidden max-lg:flex fixed bottom-0 left-0 right-0 min-h-[72px] bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-lg items-end z-[999] pb-[env(safe-area-inset-bottom,0)] px-1 pt-1.5">
+    <a href="/dashboard" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'home' ? 'text-blue-900' : 'text-slate-400' %>">
       <i class="fas fa-home text-xl"></i>
       <span class="truncate max-w-full">الرئيسية</span>
     </a>
-    <a href="/sheet" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'sheet' ? 'text-[#1e3a5f]' : 'text-slate-400' %>">
+    <a href="/sheet" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'sheet' ? 'text-blue-900' : 'text-slate-400' %>">
       <i class="fas fa-file-excel text-xl"></i>
       <span class="truncate max-w-full">Sheet</span>
     </a>
@@ -547,11 +547,11 @@
         </div>
       </div>
     </div>
-    <a href="/clients" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'clients' ? 'text-[#1e3a5f]' : 'text-slate-400' %>">
+    <a href="/clients" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'clients' ? 'text-blue-900' : 'text-slate-400' %>">
       <i class="fas fa-users text-xl"></i>
       <span class="truncate max-w-full">العملاء</span>
     </a>
-    <a href="/search" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'search' ? 'text-[#1e3a5f]' : 'text-slate-400' %>">
+    <a href="/search" class="flex flex-col items-center justify-end gap-1 text-[0.65rem] font-medium py-1.5 px-1 rounded-xl transition-all duration-200 pb-2.5 <%= page === 'search' ? 'text-blue-900' : 'text-slate-400' %>">
       <i class="fas fa-search text-xl"></i>
       <span class="truncate max-w-full">البحث</span>
     </a>
