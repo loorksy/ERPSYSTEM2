@@ -300,7 +300,10 @@
         <li>
           <a href="/payroll" class="flex items-center gap-3 py-3 px-4 rounded-xl text-[0.9rem] font-medium transition-all duration-300 mb-0.5 <%= page === 'payroll-google' ? 'bg-indigo-600/30 text-white' : 'text-slate-300 hover:bg-white/[0.08] hover:text-white' %>">
             <i class="fas fa-money-check-alt w-5 text-center <%= page === 'payroll-google' ? 'text-indigo-400' : '' %>"></i>
-            <span>تدقيق الرواتب</span>
+            <span class="flex items-center gap-2 flex-wrap">
+              <span>تدقيق الرواتب</span>
+              <span id="navPayrollDraftBadge" class="hidden text-[0.65rem] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/90 text-amber-950">مسودة</span>
+            </span>
           </a>
         </li>
         <li>

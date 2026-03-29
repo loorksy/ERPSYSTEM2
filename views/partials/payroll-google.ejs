@@ -10,25 +10,6 @@
     </div>
   </div>
 
-  <!-- جلسة التدقيق (مفتوحة حتى «إغلاق التدقيق» — من السيرفر) -->
-  <div id="payrollAuditSessionBanner" class="hidden max-w-4xl mx-auto rounded-2xl border border-amber-200/90 bg-gradient-to-l from-amber-50 to-amber-100/50 p-4 sm:p-5 shadow-sm">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div class="flex items-start gap-3">
-        <span class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-200/80 text-amber-900">
-          <i class="fas fa-clipboard-check"></i>
-        </span>
-        <div>
-          <p id="payrollAuditSessionTitle" class="text-sm font-bold text-amber-950">التدقيق نشط لهذه الدورة</p>
-          <p id="payrollAuditSessionSub" class="text-xs text-amber-900/80 mt-1">أكمل معلومات المستخدمين والمؤجل ثم اضغط «إغلاق التدقيق» عند الانتهاء. الحالة تُحفظ في النظام حتى بعد مغادرة الصفحة.</p>
-        </div>
-      </div>
-      <button type="button" id="payrollCloseAuditBtn" onclick="payrollCloseAuditSession()" class="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl font-semibold text-sm bg-amber-700 text-white hover:bg-amber-800 active:scale-[0.98] transition shrink-0">
-        إغلاق التدقيق
-      </button>
-    </div>
-    <p id="payrollAuditSessionClosedNote" class="hidden mt-3 text-sm font-medium text-emerald-800 border-t border-amber-200/60 pt-3"><i class="fas fa-check-circle ml-1"></i> تم إغلاق جلسة التدقيق لهذه الدورة.</p>
-  </div>
-
   <!-- 1. مزامنة الدورة المالية -->
   <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
     <div class="p-4 sm:p-6">
@@ -52,14 +33,33 @@
     </div>
   </section>
 
-  <!-- 2. حاوية الخيارات (تظهر بعد اختيار الدورة) -->
+  <!-- 2. حاوية الخيارات (تبقى مفتوحة عند وجود مسودة؛ جلسة التدقيق داخل اللوحة) -->
   <section id="payrollOptionsSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden">
     <div class="p-4 sm:p-6 space-y-6">
+      <!-- جلسة التدقيق داخل نفس قسم الخيارات -->
+      <div id="payrollAuditSessionBanner" class="hidden rounded-xl border border-amber-200/90 bg-gradient-to-l from-amber-50 to-amber-100/50 p-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-200/80 text-amber-900">
+              <i class="fas fa-clipboard-check"></i>
+            </span>
+            <div>
+              <p id="payrollAuditSessionTitle" class="text-sm font-bold text-amber-950">التدقيق نشط لهذه الدورة</p>
+              <p id="payrollAuditSessionSub" class="text-xs text-amber-900/80 mt-1">يُحفظ اختيار الدورة والجدول والأعمدة في هذا الجهاز. بعد أول «تدقيق» ناجح يظهر زر إغلاق الجلسة. الحالة تبقى في السيرفر حتى تضغط إغلاق التدقيق.</p>
+            </div>
+          </div>
+          <button type="button" id="payrollCloseAuditBtn" onclick="payrollCloseAuditSession()" class="hidden inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl font-semibold text-sm bg-amber-700 text-white hover:bg-amber-800 active:scale-[0.98] transition shrink-0">
+            إغلاق التدقيق
+          </button>
+        </div>
+        <p id="payrollAuditSessionClosedNote" class="hidden mt-3 text-sm font-medium text-emerald-800 border-t border-amber-200/60 pt-3"><i class="fas fa-check-circle ml-1"></i> تم إغلاق جلسة التدقيق لهذه الدورة.</p>
+      </div>
+
       <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
         <i class="fas fa-cogs text-emerald-600"></i>
         خيارات التدقيق
       </h3>
-      <p class="text-sm text-slate-600">اختر جدول <strong>معلومات المستخدمين</strong>، حدد الأعمدة، ثم <strong>مزامنة للتدقيق</strong> (سحب من Google فقط) وبعدها استخدم <strong>تطبيق على Google</strong> للكتابة في الجداول كما سابقاً.</p>
+      <p class="text-sm text-slate-600">اختر جدول <strong>معلومات المستخدمين</strong> وحدد الأعمدة، ثم اضغط <strong>تدقيق</strong> (مزامنة السيرفر ثم التطبيق على Google في خطوة واحدة).</p>
 
       <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end flex-wrap">
         <div class="flex-1 min-w-0 sm:min-w-[200px]">
@@ -68,11 +68,8 @@
             <option value="">— جاري التحميل... —</option>
           </select>
         </div>
-        <button type="button" id="payrollSyncAuditBtn" onclick="payrollSyncForAudit()" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] transition-all shrink-0" title="جلب إدارة + وكيل + معلومات المستخدمين وحفظها على السيرفر">
-          <i class="fas fa-cloud-download-alt"></i> مزامنة للتدقيق
-        </button>
-        <button type="button" id="payrollExecuteBtn" onclick="payrollExecute()" class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] transition-all shrink-0" title="كتابة النتائج والألوان في Google">
-          <i class="fas fa-play"></i> تطبيق على Google
+        <button type="button" id="payrollAuditBtn" onclick="payrollRunAudit()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] transition-all shrink-0 min-w-[140px]" title="مزامنة اللقطات ثم كتابة النتائج والألوان في Google">
+          <i class="fas fa-clipboard-check"></i> تدقيق
         </button>
       </div>
 
@@ -196,15 +193,132 @@
 </div>
 
 <script>
-(function() {
-  var cycleSelect = document.getElementById('payrollCycleSelect');
-  var optionsSection = document.getElementById('payrollOptionsSection');
-  if (cycleSelect) {
-    cycleSelect.addEventListener('change', function() {
-      if (optionsSection) optionsSection.classList.add('hidden');
-    });
+var PAYROLL_DRAFT_KEY = 'payrollAuditDraftV1';
+
+function payrollAuditHasRunForCycle(cycleId) {
+  try {
+    return localStorage.getItem('payroll_audit_has_run_' + cycleId) === '1';
+  } catch (_) { return false; }
+}
+
+function payrollMarkAuditRun(cycleId) {
+  try {
+    localStorage.setItem('payroll_audit_has_run_' + cycleId, '1');
+  } catch (_) {}
+}
+
+function payrollAuditBtnHtml() {
+  return '<i class="fas fa-clipboard-check"></i> تدقيق';
+}
+
+function payrollSetSelectValue(elId, val) {
+  if (val == null || val === '') return;
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var s = String(val);
+  for (var i = 0; i < el.options.length; i++) {
+    if (el.options[i].value === s) {
+      el.selectedIndex = i;
+      return;
+    }
   }
-})();
+}
+
+function payrollSaveDraft() {
+  var csel = document.getElementById('payrollCycleSelect');
+  if (!csel || !csel.value) return;
+  var ss = document.getElementById('payrollSpreadsheetSelect');
+  var draft = {
+    cycleId: csel.value,
+    spreadsheetId: (ss && ss.value) || '',
+    userInfoSheetName: (document.getElementById('payrollUserInfoSheetSelect') && document.getElementById('payrollUserInfoSheetSelect').value) || '',
+    userInfoUserIdCol: (document.getElementById('payrollUserInfoUserIdCol') && document.getElementById('payrollUserInfoUserIdCol').value) || '',
+    userInfoTitleCol: (document.getElementById('payrollUserInfoTitleCol') && document.getElementById('payrollUserInfoTitleCol').value) || '',
+    userInfoSalaryCol: (document.getElementById('payrollUserInfoSalaryCol') && document.getElementById('payrollUserInfoSalaryCol').value) || '',
+    userInfoStatusCol: (document.getElementById('payrollUserInfoStatusCol') && document.getElementById('payrollUserInfoStatusCol').value) || '',
+    cycleMgmtUserIdCol: (document.getElementById('payrollCycleMgmtUserIdCol') && document.getElementById('payrollCycleMgmtUserIdCol').value) || '',
+    cycleAgentUserIdCol: (document.getElementById('payrollCycleAgentUserIdCol') && document.getElementById('payrollCycleAgentUserIdCol').value) || '',
+    cycleAgentSalaryCol: (document.getElementById('payrollCycleAgentSalaryCol') && document.getElementById('payrollCycleAgentSalaryCol').value) || '',
+    discountRate: document.getElementById('payrollDiscountRate') ? document.getElementById('payrollDiscountRate').value : '0',
+    agentColor: document.getElementById('payrollAgentColor') ? document.getElementById('payrollAgentColor').value : '#3b82f6',
+    managementColor: document.getElementById('payrollMgmtColor') ? document.getElementById('payrollMgmtColor').value : '#10b981'
+  };
+  try {
+    localStorage.setItem(PAYROLL_DRAFT_KEY, JSON.stringify(draft));
+    if (typeof window.updatePayrollDraftNavBadge === 'function') window.updatePayrollDraftNavBadge();
+  } catch (_) {}
+}
+
+async function payrollRestoreDraft() {
+  var raw;
+  try { raw = localStorage.getItem(PAYROLL_DRAFT_KEY); } catch (_) { return; }
+  if (!raw) return;
+  var draft;
+  try { draft = JSON.parse(raw); } catch (_) { return; }
+  if (!draft || !draft.cycleId) return;
+
+  var csel = document.getElementById('payrollCycleSelect');
+  if (!csel) return;
+  var cycleStr = String(draft.cycleId);
+  var found = false;
+  for (var j = 0; j < csel.options.length; j++) {
+    if (csel.options[j].value === cycleStr) { found = true; break; }
+  }
+  if (!found) return;
+  csel.value = cycleStr;
+
+  var optionsSection = document.getElementById('payrollOptionsSection');
+  if (optionsSection) optionsSection.classList.remove('hidden');
+
+  await payrollLoadSpreadsheetsList();
+  var ss = document.getElementById('payrollSpreadsheetSelect');
+  if (ss && draft.spreadsheetId) {
+    ss.value = draft.spreadsheetId;
+    await payrollLoadUserInfoSheetsAndColumns(draft.spreadsheetId, draft.userInfoSheetName || null);
+    payrollSetSelectValue('payrollUserInfoSheetSelect', draft.userInfoSheetName);
+  }
+
+  await payrollLoadCycleColumns(cycleStr);
+
+  payrollSetSelectValue('payrollUserInfoUserIdCol', draft.userInfoUserIdCol);
+  payrollSetSelectValue('payrollUserInfoTitleCol', draft.userInfoTitleCol);
+  payrollSetSelectValue('payrollUserInfoSalaryCol', draft.userInfoSalaryCol);
+  payrollSetSelectValue('payrollUserInfoStatusCol', draft.userInfoStatusCol);
+  payrollSetSelectValue('payrollCycleMgmtUserIdCol', draft.cycleMgmtUserIdCol);
+  payrollSetSelectValue('payrollCycleAgentUserIdCol', draft.cycleAgentUserIdCol);
+  payrollSetSelectValue('payrollCycleAgentSalaryCol', draft.cycleAgentSalaryCol);
+
+  if (draft.discountRate != null && document.getElementById('payrollDiscountRate')) {
+    document.getElementById('payrollDiscountRate').value = draft.discountRate;
+  }
+  if (draft.agentColor && document.getElementById('payrollAgentColor')) {
+    document.getElementById('payrollAgentColor').value = draft.agentColor;
+    if (document.getElementById('payrollAgentColorText')) document.getElementById('payrollAgentColorText').value = draft.agentColor;
+  }
+  if (draft.managementColor && document.getElementById('payrollMgmtColor')) {
+    document.getElementById('payrollMgmtColor').value = draft.managementColor;
+    if (document.getElementById('payrollMgmtColorText')) document.getElementById('payrollMgmtColorText').value = draft.managementColor;
+  }
+  if (typeof window.updatePayrollDraftNavBadge === 'function') window.updatePayrollDraftNavBadge();
+}
+
+function payrollWireDraftSave() {
+  var ids = [
+    'payrollSpreadsheetSelect', 'payrollUserInfoSheetSelect',
+    'payrollUserInfoUserIdCol', 'payrollUserInfoTitleCol', 'payrollUserInfoSalaryCol', 'payrollUserInfoStatusCol',
+    'payrollCycleMgmtUserIdCol', 'payrollCycleAgentUserIdCol', 'payrollCycleAgentSalaryCol'
+  ];
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', payrollSaveDraft);
+  });
+  var dr = document.getElementById('payrollDiscountRate');
+  if (dr) dr.addEventListener('input', payrollSaveDraft);
+  ['payrollAgentColor', 'payrollMgmtColor', 'payrollAgentColorText', 'payrollMgmtColorText'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', payrollSaveDraft);
+  });
+}
 
 function syncPayrollAgentColor() {
   var color = document.getElementById('payrollAgentColor');
@@ -234,12 +348,17 @@ document.getElementById('payrollMgmtColorText').addEventListener('input', syncPa
 
 async function payrollRefreshAuditSession() {
   var sel = document.getElementById('payrollCycleSelect');
+  var optionsSection = document.getElementById('payrollOptionsSection');
   var banner = document.getElementById('payrollAuditSessionBanner');
   var btn = document.getElementById('payrollCloseAuditBtn');
   var closedNote = document.getElementById('payrollAuditSessionClosedNote');
   var titleEl = document.getElementById('payrollAuditSessionTitle');
   var subEl = document.getElementById('payrollAuditSessionSub');
   if (!banner || !sel || !sel.value) {
+    if (banner) banner.classList.add('hidden');
+    return;
+  }
+  if (optionsSection && optionsSection.classList.contains('hidden')) {
     if (banner) banner.classList.add('hidden');
     return;
   }
@@ -257,10 +376,11 @@ async function payrollRefreshAuditSession() {
       if (titleEl) titleEl.textContent = 'تم إغلاق التدقيق';
       if (subEl) subEl.textContent = 'يمكنك متابعة العمل؛ لإعادة فتح جلسة تدقيق جديدة لاحقاً قد نضيف خياراً من الإعدادات.';
     } else {
-      if (btn) btn.classList.remove('hidden');
+      var hasRun = payrollAuditHasRunForCycle(sel.value);
+      if (btn) btn.classList.toggle('hidden', !hasRun);
       if (closedNote) closedNote.classList.add('hidden');
       if (titleEl) titleEl.textContent = 'التدقيق نشط لهذه الدورة';
-      if (subEl) subEl.textContent = 'أكمل معلومات المستخدمين والمؤجل ثم اضغط «إغلاق التدقيق» عند الانتهاء. الحالة تُحفظ في النظام حتى بعد مغادرة الصفحة.';
+      if (subEl) subEl.textContent = 'يُحفظ اختيار الدورة والجدول والأعمدة في هذا الجهاز. بعد أول «تدقيق» ناجح يظهر زر إغلاق الجلسة. الحالة تبقى في السيرفر حتى تضغط إغلاق التدقيق.';
     }
   } catch (_) {
     banner.classList.add('hidden');
@@ -354,7 +474,8 @@ function columnLetter(i) {
     await payrollRefreshAuditSession();
   } catch (_) {}
   if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> تحميل الدورة'; }
-  if (typeof showToast === 'function') showToast('تم تحميل الدورة. اختر جدول البيانات وحدد الأعمدة ثم انقر تنفيذ.', 'success');
+  if (typeof showToast === 'function') showToast('تم تحميل الدورة. اختر جدول البيانات وحدد الأعمدة ثم انقر تدقيق.', 'success');
+  payrollSaveDraft();
 }
 
   async function payrollLoadCycleColumns(cycleId) {
@@ -540,10 +661,8 @@ async function payrollSyncForAudit() {
   var userInfoSheetName = (document.getElementById('payrollUserInfoSheetSelect') && document.getElementById('payrollUserInfoSheetSelect').value) || '';
   if (!cycleId || !spreadsheetId) {
     if (typeof showToast === 'function') showToast('اختر الدورة وجدول معلومات المستخدمين أولاً', 'error');
-    return;
+    return false;
   }
-  var btn = document.getElementById('payrollSyncAuditBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري السحب...'; }
   try {
     var res = await fetch('/api/sheet/cycles/' + cycleId + '/sync', {
       method: 'POST',
@@ -558,25 +677,28 @@ async function payrollSyncForAudit() {
       var t = data.message || 'تم';
       if (data.detail) t += ' — ' + data.detail;
       if (typeof showToast === 'function') showToast(t, 'success');
-    } else {
-      if (typeof showToast === 'function') showToast(data.message || 'فشل المزامنة', 'error');
+      return true;
     }
+    if (typeof showToast === 'function') showToast(data.message || 'فشل المزامنة', 'error');
+    return false;
   } catch (_) {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+    return false;
   }
-  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> مزامنة للتدقيق'; }
 }
 
-async function payrollExecute() {
+async function payrollExecute(fromRunAudit) {
   var cycleId = document.getElementById('payrollCycleSelect').value;
   var spreadsheetId = (document.getElementById('payrollSpreadsheetSelect').value || '').trim();
   if (!cycleId || !spreadsheetId) {
     if (typeof showToast === 'function') showToast('اختر الدورة المالية وجدول البيانات أولاً', 'error');
     return;
   }
-  var btn = document.getElementById('payrollExecuteBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التطبيق...';
+  var btn = document.getElementById('payrollAuditBtn');
+  if (!fromRunAudit && btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التطبيق...';
+  }
   var discountRate = document.getElementById('payrollDiscountRate').value;
   var agentColor = document.getElementById('payrollAgentColor').value;
   var managementColor = document.getElementById('payrollMgmtColor').value;
@@ -610,6 +732,7 @@ async function payrollExecute() {
     });
     var data = await res.json();
     if (data.success) {
+      payrollMarkAuditRun(String(cycleId));
       var html = payrollBuildResultHtml(data);
       document.getElementById('payrollResultsContent').innerHTML = html;
       document.getElementById('payrollResultsSection').classList.remove('hidden');
@@ -620,14 +743,37 @@ async function payrollExecute() {
       if (typeof showToast === 'function') showToast(toastMsg, data.applied ? 'success' : 'warning');
       if (typeof window.refreshDeferredBalanceCard === 'function') window.refreshDeferredBalanceCard();
       if (typeof payrollRefreshAuditSession === 'function') payrollRefreshAuditSession();
+      payrollSaveDraft();
     } else {
       if (typeof showToast === 'function') showToast(data.message || 'فشل التنفيذ', 'error');
     }
   } catch (_) {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
+  } finally {
+    if (!fromRunAudit && btn) {
+      btn.disabled = false;
+      btn.innerHTML = payrollAuditBtnHtml();
+    }
   }
-  btn.disabled = false;
-  btn.innerHTML = '<i class="fas fa-play"></i> تطبيق على Google';
+}
+
+async function payrollRunAudit() {
+  var btn = document.getElementById('payrollAuditBtn');
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 1/2 مزامنة...';
+    }
+    var ok = await payrollSyncForAudit();
+    if (!ok) return;
+    if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 2/2 تطبيق...';
+    await payrollExecute(true);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = payrollAuditBtnHtml();
+    }
+  }
 }
 
 async function payrollSaveSettings() {
@@ -646,6 +792,7 @@ async function payrollSaveSettings() {
     });
     var data = await res.json();
     if (typeof showToast === 'function') showToast(data.message || (data.success ? 'تم حفظ الإعدادات' : 'فشل'), data.success ? 'success' : 'error');
+    if (data.success) payrollSaveDraft();
   } catch (_) {
     if (typeof showToast === 'function') showToast('خطأ في الاتصال', 'error');
   }
@@ -667,9 +814,20 @@ async function payrollLoadSettings() {
 }
 
 (function initPayrollPage() {
-  var csel = document.getElementById('payrollCycleSelect');
-  if (csel) csel.addEventListener('change', function() { payrollRefreshAuditSession(); });
-  payrollLoadCycles().then(function() { return payrollRefreshAuditSession(); });
-  payrollLoadSettings();
+  payrollLoadSettings().then(function() {
+    return payrollLoadCycles();
+  }).then(function() {
+    return payrollRestoreDraft();
+  }).then(function() {
+    payrollWireDraftSave();
+    var csel = document.getElementById('payrollCycleSelect');
+    if (csel) {
+      csel.addEventListener('change', function() {
+        payrollRefreshAuditSession();
+        payrollSaveDraft();
+      });
+    }
+    return payrollRefreshAuditSession();
+  });
 })();
 </script>

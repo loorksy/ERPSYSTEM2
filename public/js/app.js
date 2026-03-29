@@ -261,6 +261,16 @@ function initSidebar() {
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
   if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
 
+  window.updatePayrollDraftNavBadge = function () {
+    try {
+      var badge = document.getElementById('navPayrollDraftBadge');
+      if (!badge) return;
+      var has = !!localStorage.getItem('payrollAuditDraftV1');
+      badge.classList.toggle('hidden', !has);
+    } catch (_) {}
+  };
+  window.updatePayrollDraftNavBadge();
+
   let startX = 0, currentX = 0, isDragging = false;
   sidebar?.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; isDragging = true; });
   sidebar?.addEventListener('touchmove', (e) => { if (!isDragging) return; currentX = e.touches[0].clientX; const d = currentX - startX; if (d > 0) sidebar.style.transform = `translateX(${d}px)`; });
