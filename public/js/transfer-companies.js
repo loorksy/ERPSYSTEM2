@@ -34,7 +34,7 @@
         return '<div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm cursor-pointer hover:shadow-md" onclick="tcOpen(' + c.id + ')">' +
           '<h5 class="font-bold">' + (c.name || '') + '</h5>' +
           '<p class="text-sm text-slate-600 mt-1">' + (c.country || '') + '</p>' +
-          '<p class="text-sm font-semibold text-indigo-600 mt-2">' + (c.balance_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ' + (c.balance_currency || 'USD') + '</p>' +
+          '<p class="text-sm font-semibold text-sky-600 mt-2">' + (c.balance_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ' + (c.balance_currency || 'USD') + '</p>' +
           '<p class="text-xs text-slate-500 mt-1">' + types + '</p></div>';
       }).join('');
     });

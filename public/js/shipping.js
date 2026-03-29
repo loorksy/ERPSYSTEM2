@@ -22,7 +22,7 @@
         var gQty = res.goldBalance != null ? res.goldBalance : 0;
         var cQty = res.crystalBalance != null ? res.crystalBalance : 0;
         if (g) g.innerHTML = '<span class="block">' + fmt(gUsd) + '</span><span class="text-xs font-normal text-amber-800/80">كمية: ' + (gQty||0).toLocaleString('en-US') + '</span>';
-        if (c) c.innerHTML = '<span class="block">' + fmt(cUsd) + '</span><span class="text-xs font-normal text-indigo-800/80">كمية: ' + (cQty||0).toLocaleString('en-US') + '</span>';
+        if (c) c.innerHTML = '<span class="block">' + fmt(cUsd) + '</span><span class="text-xs font-normal text-sky-800/80">كمية: ' + (cQty||0).toLocaleString('en-US') + '</span>';
       }
     });
   }
@@ -69,20 +69,20 @@
       var list = res.list || [];
       if (list.length === 0) {
         box.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-3xl border border-dashed border-slate-200 bg-gradient-to-b from-slate-50 to-white">' +
-          '<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 shadow-inner"><i class="fas fa-truck-moving text-2xl"></i></div>' +
+          '<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 shadow-inner"><i class="fas fa-truck-moving text-2xl"></i></div>' +
           '<p class="text-slate-700 font-semibold mb-1">لا توجد وكالات بعد</p>' +
           '<p class="text-sm text-slate-500 text-center max-w-sm">أضف وكالة شحن لعرض الرصيد وسجل الحركات من الزر أعلاه.</p></div>';
         return;
       }
       box.innerHTML = list.map(function(c) {
-        return '<div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 cursor-pointer shadow-sm hover:shadow-[0_12px_32px_rgba(79,70,229,0.12)] hover:border-indigo-200 hover:-translate-y-0.5 transition-all duration-300" onclick="shippingOpenCarrierDetail(' + c.id + ')">' +
-          '<div class="absolute top-0 left-0 h-full w-1 rounded-r-full bg-gradient-to-b from-indigo-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>' +
+        return '<div class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 cursor-pointer shadow-sm hover:shadow-[0_12px_32px_rgba(79,70,229,0.12)] hover:border-sky-200 hover:-translate-y-0.5 transition-all duration-300" onclick="shippingOpenCarrierDetail(' + c.id + ')">' +
+          '<div class="absolute top-0 left-0 h-full w-1 rounded-r-full bg-gradient-to-b from-sky-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>' +
           '<div class="flex items-start gap-4">' +
-          '<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-[0_6px_18px_rgba(79,70,229,0.35)]"><i class="fas fa-truck text-lg"></i></div>' +
+          '<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-600 to-sky-500 text-white shadow-[0_6px_18px_rgba(79,70,229,0.35)]"><i class="fas fa-truck text-lg"></i></div>' +
           '<div class="min-w-0 flex-1">' +
           '<h5 class="font-bold text-slate-800 text-base leading-snug">' + (c.name || '') + '</h5>' +
           '<p class="text-xs text-slate-500 mt-1.5 flex items-center gap-1"><i class="fas fa-receipt text-[10px]"></i> عرض السجل والحركات</p></div>' +
-          '<span class="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors"><i class="fas fa-chevron-left text-xs"></i></span></div></div>';
+          '<span class="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400 group-hover:bg-sky-100 group-hover:text-sky-600 transition-colors"><i class="fas fa-chevron-left text-xs"></i></span></div></div>';
       }).join('');
     });
   }
@@ -90,7 +90,7 @@
   var SHIP_TAB_INACTIVE =
     'shipping-tab-link flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors';
   var SHIP_TAB_ACTIVE =
-    'shipping-tab-link flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm font-semibold text-indigo-700 bg-white shadow-sm ring-1 ring-slate-200/90 transition-colors';
+    'shipping-tab-link flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm font-semibold text-sky-700 bg-white shadow-sm ring-1 ring-slate-200/90 transition-colors';
 
   window.switchShippingTab = function(btn, tabId) {
     var card = document.querySelector('[data-tabs-container="shipping"]');
@@ -477,7 +477,7 @@
     var netAfter = Math.round(gross * (1 - d / 100) * 100) / 100;
     var expenseDiscount = Math.round((gross - netAfter) * 100) / 100;
     var html = [];
-    html.push('<p><span class="font-semibold text-indigo-900">بعد الخصم (صافي):</span> ' + fmtMoneyPreview(netAfter) + '</p>');
+    html.push('<p><span class="font-semibold text-sky-900">بعد الخصم (صافي):</span> ' + fmtMoneyPreview(netAfter) + '</p>');
     if (expenseDiscount > 0) {
       html.push('<p class="text-amber-800 text-xs">يُسجَّل كمصروف (خصم): ' + fmtMoneyPreview(expenseDiscount) + '</p>');
     }

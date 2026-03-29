@@ -18,9 +18,9 @@
 
   function statCard(iconClass, iconBg, label, value, valueClass) {
     return (
-      '<div class="group relative rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-indigo-200/70 hover:shadow-md min-w-0">' +
+      '<div class="group relative rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/90 shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition hover:border-sky-200/70 hover:shadow-md min-w-0">' +
       '<div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">' +
-      '<span class="absolute -left-6 -top-6 h-20 w-20 rounded-full bg-indigo-400/[0.06] blur-2xl"></span>' +
+      '<span class="absolute -left-6 -top-6 h-20 w-20 rounded-full bg-sky-400/[0.06] blur-2xl"></span>' +
       '</div>' +
       '<div class="relative z-[1] flex flex-col gap-2.5 p-3 sm:p-4 min-w-0">' +
       '<div class="flex items-start gap-2.5 min-w-0">' +
@@ -261,7 +261,7 @@
       var html =
         '<div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm">' +
         '<p class="text-xs font-semibold text-slate-500 mb-1">الرصيد الحالي</p>' +
-        '<p class="font-mono text-3xl font-bold tabular-nums text-indigo-700">' +
+        '<p class="font-mono text-3xl font-bold tabular-nums text-sky-700">' +
         fmt(c.balance_amount) +
         ' ' +
         esc(c.balance_currency || 'USD') +
@@ -344,12 +344,12 @@
       var f = res.fund;
       if (title) title.textContent = f.name || 'صندوق';
       var html =
-        '<div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-indigo-50/40 p-5 shadow-sm mb-6">' +
+        '<div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/40 p-5 shadow-sm mb-6">' +
         '<p class="text-xs font-semibold text-slate-500 mb-3">أرصدة العملات</p>' +
         '<div class="flex flex-wrap gap-2">';
       (res.balances || []).forEach(function(b) {
         html +=
-          '<span class="inline-flex items-center rounded-xl border border-indigo-200 bg-white px-4 py-2 font-mono text-sm font-semibold tabular-nums text-indigo-900 shadow-sm">' +
+          '<span class="inline-flex items-center rounded-xl border border-sky-200 bg-white px-4 py-2 font-mono text-sm font-semibold tabular-nums text-sky-900 shadow-sm">' +
           fmt(b.amount) +
           ' ' +
           esc(b.currency || '') +
