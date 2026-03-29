@@ -594,7 +594,7 @@
     
     <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-start sm:items-center bg-white/80 backdrop-blur-md z-10 shrink-0">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
+        <div class="h-10 w-10 flex items-center justify-center rounded-xl bg-indigo-50 text-sky-600 shrink-0">
           <i class="fas fa-file-import text-lg"></i>
         </div>
         <div>
@@ -647,12 +647,12 @@
             <span class="text-xs text-slate-500 mt-1">يجب أن يحتوي على (كود، اسم، رصيد)</span>
             <span id="accBulkFileName" class="hidden mt-3 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full font-mono max-w-full truncate"></span>
           </label>
-          <button type="button" onclick="accSubmitBulk()" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">تحميل ومعاينة <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
+          <button type="button" onclick="accSubmitBulk()" class="w-full py-3 rounded-xl bg-sky-500 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">تحميل ومعاينة <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
         </div>
 
         <div id="accBulkPanelPaste" class="acc-bulk-source-panel hidden space-y-4">
           <textarea id="accBulkPaste" rows="5" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none resize-none font-mono" placeholder="الصق بيانات الأعمدة هنا..."></textarea>
-          <button type="button" onclick="accSubmitBulkText()" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">معاينة النص <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
+          <button type="button" onclick="accSubmitBulkText()" class="w-full py-3 rounded-xl bg-sky-500 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">معاينة النص <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
         </div>
 
         <div id="accBulkPanelSheet" class="acc-bulk-source-panel hidden space-y-4">
@@ -662,7 +662,7 @@
           </div>
           <input type="url" id="accBulkSheetUrl" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="رابط Google Sheet">
           <input type="text" id="accBulkSheetName" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" placeholder="اسم الورقة (اختياري)">
-          <button type="button" onclick="accSubmitBulkSheetUrl()" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">معاينة الرابط <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
+          <button type="button" onclick="accSubmitBulkSheetUrl()" class="w-full py-3 rounded-xl bg-sky-500 text-white font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all">معاينة الرابط <i class="fas fa-arrow-left mr-1 text-xs opacity-80"></i></button>
         </div>
       </div>
 
@@ -728,7 +728,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3 mb-2 px-1">
         <span class="text-xs font-semibold text-slate-600">معتمدون برصيد</span>
         <label class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
-          <input type="checkbox" id="accDelSelectAll" class="acc-del-select-all h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
+          <input type="checkbox" id="accDelSelectAll" class="acc-del-select-all h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-indigo-500" checked>
           <span>تحديد الكل</span>
         </label>
       </div>
@@ -746,7 +746,7 @@
 <div id="accConfirmModal" class="fixed inset-0 z-[10060] hidden items-center justify-center p-4 sm:p-6 max-lg:p-2 bg-slate-900/60 backdrop-blur-sm" dir="rtl" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="accConfirmTitle">
   <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xl max-w-md w-full p-5 sm:p-6 max-lg:my-auto">
     <div class="flex items-start gap-3 mb-5">
-      <span id="accConfirmIcon" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+      <span id="accConfirmIcon" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-sky-600 border border-indigo-100">
         <i class="fas fa-circle-question text-lg" aria-hidden="true"></i>
       </span>
       <div class="min-w-0 flex-1">
@@ -764,7 +764,7 @@
 <div id="accAddModal" class="fixed inset-0 z-[10050] hidden items-center justify-center p-4 max-lg:p-2 max-lg:items-stretch max-lg:justify-start bg-slate-900/50 backdrop-blur-[2px]" dir="rtl">
   <div class="bg-white rounded-2xl border border-slate-100 shadow-xl p-6 max-w-md w-full max-lg:max-h-full max-lg:flex max-lg:flex-col">
     <div class="flex items-start gap-3 mb-5">
-      <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 border border-slate-100">
+      <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-sky-600 border border-slate-100">
         <i class="fas fa-user-plus"></i>
       </span>
       <div>
@@ -783,7 +783,7 @@
       </div>
       <div class="flex flex-col-reverse sm:flex-row gap-2 pt-2">
         <button type="button" onclick="accCloseAdd()" class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-50">إلغاء</button>
-        <button type="submit" class="w-full sm:flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-sm hover:bg-indigo-700">حفظ</button>
+        <button type="submit" class="w-full sm:flex-1 py-3 rounded-xl bg-sky-500 text-white font-bold shadow-sm hover:bg-indigo-700">حفظ</button>
       </div>
     </form>
   </div>
@@ -794,7 +794,7 @@
     <div class="flex justify-between items-start mb-4">
       <div>
         <h4 id="accDetailTitle" class="text-lg font-bold"></h4>
-        <p id="accDetailBal" class="text-indigo-600 font-semibold mt-1"></p>
+        <p id="accDetailBal" class="text-sky-600 font-semibold mt-1"></p>
       </div>
       <button type="button" onclick="accCloseDetail()" class="text-slate-400"><i class="fas fa-times text-xl"></i></button>
     </div>
@@ -819,7 +819,7 @@
         <input type="number" id="accDiscountPct" step="0.1" min="0" max="100" placeholder="اتركه فارغاً إن لم يكن هناك خصم" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm">
       </div>
       <select id="accCycle" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm"><option value="">— دورة مالية —</option></select>
-      <button type="button" onclick="accSubmitAmount()" class="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm">تسجيل</button>
+      <button type="button" onclick="accSubmitAmount()" class="w-full py-2 rounded-lg bg-sky-500 text-white text-sm">تسجيل</button>
     </div>
     <div id="accTransferPanel" class="hidden space-y-2 mb-4 p-4 rounded-xl bg-slate-50">
       <select id="accTfType" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" onchange="accTfTypeChange()">
@@ -836,7 +836,7 @@
       <select id="accTfFund" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm hidden"></select>
       <select id="accTfCompany" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm hidden"></select>
       <p id="accTfShipHint" class="text-xs text-slate-500 hidden">سجّل عملية الشحن من قسم الشحن ثم اربطها لاحقاً إن لزم.</p>
-      <button type="button" onclick="accSubmitTransfer()" class="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm">تنفيذ</button>
+      <button type="button" onclick="accSubmitTransfer()" class="w-full py-2 rounded-lg bg-sky-500 text-white text-sm">تنفيذ</button>
     </div>
     <h5 class="font-bold text-slate-800 mb-2">السجل</h5>
     <div id="accLedger" class="text-sm space-y-2 max-h-48 overflow-y-auto"></div>

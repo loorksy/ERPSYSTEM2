@@ -1,156 +1,156 @@
 <div class="max-w-6xl mx-auto px-3 sm:px-4 lg:px-0 pb-10 relative min-w-0" dir="rtl" id="homeDashboardRoot">
-  <!-- شريط أدوات: موبايل — عمودان | لابتوب -->
-  <div class="mb-5 md:mb-6 flex flex-col items-center md:items-end gap-2 w-full">
-    <div class="flex w-full max-md:max-w-lg max-md:mx-auto max-md:flex-row max-md:items-stretch max-md:gap-2 md:inline-flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-2.5 md:max-w-full">
-      <!-- الدورة -->
-      <div class="flex min-w-0 flex-1 flex-col gap-1.5 max-md:rounded-2xl max-md:border max-md:border-slate-200/85 max-md:bg-white max-md:p-2.5 max-md:shadow-sm max-md:shadow-slate-900/[0.04] md:flex-row md:items-center md:gap-1.5 md:flex-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-        <div class="flex items-center gap-1 text-slate-500 md:hidden">
-          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-50 text-indigo-600"><i class="fas fa-calendar-check text-[0.65rem]"></i></span>
-          <span class="text-[0.65rem] font-semibold leading-tight">الدورة المالية</span>
+  <!-- Header Toolbar -->
+  <div class="mb-6 md:mb-8 flex flex-col items-center md:items-end gap-3 w-full">
+    <div class="flex w-full max-md:max-w-lg max-md:mx-auto max-md:flex-row max-md:items-stretch max-md:gap-3 md:inline-flex md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3 md:max-w-full">
+      <!-- Cycle Selector -->
+      <div class="flex min-w-0 flex-1 flex-col gap-2 max-md:rounded-2xl max-md:border max-md:border-slate-200/80 max-md:bg-white max-md:p-3 max-md:shadow-sm md:flex-row md:items-center md:gap-2 md:flex-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+        <div class="flex items-center gap-2 text-slate-500 md:hidden">
+          <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600"><i class="fas fa-calendar-check text-xs"></i></span>
+          <span class="text-xs font-semibold leading-tight">الدورة المالية</span>
         </div>
-        <span class="hidden md:inline text-[0.65rem] sm:text-xs font-medium text-slate-500 shrink-0">دورة</span>
-        <div class="flex min-w-0 flex-1 items-center gap-1">
-          <select id="homeCycleSelect" class="min-w-0 flex-1 text-[0.7rem] sm:text-xs py-1.5 px-2 sm:px-2.5 rounded-lg border border-slate-200/90 bg-white/90 text-slate-800 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/30 md:min-w-[7.5rem] md:max-w-[11rem]" onchange="homeLoadStats()">
+        <span class="hidden md:inline text-xs font-medium text-slate-500 shrink-0">دورة</span>
+        <div class="flex min-w-0 flex-1 items-center gap-2">
+          <select id="homeCycleSelect" class="min-w-0 flex-1 text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm transition-all duration-200 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/20 md:min-w-[8rem] md:max-w-[12rem]" onchange="homeLoadStats()">
             <option value="">— دورة —</option>
           </select>
-          <button type="button" onclick="homeLoadStats()" class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg bg-indigo-600/95 px-2 py-1.5 text-[0.65rem] sm:text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition" title="تحديث الأرقام">
-            <i class="fas fa-sync-alt text-[0.6rem]"></i>
+          <button type="button" onclick="homeLoadStats()" class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-sky-500 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-sky-500/20 hover:bg-sky-600 hover:shadow-md hover:shadow-sky-500/25 active:scale-[0.98] transition-all duration-200" title="تحديث الأرقام">
+            <i class="fas fa-sync-alt text-[0.65rem]"></i>
             <span class="hidden sm:inline">تحديث</span>
           </button>
         </div>
       </div>
       <span class="hidden md:inline text-slate-200 select-none" aria-hidden="true">|</span>
-      <!-- تقرير PDF -->
-      <div class="flex min-w-0 flex-1 flex-col gap-1.5 max-md:rounded-2xl max-md:border max-md:border-slate-200/85 max-md:bg-white max-md:p-2.5 max-md:shadow-sm max-md:shadow-slate-900/[0.04] md:flex-row md:items-center md:gap-1.5 md:flex-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-        <div class="flex items-center gap-1 text-slate-500 md:hidden">
-          <span class="flex h-6 w-6 items-center justify-center rounded-md bg-red-50 text-red-600"><i class="fas fa-file-pdf text-[0.65rem]"></i></span>
-          <span class="text-[0.65rem] font-semibold leading-tight">تقرير PDF</span>
+      <!-- PDF Report -->
+      <div class="flex min-w-0 flex-1 flex-col gap-2 max-md:rounded-2xl max-md:border max-md:border-slate-200/80 max-md:bg-white max-md:p-3 max-md:shadow-sm md:flex-row md:items-center md:gap-2 md:flex-none md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+        <div class="flex items-center gap-2 text-slate-500 md:hidden">
+          <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-red-600"><i class="fas fa-file-pdf text-xs"></i></span>
+          <span class="text-xs font-semibold leading-tight">تقرير PDF</span>
         </div>
-        <span class="hidden md:inline text-[0.65rem] sm:text-xs font-medium text-slate-500 shrink-0"><i class="fas fa-file-pdf text-red-500 text-[0.6rem] ml-0.5"></i> PDF</span>
-        <div class="flex min-w-0 flex-1 items-center gap-1">
-          <select id="homeReportType" class="min-w-0 flex-1 text-[0.7rem] sm:text-xs py-1.5 px-2 sm:px-2.5 rounded-lg border border-slate-200/90 bg-white/90 text-slate-800 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400/30 md:min-w-[6.5rem] md:max-w-[10rem]" aria-label="نوع التقرير">
+        <span class="hidden md:inline text-xs font-medium text-slate-500 shrink-0"><i class="fas fa-file-pdf text-red-500 text-[0.65rem] ml-1"></i> PDF</span>
+        <div class="flex min-w-0 flex-1 items-center gap-2">
+          <select id="homeReportType" class="min-w-0 flex-1 text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm transition-all duration-200 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/20 md:min-w-[7rem] md:max-w-[11rem]" aria-label="نوع التقرير">
             <option value="comprehensive">شامل</option>
             <option value="accreditations">اعتمادات</option>
             <option value="transfer-companies">تحويل</option>
             <option value="movements">حركات</option>
           </select>
-          <button type="button" onclick="homeDownloadReportPdf()" class="inline-flex shrink-0 items-center justify-center gap-1 rounded-lg bg-red-600 px-2 py-1.5 text-[0.65rem] sm:text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition" title="تنزيل PDF">
-            <i class="fas fa-download text-[0.6rem]"></i>
+          <button type="button" onclick="homeDownloadReportPdf()" class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-red-500 px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-red-500/20 hover:bg-red-600 hover:shadow-md transition-all duration-200" title="تنزيل PDF">
+            <i class="fas fa-download text-[0.65rem]"></i>
             تنزيل
           </button>
         </div>
       </div>
     </div>
-    <p class="text-[0.6rem] sm:text-[0.65rem] text-slate-400 text-center md:text-right max-w-md leading-snug px-1">يُطبَّق اختيار الدورة على التقارير التي تدعم التصفية.</p>
+    <p class="text-[0.65rem] sm:text-xs text-slate-400 text-center md:text-right max-w-md leading-relaxed px-1">يُطبَّق اختيار الدورة على التقارير التي تدعم التصفية.</p>
   </div>
 
-  <section class="space-y-6 lg:space-y-8">
-    <!-- مؤشرات مالية -->
+  <section class="space-y-8 lg:space-y-10">
+    <!-- Financial Indicators -->
     <div>
-      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 shrink-0"><i class="fas fa-chart-pie text-sm"></i></span>
+      <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-3">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 to-cyan-50 text-sky-600 shrink-0 shadow-sm"><i class="fas fa-chart-pie text-sm"></i></span>
         مؤشرات مالية
       </h3>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <a href="/profit-sources" class="home-dash-card group" title="مصادر الربح">
-          <div class="home-dash-card-icon bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white">
-            <i class="fas fa-coins text-base sm:text-lg"></i>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <a href="/profit-sources" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-sky-100 hover:-translate-y-1 transition-all duration-200" title="مصادر الربح">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 group-hover:bg-sky-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-coins text-lg"></i>
           </div>
-          <p class="home-dash-card-label">الربح الصافي</p>
-          <p class="home-dash-metric text-slate-900" id="netProfit">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">الربح الصافي</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="netProfit">0.00</p>
         </a>
 
-        <a href="/expenses-manual" class="home-dash-card group" title="المصاريف — تسجيل وسجل موحّد">
-          <div class="home-dash-card-icon bg-rose-50 text-rose-600 group-hover:bg-rose-600 group-hover:text-white">
-            <i class="fas fa-receipt text-base sm:text-lg"></i>
+        <a href="/expenses-manual" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-100 hover:-translate-y-1 transition-all duration-200" title="المصاريف">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mb-4 group-hover:bg-rose-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-receipt text-lg"></i>
           </div>
-          <p class="home-dash-card-label">المصاريف (مجمّع)</p>
-          <p class="home-dash-metric text-slate-900" id="totalExpenses">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">المصاريف (مجمّع)</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="totalExpenses">0.00</p>
         </a>
 
-        <a href="/debts" class="home-dash-card group" id="homeCardDebt" title="صفحة الديون والملفات">
-          <div class="home-dash-card-icon bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white">
-            <i class="fas fa-file-invoice-dollar text-base sm:text-lg"></i>
+        <a href="/debts" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-red-100 hover:-translate-y-1 transition-all duration-200" id="homeCardDebt" title="صفحة الديون">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-file-invoice-dollar text-lg"></i>
           </div>
-          <p class="home-dash-card-label">إجمالي الديون</p>
-          <p class="home-dash-metric text-slate-900" id="totalDebts">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">إجمالي الديون</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="totalDebts">0.00</p>
         </a>
 
-        <a href="/receivables-to-us" class="home-dash-card group" title="ديين لنا">
-          <div class="home-dash-card-icon bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white">
-            <i class="fas fa-hand-holding-heart text-base sm:text-lg"></i>
+        <a href="/receivables-to-us" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-100 hover:-translate-y-1 transition-all duration-200" title="ديين لنا">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-hand-holding-heart text-lg"></i>
           </div>
-          <p class="home-dash-card-label">ديين لنا</p>
-          <p class="home-dash-metric text-slate-900" id="receivablesToUsHome">—</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">ديين لنا</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="receivablesToUsHome">—</p>
         </a>
       </div>
     </div>
 
-    <!-- سيولة ومستحقات -->
+    <!-- Liquidity & Payables -->
     <div>
-      <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-800 shrink-0"><i class="fas fa-wallet text-sm"></i></span>
+      <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-3">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 text-amber-600 shrink-0 shadow-sm"><i class="fas fa-wallet text-sm"></i></span>
         سيولة ومستحقات
       </h3>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        <a href="/payment-due" class="home-dash-card group" title="مطلوب دفع">
-          <div class="home-dash-card-icon bg-amber-50 text-amber-700 group-hover:bg-amber-500 group-hover:text-white">
-            <i class="fas fa-money-bill-wave text-base sm:text-lg"></i>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <a href="/payment-due" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-100 hover:-translate-y-1 transition-all duration-200" title="مطلوب دفع">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-money-bill-wave text-lg"></i>
           </div>
-          <p class="home-dash-card-label">مطلوب دفع</p>
-          <p class="home-dash-metric text-slate-900" id="paymentDueHome">—</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">مطلوب دفع</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="paymentDueHome">—</p>
         </a>
 
-        <div class="home-dash-card cursor-pointer" id="homeCardCash" onclick="homeOpenFundModal()" title="مصادر الأموال والصناديق">
-          <div class="home-dash-card-icon bg-amber-50 text-amber-600">
-            <i class="fas fa-vault text-base sm:text-lg"></i>
+        <div class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-100 hover:-translate-y-1 transition-all duration-200 cursor-pointer" id="homeCardCash" onclick="homeOpenFundModal()" title="مصادر الأموال والصناديق">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-vault text-lg"></i>
           </div>
-          <p class="home-dash-card-label">رصيد الصندوق الرئيسي</p>
-          <p class="text-[0.6rem] sm:text-[0.65rem] text-slate-400 mb-0.5">(محاسبي)</p>
-          <p class="home-dash-metric text-slate-900" id="cashBalance">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">رصيد الصندوق الرئيسي</p>
+          <p class="text-[0.6rem] text-slate-400 mb-0.5">(محاسبي)</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="cashBalance">0.00</p>
         </div>
 
-        <a href="/deferred-balance" id="deferredBalanceLink" class="home-dash-card group">
-          <div class="home-dash-card-icon bg-sky-50 text-sky-600 group-hover:bg-sky-600 group-hover:text-white">
-            <i class="fas fa-clock-rotate-left text-base sm:text-lg"></i>
+        <a href="/deferred-balance" id="deferredBalanceLink" class="home-dash-card group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-sky-100 hover:-translate-y-1 transition-all duration-200">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-4 group-hover:bg-sky-500 group-hover:text-white transition-all duration-200">
+            <i class="fas fa-clock-rotate-left text-lg"></i>
           </div>
-          <p class="home-dash-card-label">رصيد المؤجل</p>
-          <p class="home-dash-metric text-slate-900" id="deferredBalance">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">رصيد المؤجل</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="deferredBalance">0.00</p>
         </a>
 
-        <div class="home-dash-card">
-          <div class="home-dash-card-icon bg-violet-50 text-violet-600">
-            <i class="fas fa-truck-fast text-base sm:text-lg"></i>
+        <div class="home-dash-card bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+          <div class="home-dash-card-icon w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4">
+            <i class="fas fa-truck-fast text-lg"></i>
           </div>
-          <p class="home-dash-card-label">رصيد الشحن (كمية)</p>
-          <p class="home-dash-metric text-slate-900" id="shippingBalance">0.00</p>
+          <p class="home-dash-card-label text-xs text-slate-500 font-medium mb-1">رصيد الشحن (كمية)</p>
+          <p class="home-dash-metric text-xl sm:text-2xl font-bold text-slate-900 font-mono" id="shippingBalance">0.00</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- حالة Google Sheets -->
-  <div class="mt-5 lg:mt-6 flex justify-center md:justify-end w-full">
-    <div class="inline-flex items-center gap-2 sm:gap-2.5 max-w-full flex-wrap justify-center rounded-full border border-slate-200/70 bg-gradient-to-l from-white to-slate-50/90 pl-2.5 pr-1.5 py-1 shadow-sm shadow-slate-900/[0.03]">
-      <span class="inline-flex items-center gap-1 text-[0.65rem] sm:text-[0.7rem] font-medium text-slate-500 shrink-0" title="Google Sheets">
-        <i class="fas fa-table text-emerald-600/90 text-[0.65rem]"></i>
+  <!-- Google Sheets Status -->
+  <div class="mt-8 lg:mt-10 flex justify-center md:justify-end w-full">
+    <div class="inline-flex items-center gap-2.5 sm:gap-3 max-w-full flex-wrap justify-center rounded-2xl border border-slate-200/80 bg-white pl-3 pr-2 py-2 shadow-sm">
+      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 shrink-0" title="Google Sheets">
+        <i class="fas fa-table text-emerald-600 text-xs"></i>
         <span class="hidden sm:inline">Sheets</span>
       </span>
-      <span class="h-3 w-px shrink-0 bg-slate-200/90" aria-hidden="true"></span>
-      <span id="homeSheetsStatus" class="inline-flex items-center rounded-full px-2 py-0.5 text-[0.6rem] sm:text-[0.65rem] font-semibold bg-slate-100 text-slate-500">جاري التحقق…</span>
-      <a href="/settings" class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600" title="إعدادات الربط" aria-label="إعدادات Google Sheets">
-        <i class="fas fa-sliders-h text-[0.7rem]"></i>
+      <span class="h-4 w-px shrink-0 bg-slate-200" aria-hidden="true"></span>
+      <span id="homeSheetsStatus" class="inline-flex items-center rounded-full px-2.5 py-1 text-[0.65rem] sm:text-xs font-semibold bg-slate-100 text-slate-500">جاري التحقق…</span>
+      <a href="/settings" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-all duration-200 hover:bg-sky-50 hover:text-sky-600" title="إعدادات الربط" aria-label="إعدادات Google Sheets">
+        <i class="fas fa-sliders-h text-xs"></i>
       </a>
     </div>
   </div>
 </div>
 
-<!-- نافذة مصادر الصناديق -->
-<div id="homeFundModal" class="fixed inset-0 z-[3000] hidden items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px]">
-  <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl border border-slate-200/80 flex flex-col">
-    <div class="flex justify-between items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/80">
+<!-- Fund Sources Modal -->
+<div id="homeFundModal" class="fixed inset-0 z-[3000] hidden items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+  <div class="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl border border-slate-200/80 flex flex-col">
+    <div class="flex justify-between items-center gap-3 px-6 py-5 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
       <h4 class="text-lg font-bold text-slate-900">مصادر الأموال والصناديق</h4>
-      <button type="button" onclick="homeCloseFundModal()" class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition" aria-label="إغلاق">
+      <button type="button" onclick="homeCloseFundModal()" class="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200" aria-label="إغلاق">
         <i class="fas fa-times text-lg"></i>
       </button>
     </div>
