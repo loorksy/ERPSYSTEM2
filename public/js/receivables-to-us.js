@@ -91,7 +91,7 @@
             ? mlist
                 .map(function(x) {
                   return (
-                    '<div class="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-gradient-to-l from-slate-50/90 to-white px-4 py-3.5 transition hover:border-indigo-200 hover:shadow-sm">' +
+                    '<div class="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-gradient-to-l from-slate-50/90 to-white px-4 py-3.5 transition hover:border-sky-200 hover:shadow-sm">' +
                     '<span class="font-mono text-sm text-slate-700">' +
                     esc(x.memberUserId) +
                     '</span>' +

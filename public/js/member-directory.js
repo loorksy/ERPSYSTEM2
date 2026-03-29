@@ -59,7 +59,7 @@
             '<td class="px-4 py-2 text-xs text-slate-500">' +
             esc(r.updated_at ? new Date(r.updated_at).toLocaleString('ar') : '—') +
             '</td>' +
-            '<td class="px-4 py-2"><a class="text-indigo-600 text-xs font-semibold hover:underline" href="/member-directory/member/' +
+            '<td class="px-4 py-2"><a class="text-sky-600 text-xs font-semibold hover:underline" href="/member-directory/member/' +
             idEnc +
             '">تفاصيل</a></td>' +
             '</tr>'

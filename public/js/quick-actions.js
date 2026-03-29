@@ -169,7 +169,7 @@
         '<label class="block text-sm font-medium mb-1">الوكالة</label><select id="qaSubId" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200"><option value="">— اختر —</option>' + opts + '</select>' +
         '<label class="block text-sm font-medium mb-1">المبلغ (USD)</label><input type="number" id="qaSubAmt" step="0.01" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200">' +
         '<label class="block text-sm font-medium mb-1">ملاحظات</label><input type="text" id="qaSubNotes" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-200">' +
-        '<button type="button" id="qaSubGo" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold">تسجيل</button>'
+        '<button type="button" id="qaSubGo" class="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold">تسجيل</button>'
       );
       document.getElementById('qaBack').addEventListener('click', openOutMenu);
       document.getElementById('qaSubGo').addEventListener('click', function () {
@@ -200,7 +200,7 @@
         '<label class="block text-sm font-medium mb-1">المبلغ (USD)</label><input type="number" id="qaCoAmt" step="0.01" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200">' +
         '<label class="inline-flex items-center gap-2 mb-2 text-sm"><input type="checkbox" id="qaCoPayable" ' + payCb + '> تسجيل كدين علينا (بدون خصم من الصندوق الرئيسي)</label>' +
         '<input type="text" id="qaCoNotes" placeholder="ملاحظات" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-200">' +
-        '<button type="button" id="qaCoGo" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold">تنفيذ</button>'
+        '<button type="button" id="qaCoGo" class="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold">تنفيذ</button>'
       );
       document.getElementById('qaBack').addEventListener('click', openOutMenu);
       document.getElementById('qaCoGo').addEventListener('click', function () {
@@ -236,7 +236,7 @@
         '<label class="block text-sm font-medium mb-1">المبلغ (USD)</label><input type="number" id="qaFdAmt" step="0.01" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200">' +
         '<label class="inline-flex items-center gap-2 mb-2 text-sm"><input type="checkbox" id="qaFdPayable" ' + payCb + '> تسجيل كدين علينا (بدون خصم من الرئيسي)</label>' +
         '<input type="text" id="qaFdNotes" placeholder="ملاحظات" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-200">' +
-        '<button type="button" id="qaFdGo" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold">تنفيذ</button>'
+        '<button type="button" id="qaFdGo" class="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold">تنفيذ</button>'
       );
       document.getElementById('qaBack').addEventListener('click', openOutMenu);
       document.getElementById('qaFdGo').addEventListener('click', function () {
@@ -334,9 +334,9 @@
         '<label class="block text-sm font-medium mb-1">المبلغ بالدولار</label><input type="number" id="qaFxAmtUsd" step="0.01" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200" placeholder="1000">' +
         '<label class="block text-sm font-medium mb-1">السعر المثبت (وحدة/USD)</label><input type="number" id="qaFxIn" step="0.0001" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200" placeholder="45">' +
         '<label class="block text-sm font-medium mb-1">سعر الشراء الفعلي (وحدة/USD)</label><input type="number" id="qaFxOut" step="0.0001" class="w-full mb-2 px-3 py-2 rounded-lg border border-slate-200" placeholder="46">' +
-        '<p id="qaFxPrev" class="text-sm text-indigo-700 mb-2 min-h-[1.25rem]"></p>' +
+        '<p id="qaFxPrev" class="text-sm text-sky-700 mb-2 min-h-[1.25rem]"></p>' +
         '<input type="text" id="qaFxNotes" placeholder="ملاحظات" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-200">' +
-        '<button type="button" id="qaFxGo" class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold">إضافة ربح</button>'
+        '<button type="button" id="qaFxGo" class="w-full py-3 rounded-xl bg-sky-600 text-white font-semibold">إضافة ربح</button>'
       );
       document.getElementById('qaBack').addEventListener('click', openInMenu);
       function prev() {

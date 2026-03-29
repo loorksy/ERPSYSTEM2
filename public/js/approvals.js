@@ -62,7 +62,7 @@
           ? 'bg-red-50 text-red-600 border-red-100'
           : save
             ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-            : 'bg-indigo-50 text-indigo-600 border-indigo-100');
+            : 'bg-sky-50 text-sky-600 border-sky-100');
       var ic = iconWrap.querySelector('i');
       if (ic) {
         ic.setAttribute('aria-hidden', 'true');
@@ -259,7 +259,7 @@
         escHtml(accFmtMoney(parseFloat(String(row.amount != null ? row.amount : '').replace(/,/g, '')) || 0)) +
         '</span></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-disc p-3 align-middle" data-label="خصم %">' +
-        '<input type="number" min="0" max="100" step="0.1" class="acc-bulk-disc w-full sm:w-24 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none" data-idx="' + idx + '" value="' + discVal + '" placeholder="—"></td>' +
+        '<input type="number" min="0" max="100" step="0.1" class="acc-bulk-disc w-full sm:w-24 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-sm text-center focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" data-idx="' + idx + '" value="' + discVal + '" placeholder="—"></td>' +
         '<td class="acc-bulk-td acc-bulk-cell-act p-3 align-middle text-left sm:w-12" data-label="إجراء">' +
         '<button type="button" class="acc-bulk-del-btn w-full sm:w-8 sm:h-8 inline-flex items-center justify-center rounded-lg py-2 sm:py-0 text-sm font-semibold sm:font-normal" data-acc-delete="' + idx + '" title="حذف الصف"><span class="sm:hidden ml-2">حذف</span><i class="fas fa-trash-alt pointer-events-none text-sm"></i></button></td></tr>'
       );
@@ -424,7 +424,7 @@
     if (kind === 'loading') {
       return (
         '<div class="col-span-full acc-approvals-empty text-slate-400 text-center">' +
-        '<i class="fas fa-spinner fa-spin text-3xl text-indigo-400" aria-hidden="true"></i>' +
+        '<i class="fas fa-spinner fa-spin text-3xl text-sky-400" aria-hidden="true"></i>' +
         '<span class="text-sm font-medium">جاري التحميل...</span></div>'
       );
     }
@@ -526,8 +526,8 @@
     var code = escHtml(a.code || '');
     var bal = accFmtMoney(a.balance_amount || 0);
     return (
-      '<label class="acc-del-row flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-xl border border-slate-100 bg-white cursor-pointer hover:border-indigo-100 hover:bg-indigo-50/40 transition-colors shadow-sm text-center sm:text-right">' +
-      '<input type="checkbox" class="acc-del-cb h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" value="' + a.id + '" checked>' +
+      '<label class="acc-del-row flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 rounded-xl border border-slate-100 bg-white cursor-pointer hover:border-sky-100 hover:bg-sky-50/40 transition-colors shadow-sm text-center sm:text-right">' +
+      '<input type="checkbox" class="acc-del-cb h-4 w-4 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500" value="' + a.id + '" checked>' +
       '<span class="flex-1 min-w-0 text-sm text-slate-800">' + name + (code ? ' <span class="text-slate-400 text-xs font-mono">' + code + '</span>' : '') + '</span>' +
       '<span class="shrink-0 text-sm font-bold text-emerald-600 tabular-nums">' + bal + '</span>' +
       '</label>'
@@ -821,7 +821,7 @@
       var net = Number(e.balance_amount) || 0;
       var pay = Number(e.balance_payable) || 0;
       var rec = Number(e.balance_receivable) || 0;
-      var netCls = net < -0.0001 ? 'text-red-600' : 'text-indigo-600';
+      var netCls = net < -0.0001 ? 'text-red-600' : 'text-sky-600';
       var balLines =
         '<p class="' + netCls + ' font-semibold">الصافي: ' + escHtml(accFmtMoney(net)) + '</p>';
       if (rec > 0.0001) {

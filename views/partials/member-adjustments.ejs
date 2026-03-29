@@ -1,7 +1,7 @@
 <div class="max-w-lg lg:max-w-5xl mx-auto px-4 sm:px-0 space-y-6 pb-8" dir="rtl">
   <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-6 lg:p-8">
     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 lg:mb-6">
-      <i class="fas fa-balance-scale text-indigo-600"></i>
+      <i class="fas fa-balance-scale text-sky-600"></i>
       إضافات وخصومات ومكافآت
     </h2>
 
@@ -12,7 +12,7 @@
           <label class="block text-xs font-semibold text-slate-600">رقم المستخدم</label>
           <div class="flex gap-2">
             <input type="text" id="maMemberId" placeholder="مثال: 12345"
-              class="flex-1 min-w-0 py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+              class="flex-1 min-w-0 py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500">
             <button type="button" id="maPasteBtn"
               class="shrink-0 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700">لصق</button>
           </div>
@@ -21,7 +21,7 @@
         <div class="space-y-2">
           <label class="block text-xs font-semibold text-slate-600">النوع</label>
           <select id="maKind"
-            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500">
+            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-sky-500">
             <option value="deduct">خصم</option>
             <option value="add">إضافة</option>
             <option value="reward">مكافأة</option>
@@ -31,7 +31,7 @@
         <div class="space-y-2">
           <label class="block text-xs font-semibold text-slate-600">المبلغ (USD)</label>
           <input type="number" id="maAmount" min="0" step="0.01" placeholder="0.00"
-            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500">
         </div>
       </div>
 
@@ -39,13 +39,13 @@
         <div class="space-y-2">
           <label class="block text-xs font-semibold text-slate-600">دورة مالية (مُستحسَن لتحديث Google)</label>
           <select id="maCycleId"
-            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-indigo-500">
+            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-sky-500">
             <option value="">— اختر الدورة —</option>
           </select>
         </div>
 
         <label class="flex items-start gap-2 sm:gap-3 cursor-pointer text-sm text-slate-700">
-          <input type="checkbox" id="maSyncSheet" class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0" checked>
+          <input type="checkbox" id="maSyncSheet" class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500 shrink-0" checked>
           <span>تحديث عمود الراتب في جدول معلومات المستخدمين (Google Sheet)</span>
         </label>
 
@@ -65,14 +65,14 @@
         <div class="space-y-2">
           <label class="block text-xs font-semibold text-slate-600">ملاحظات</label>
           <textarea id="maNotes" rows="2" placeholder="اختياري"
-            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 resize-y min-h-[4rem] lg:min-h-[5.5rem]"></textarea>
+            class="w-full py-2.5 px-3 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 resize-y min-h-[4rem] lg:min-h-[5.5rem]"></textarea>
         </div>
       </div>
     </div>
 
     <div class="mt-6 lg:mt-8 pt-5 border-t border-slate-100">
       <button type="button" id="maSubmitBtn"
-        class="w-full lg:w-auto lg:min-w-[12rem] lg:px-10 py-3 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700">
+        class="w-full lg:w-auto lg:min-w-[12rem] lg:px-10 py-3 rounded-xl bg-sky-600 text-white text-sm font-bold hover:bg-sky-700">
         تسجيل
       </button>
       <p id="maMsg" class="text-sm text-center lg:text-right mt-3 min-h-[1.25rem]"></p>

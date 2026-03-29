@@ -14,7 +14,7 @@
     var tbody = document.getElementById('expUnifiedBody');
     var src = document.getElementById('expUnifiedFilter');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-12 text-center text-sm text-slate-400"><i class="fas fa-circle-notch fa-spin text-indigo-500 ml-2"></i> جاري التحميل…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-12 text-center text-sm text-slate-400"><i class="fas fa-circle-notch fa-spin text-sky-500 ml-2"></i> جاري التحميل…</td></tr>';
     var q = new URLSearchParams();
     if (src && src.value) q.set('sourceType', src.value);
     apiCall('/api/expenses/ledger-unified?' + q.toString()).then(function(res) {

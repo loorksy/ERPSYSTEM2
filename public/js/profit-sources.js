@@ -86,14 +86,14 @@
         var ac = amountClass(r.total);
         return (
           '<li class="border-b border-slate-100/90 last:border-0">' +
-          '<a href="' + detailUrl + '" class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-3 py-3.5 sm:px-5 sm:py-4 transition-colors hover:bg-indigo-50/50 active:bg-indigo-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 group min-w-0">' +
+          '<a href="' + detailUrl + '" class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-3 py-3.5 sm:px-5 sm:py-4 transition-colors hover:bg-sky-50/50 active:bg-sky-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 group min-w-0">' +
           '<div class="min-w-0 flex-1 text-right w-full">' +
-          '<p class="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-indigo-950 leading-snug">' + escapeHtml(title) + '</p>' +
+          '<p class="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-sky-950 leading-snug">' + escapeHtml(title) + '</p>' +
           '<p class="mt-1 font-mono text-[0.65rem] sm:text-xs text-slate-400 truncate" title="' + escapeHtml(code) + '">' + escapeHtml(code) + '</p>' +
           '</div>' +
           '<div class="flex shrink-0 items-center justify-end gap-2 sm:gap-3 w-full sm:w-auto min-w-0">' +
           '<span class="font-mono text-sm sm:text-base font-bold tabular-nums text-right min-w-0 max-w-full break-words leading-snug ' + ac + '">' + fmt(r.total) + '</span>' +
-          '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 transition group-hover:bg-indigo-100 group-hover:text-indigo-600" aria-hidden="true"><i class="fas fa-chevron-left text-xs"></i></span>' +
+          '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 transition group-hover:bg-sky-100 group-hover:text-sky-600" aria-hidden="true"><i class="fas fa-chevron-left text-xs"></i></span>' +
           '</div></a></li>'
         );
       }).join('');

@@ -182,12 +182,12 @@ window.homeOpenFundModal = function() {
       html += '<div class="p-3 rounded-xl bg-slate-50 border border-slate-100"><strong>' + (f.name || '') + '</strong> ' +
         (f.is_main ? '<span class="text-amber-600 text-xs">رئيسي</span>' : '') +
         '<p class="text-xs text-slate-500">' + (f.fund_number || '') + ' · ' + (f.country || '') + '</p>' +
-        '<p class="font-semibold text-indigo-700">' + (bs || '0') + '</p></div>';
+        '<p class="font-semibold text-sky-700">' + (bs || '0') + '</p></div>';
     });
     if (d.profitPoolUsd != null && d.profitPoolUsd > 0) {
-      html += '<div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 mt-2"><strong>صندوق الربح</strong> ' +
+      html += '<div class="p-3 rounded-xl bg-sky-50 border border-sky-100 mt-2"><strong>صندوق الربح</strong> ' +
         '<span class="text-xs text-slate-500">(منفصل عن بطاقة رصيد الصندوق)</span>' +
-        '<p class="font-semibold text-indigo-800 mt-1">' + formatMoney(d.profitPoolUsd) + ' USD</p></div>';
+        '<p class="font-semibold text-sky-800 mt-1">' + formatMoney(d.profitPoolUsd) + ' USD</p></div>';
     }
     body.innerHTML = html || '<p class="text-slate-400">لا بيانات</p>';
   });
@@ -382,7 +382,7 @@ function switchTab(btn, tabId) {
   card.querySelectorAll('.tab-btn').forEach(function(b) {
     b.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200';
   });
-  btn.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-indigo-600 text-white shadow-md';
+  btn.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-sky-600 text-white shadow-md';
 }
 
 function showToast(message, type = 'success') {

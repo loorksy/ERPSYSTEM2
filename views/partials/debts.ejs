@@ -1,11 +1,11 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-0 pb-10 space-y-8 lg:space-y-10 min-w-0" dir="rtl" id="debtsPageRoot">
   <!-- رأس الصفحة -->
-  <header class="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+  <header class="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-sky-50/60 shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_100%_0%,rgba(99,102,241,0.1),transparent)] pointer-events-none"></div>
     <div class="relative flex flex-col gap-5 p-6 sm:p-8">
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div class="min-w-0">
-          <p class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-1">المحاسبة</p>
+          <p class="text-xs font-bold uppercase tracking-wider text-sky-600 mb-1">المحاسبة</p>
           <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">الديون والملفات</h1>
           <p class="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">متابعة <span class="font-semibold text-emerald-700">دين لنا</span> و<span class="font-semibold text-rose-700">دين علينا</span>، مع تفاصيل الشركات والصناديق والتسجيل اليدوي.</p>
         </div>
@@ -14,7 +14,7 @@
             <i class="fas fa-money-bill-wave text-amber-600 text-xs"></i>
             مطلوب دفع
           </a>
-          <a href="/dashboard" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50">
+          <a href="/dashboard" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50">
             <i class="fas fa-arrow-right text-xs opacity-70"></i>
             لوحة التحكم
           </a>
@@ -61,12 +61,12 @@
   <!-- بطاقات المؤشرات -->
   <div>
     <h2 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700"><i class="fas fa-chart-simple text-sm"></i></span>
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700"><i class="fas fa-chart-simple text-sm"></i></span>
       تفصيل الالتزامات
     </h2>
     <div id="debtsSummary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 min-w-0">
       <div class="col-span-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 py-14 text-slate-500">
-        <i class="fas fa-circle-notch fa-spin text-2xl text-indigo-500 mb-3"></i>
+        <i class="fas fa-circle-notch fa-spin text-2xl text-sky-500 mb-3"></i>
         <span class="text-sm font-medium">جاري تحميل الأرقام…</span>
       </div>
     </div>
@@ -85,24 +85,24 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-600">النوع</label>
-          <select id="debtRegEntityType" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium text-slate-800 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+          <select id="debtRegEntityType" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium text-slate-800 transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15">
             <option value="transfer_company">شركة تحويل</option>
             <option value="fund">صندوق</option>
           </select>
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-600">الكيان</label>
-          <select id="debtRegEntityId" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium text-slate-800 transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+          <select id="debtRegEntityId" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium text-slate-800 transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15">
             <option value="">— اختر —</option>
           </select>
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-600">المبلغ</label>
-          <input type="number" id="debtRegAmount" step="0.01" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-mono tabular-nums transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="0.00">
+          <input type="number" id="debtRegAmount" step="0.01" min="0" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-mono tabular-nums transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="0.00">
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-slate-600">العملة</label>
-          <select id="debtRegCurrency" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+          <select id="debtRegCurrency" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15">
             <option value="USD">USD</option>
             <option value="TRY">TRY</option>
             <option value="SYP">SYP</option>
@@ -110,14 +110,14 @@
         </div>
         <div class="space-y-1.5 md:col-span-2">
           <label class="text-xs font-semibold text-slate-600">طريقة التسوية</label>
-          <select id="debtRegSettlement" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15">
+          <select id="debtRegSettlement" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15">
             <option value="payable">دين علينا (افتراضي)</option>
             <option value="cash">كاش — إيداع في الصندوق الرئيسي (USD)</option>
           </select>
         </div>
         <div class="md:col-span-2 space-y-1.5">
           <label class="text-xs font-semibold text-slate-600">ملاحظات</label>
-          <input type="text" id="debtRegNotes" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm transition focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15" placeholder="اختياري">
+          <input type="text" id="debtRegNotes" class="w-full rounded-xl border-2 border-slate-200 bg-slate-50/50 px-4 py-3 text-sm transition focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/15" placeholder="اختياري">
         </div>
       </div>
       <button type="button" id="debtRegSubmit" class="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-rose-600 to-rose-700 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-rose-600/25 transition hover:from-rose-700 hover:to-rose-800 hover:shadow-xl active:scale-[0.99]">
@@ -162,17 +162,17 @@
       <div id="debtsPayables" class="p-3 sm:p-5 space-y-3 min-h-[3rem]"></div>
     </section>
 
-    <section class="rounded-2xl sm:rounded-3xl border border-indigo-200/60 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50/80 p-5 sm:p-6 shadow-sm">
+    <section class="rounded-2xl sm:rounded-3xl border border-sky-200/60 bg-gradient-to-br from-sky-50/50 via-white to-slate-50/80 p-5 sm:p-6 shadow-sm">
       <h2 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
         <i class="fas fa-bolt text-amber-500"></i>
         تنقّل سريع
       </h2>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <a href="/shipping" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 transition group-hover:bg-indigo-600 group-hover:text-white"><i class="fas fa-truck-fast"></i></span>
+        <a href="/shipping" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-sky-300 hover:shadow-md hover:-translate-y-0.5">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-700 transition group-hover:bg-sky-600 group-hover:text-white"><i class="fas fa-truck-fast"></i></span>
           <span class="text-xs font-bold text-slate-800 leading-tight">الشحن</span>
         </a>
-        <a href="/approvals" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5">
+        <a href="/approvals" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-sky-300 hover:shadow-md hover:-translate-y-0.5">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-700 transition group-hover:bg-sky-600 group-hover:text-white"><i class="fas fa-stamp"></i></span>
           <span class="text-xs font-bold text-slate-800 leading-tight">الاعتمادات</span>
         </a>
@@ -180,11 +180,11 @@
           <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 transition group-hover:bg-emerald-600 group-hover:text-white"><i class="fas fa-exchange-alt"></i></span>
           <span class="text-xs font-bold text-slate-800 leading-tight">فرق التصريف</span>
         </a>
-        <a href="/transfer-companies" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5">
+        <a href="/transfer-companies" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-sky-300 hover:shadow-md hover:-translate-y-0.5">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-800 transition group-hover:bg-orange-600 group-hover:text-white"><i class="fas fa-building"></i></span>
           <span class="text-xs font-bold text-slate-800 leading-tight">شركات التحويل</span>
         </a>
-        <a href="/funds" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 sm:col-span-1 col-span-2 sm:col-auto">
+        <a href="/funds" class="debts-quick-link group flex flex-col items-center gap-2 rounded-2xl border border-slate-200/90 bg-white p-4 text-center shadow-sm transition hover:border-sky-300 hover:shadow-md hover:-translate-y-0.5 sm:col-span-1 col-span-2 sm:col-auto">
           <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800 transition group-hover:bg-amber-600 group-hover:text-white"><i class="fas fa-coins"></i></span>
           <span class="text-xs font-bold text-slate-800 leading-tight">الصناديق</span>
         </a>
