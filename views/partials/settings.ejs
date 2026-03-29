@@ -69,7 +69,7 @@
 <div class="max-w-5xl">
   <div id="settingsCard" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col min-w-0" data-tabs-container="settings">
     <header class="shrink-0 flex items-center gap-3 py-5 px-4 sm:px-6 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
-      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-md shadow-sky-500/25">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#0f2744] text-white shadow-md border border-[#c9a227]/20">
         <i class="fas fa-cog text-xl"></i>
       </div>
       <div class="min-w-0">
@@ -84,7 +84,7 @@
           <i class="fas fa-sliders-h shrink-0 text-[0.85em] sm:text-[0.95em]"></i>
           <span class="leading-tight">عام</span>
         </button>
-        <button type="button" role="tab" class="settings-tab-btn flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm font-semibold text-sky-600 bg-white shadow-sm ring-1 ring-slate-200/90 transition-colors" data-settings-tab="settings-profile">
+        <button type="button" role="tab" class="settings-tab-btn flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm font-semibold text-[#1e3a5f] bg-white shadow-sm ring-1 ring-slate-200/90 transition-colors" data-settings-tab="settings-profile">
           <i class="fas fa-user-circle shrink-0 text-[0.85em] sm:text-[0.95em]"></i>
           <span class="leading-tight">الملف الشخصي</span>
         </button>
@@ -115,7 +115,7 @@
                   <% }); %>
                 </select>
               </div>
-              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/25">
+              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87] hover:shadow-lg hover:shadow-sky-500/25">
                 <i class="fas fa-save"></i>
                 <span>حفظ</span>
               </button>
@@ -126,7 +126,7 @@
             <h4 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fas fa-book-open text-sky-500"></i> التقارير والمصطلحات</h4>
             <p class="text-sm text-slate-600 mb-4">عند التصدير إلى PDF يمكن عرض أسماء مبسّطة للعملاء بدل المصطلحات المحاسبية الدقيقة. المحاسبون يبقون على العرض التقني الافتراضي حتى تفعّل الخيار أدناه أو تستخدم الرابط مع <code class="text-xs bg-slate-100 px-1 rounded" dir="ltr">?reportTerms=client</code>.</p>
             <label class="flex items-start gap-3 cursor-pointer select-none max-w-xl">
-              <input type="checkbox" id="simpleFinancialTerms" class="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              <input type="checkbox" id="simpleFinancialTerms" class="mt-1 h-4 w-4 rounded border-slate-300 text-[#1e3a5f] focus:ring-sky-500"
                 <%= (typeof useSimpleFinancialTerms !== 'undefined' && useSimpleFinancialTerms) ? 'checked' : '' %>
                 onchange="saveSimpleFinancialTerms(this.checked)">
               <span class="text-sm text-slate-800 leading-relaxed">
@@ -143,15 +143,15 @@
         <div class="space-y-8">
           <!-- Profile Form -->
           <div>
-            <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-user-circle text-sky-600"></i> الملف الشخصي</h4>
+            <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-user-circle text-[#1e3a5f]"></i> الملف الشخصي</h4>
             <form id="profileForm" onsubmit="updateProfile(event)">
               <div class="mb-5">
                 <label for="displayName" class="block mb-2 font-semibold text-sm text-slate-800">الاسم المعروض</label>
                 <input type="text" id="displayName" name="displayName"
-                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400"
+                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-[#1e3a5f] focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 placeholder:text-slate-400"
                   value="<%= user.displayName %>" required>
               </div>
-              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/25">
+              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87] hover:shadow-lg hover:shadow-sky-500/25">
                 <i class="fas fa-save"></i>
                 <span>حفظ التغييرات</span>
               </button>
@@ -162,27 +162,27 @@
 
           <!-- Password Form -->
           <div>
-            <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-key text-sky-600"></i> تغيير كلمة المرور</h4>
+            <h4 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fas fa-key text-[#1e3a5f]"></i> تغيير كلمة المرور</h4>
             <form id="passwordForm" onsubmit="changePassword(event)">
               <div class="mb-5">
                 <label for="currentPassword" class="block mb-2 font-semibold text-sm text-slate-800">كلمة المرور الحالية</label>
                 <input type="password" id="currentPassword" name="currentPassword"
-                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400"
+                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-[#1e3a5f] focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 placeholder:text-slate-400"
                   required>
               </div>
               <div class="mb-5">
                 <label for="newPassword" class="block mb-2 font-semibold text-sm text-slate-800">كلمة المرور الجديدة</label>
                 <input type="password" id="newPassword" name="newPassword"
-                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400"
+                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-[#1e3a5f] focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 placeholder:text-slate-400"
                   required minlength="6">
               </div>
               <div class="mb-5">
                 <label for="confirmPassword" class="block mb-2 font-semibold text-sm text-slate-800">تأكيد كلمة المرور</label>
                 <input type="password" id="confirmPassword" name="confirmPassword"
-                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400"
+                  class="w-full py-3 px-4 border-2 border-slate-200 rounded-xl text-[0.95rem] bg-slate-50 text-slate-800 transition-all duration-300 focus:outline-none focus:border-[#1e3a5f] focus:bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 placeholder:text-slate-400"
                   required minlength="6">
               </div>
-              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/25">
+              <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[0.95rem] transition-all duration-300 cursor-pointer whitespace-nowrap active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87] hover:shadow-lg hover:shadow-sky-500/25">
                 <i class="fas fa-lock"></i>
                 <span>تغيير كلمة المرور</span>
               </button>
@@ -224,7 +224,7 @@
             <div class="flex gap-3 max-md:flex-col">
               <input type="password" id="openaiKey" placeholder="sk-..." dir="ltr"
                 class="flex-1 py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400">
-              <button type="button" id="openaiSaveBtn" onclick="saveAIKey('openai')" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600 whitespace-nowrap">
+              <button type="button" id="openaiSaveBtn" onclick="saveAIKey('openai')" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87] whitespace-nowrap">
                 <i class="fas fa-save"></i> حفظ
               </button>
             </div>
@@ -255,7 +255,7 @@
             <div class="flex gap-3 max-md:flex-col">
               <input type="password" id="geminiKey" placeholder="AIza..." dir="ltr"
                 class="flex-1 py-3 px-4 border-2 border-slate-200 rounded-xl text-sm bg-white text-slate-800 transition-all duration-300 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/10 placeholder:text-slate-400">
-              <button type="button" id="geminiSaveBtn" onclick="saveAIKey('gemini')" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600 whitespace-nowrap">
+              <button type="button" id="geminiSaveBtn" onclick="saveAIKey('gemini')" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87] whitespace-nowrap">
                 <i class="fas fa-save"></i> حفظ
               </button>
             </div>
@@ -304,7 +304,7 @@
                 <small class="block mt-1 text-xs text-slate-500">يمكنك إيجاده في رابط الجدول بعد /d/ وقبل /edit</small>
               </div>
               <div class="flex flex-wrap gap-2">
-                <button type="button" id="sheetsSaveSpreadsheetBtn" onclick="saveSheetsSpreadsheet()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-sky-500 text-white hover:bg-sky-600">
+                <button type="button" id="sheetsSaveSpreadsheetBtn" onclick="saveSheetsSpreadsheet()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-[#1e3a5f] text-white hover:bg-[#2d5a87]">
                   <i class="fas fa-save"></i> حفظ الجدول المختار
                 </button>
                 <button type="button" id="sheetsDisconnectBtn" onclick="disconnectSheets()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer active:scale-[0.97] bg-slate-200 text-slate-700 hover:bg-slate-300">
@@ -353,7 +353,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 mb-2 px-1">
           <span class="text-xs font-semibold text-slate-600">فئات البيانات</span>
           <label class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none">
-            <input type="checkbox" id="resetCatSelectAll" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked>
+            <input type="checkbox" id="resetCatSelectAll" class="h-4 w-4 rounded border-slate-300 text-[#1e3a5f] focus:ring-sky-500" checked>
             <span>تحديد الكل</span>
           </label>
         </div>
@@ -388,7 +388,7 @@
     'settings-tab-btn flex max-sm:flex-none max-sm:shrink-0 sm:flex-1 sm:min-w-0 sm:basis-0 h-11 sm:h-12 flex-row items-center justify-center gap-1 whitespace-nowrap px-2 sm:px-2 rounded-lg text-[10px] sm:text-xs sm:text-sm transition-colors touch-manipulation';
   var SETTINGS_TAB_INACTIVE = SETTINGS_TAB_BASE + ' font-medium text-slate-600 hover:text-slate-900';
   var SETTINGS_TAB_ACTIVE =
-    SETTINGS_TAB_BASE + ' font-semibold text-sky-600 bg-white shadow-sm ring-1 ring-slate-200/90';
+    SETTINGS_TAB_BASE + ' font-semibold text-[#1e3a5f] bg-white shadow-sm ring-1 ring-slate-200/90';
   function showTab(tabId) {
     var panels = card.querySelectorAll('.settings-tab-panel');
     var targetPanel = card.querySelector('[data-settings-panel="' + tabId + '"]');
@@ -425,7 +425,7 @@
         msg.textContent = 'تم الربط بحساب Google بنجاح. اختر جدول البيانات أدناه.';
       } else if (search.indexOf('sheets=no_credentials') !== -1) {
         msg.className = 'mb-4 p-3 rounded-lg bg-amber-100 text-amber-700 text-sm';
-        msg.textContent = 'لم يتم إعداد بيانات الاعتماد. أضف GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET في .env';
+        msg.textContent = 'لم يتم إعد��د بيانات الاعتماد. أضف GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET في .env';
       } else if (search.indexOf('sheets=callback_failed') !== -1 || search.indexOf('sheets=auth_failed') !== -1) {
         msg.className = 'mb-4 p-3 rounded-lg bg-red-100 text-red-700 text-sm';
         msg.textContent = 'فشل الربط. حاول مرة أخرى.';
@@ -627,7 +627,7 @@ function renderResetCategories() {
     cb.type = 'checkbox';
     cb.id = id;
     cb.setAttribute('data-reset-cat', cat.id);
-    cb.className = 'reset-cat-cb h-4 w-4 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500';
+    cb.className = 'reset-cat-cb h-4 w-4 shrink-0 rounded border-slate-300 text-[#1e3a5f] focus:ring-sky-500';
     cb.disabled = wipeOn;
     cb.checked = true;
     var span = document.createElement('span');

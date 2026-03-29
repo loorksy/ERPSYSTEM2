@@ -382,7 +382,7 @@ function switchTab(btn, tabId) {
   card.querySelectorAll('.tab-btn').forEach(function(b) {
     b.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-slate-100 text-slate-600 hover:bg-slate-200';
   });
-  btn.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-sky-600 text-white shadow-md';
+  btn.className = 'tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 bg-[#1e3a5f] text-white shadow-md';
 }
 
 function showToast(message, type = 'success') {
