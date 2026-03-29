@@ -1387,6 +1387,32 @@ img {
   }
 }
 
+/* تدقيق الرواتب — عرض أقصى يتدرّج مع عرض الشاشة (لابتوب وسطح المكتب) */
+.payroll-audit-page {
+  width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
+  max-width: min(48rem, 100%);
+}
+
+@media (min-width: 48rem) {
+  .payroll-audit-page {
+    max-width: min(64rem, 100%);
+  }
+}
+
+@media (min-width: 64rem) {
+  .payroll-audit-page {
+    max-width: min(85rem, 100%);
+  }
+}
+
+@media (min-width: 80rem) {
+  .payroll-audit-page {
+    max-width: min(96rem, 100%);
+  }
+}
+
 /* PWA Safe Areas */
 @supports (padding: env(safe-area-inset-bottom)) {
   .mobile-bottom-nav {
