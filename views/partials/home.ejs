@@ -11,11 +11,11 @@
       <div class="flex flex-wrap items-center gap-3">
         <!-- Cycle Selector -->
         <div class="flex items-center gap-2 bg-white rounded-xl border border-slate-200 px-3 py-2 shadow-sm">
-          <i class="fas fa-calendar-alt text-[#1e3a5f] text-sm"></i>
+          <i class="fas fa-calendar-alt text-blue-900 text-sm"></i>
           <select id="homeCycleSelect" class="text-sm bg-transparent border-none focus:outline-none text-slate-700 min-w-[120px]" onchange="homeLoadStats()">
             <option value="">— الدورة المالية —</option>
           </select>
-          <button type="button" onclick="homeLoadStats()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1e3a5f] text-white hover:bg-[#2d5a87] transition-all" title="تحديث">
+          <button type="button" onclick="homeLoadStats()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-900 text-white hover:bg-blue-800 transition-all" title="تحديث">
             <i class="fas fa-sync-alt text-xs"></i>
           </button>
         </div>
@@ -40,15 +40,15 @@
   <!-- Financial Overview Section -->
   <section class="mb-8">
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-10 h-10 rounded-xl bg-[#1e3a5f]/10 flex items-center justify-center">
-        <i class="fas fa-chart-pie text-[#1e3a5f]"></i>
+      <div class="w-10 h-10 rounded-xl bg-blue-900/10 flex items-center justify-center">
+        <i class="fas fa-chart-pie text-blue-900"></i>
       </div>
       <h2 class="text-lg font-bold text-slate-800">المؤشرات المالية</h2>
     </div>
     
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Net Profit -->
-      <a href="/profit-sources" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all duration-200">
+      <a href="/profit-sources" class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-200">
         <div class="flex items-start justify-between mb-4">
           <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all">
             <i class="fas fa-coins text-xl"></i>
@@ -59,43 +59,43 @@
           </span>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">الربح الصافي</p>
-        <p class="text-2xl font-bold text-slate-900" id="netProfit">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="netProfit">0.00</p>
       </a>
 
       <!-- Expenses -->
-      <a href="/expenses-manual" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-200">
+      <a href="/expenses-manual" class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-red-200 transition-all duration-200">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
             <i class="fas fa-receipt text-xl"></i>
           </div>
-          <span class="text-xs font-medium text-rose-600 bg-rose-50 px-2 py-1 rounded-full">مصاريف</span>
+          <span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">مصاريف</span>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">المصاريف (مجمّع)</p>
-        <p class="text-2xl font-bold text-slate-900" id="totalExpenses">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="totalExpenses">0.00</p>
       </a>
 
       <!-- Debts -->
-      <a href="/debts" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-200" id="homeCardDebt">
+      <a href="/debts" class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-orange-200 transition-all duration-200" id="homeCardDebt">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-all">
             <i class="fas fa-file-invoice-dollar text-xl"></i>
           </div>
-          <span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">ديون</span>
+          <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">ديون</span>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">إجمالي الديون</p>
-        <p class="text-2xl font-bold text-slate-900" id="totalDebts">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="totalDebts">0.00</p>
       </a>
 
       <!-- Receivables -->
-      <a href="/receivables-to-us" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all duration-200">
+      <a href="/receivables-to-us" class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-200">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-[#1e3a5f]/10 text-[#1e3a5f] flex items-center justify-center group-hover:bg-[#1e3a5f] group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-900 flex items-center justify-center group-hover:bg-blue-900 group-hover:text-white transition-all">
             <i class="fas fa-hand-holding-usd text-xl"></i>
           </div>
-          <span class="text-xs font-medium text-[#1e3a5f] bg-[#1e3a5f]/10 px-2 py-1 rounded-full">مستحقات</span>
+          <span class="text-xs font-medium text-blue-900 bg-blue-50 px-2 py-1 rounded-full">مستحقات</span>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">ديين لنا</p>
-        <p class="text-2xl font-bold text-slate-900" id="receivablesToUsHome">—</p>
+        <p class="text-2xl font-bold text-slate-800" id="receivablesToUsHome">—</p>
       </a>
     </div>
   </section>
@@ -103,57 +103,57 @@
   <!-- Liquidity Section -->
   <section class="mb-8">
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-10 h-10 rounded-xl bg-[#c9a227]/10 flex items-center justify-center">
-        <i class="fas fa-wallet text-[#c9a227]"></i>
+      <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+        <i class="fas fa-wallet text-amber-600"></i>
       </div>
       <h2 class="text-lg font-bold text-slate-800">السيولة والمستحقات</h2>
     </div>
     
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Payment Due -->
-      <a href="/payment-due" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200">
+      <a href="/payment-due" class="group bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-5 border border-amber-200 shadow-sm hover:shadow-lg transition-all duration-200">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-amber-200 text-amber-700 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
             <i class="fas fa-money-bill-wave text-xl"></i>
           </div>
         </div>
-        <p class="text-xs text-slate-500 font-medium mb-1">مطلوب دفع</p>
-        <p class="text-2xl font-bold text-slate-900" id="paymentDueHome">—</p>
+        <p class="text-xs text-amber-700 font-medium mb-1">مطلوب دفع</p>
+        <p class="text-2xl font-bold text-amber-900" id="paymentDueHome">—</p>
       </a>
 
       <!-- Cash Balance -->
-      <div class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-[#c9a227]/30 transition-all duration-200 cursor-pointer" id="homeCardCash" onclick="homeOpenFundModal()">
+      <div class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-amber-200 transition-all duration-200 cursor-pointer" id="homeCardCash" onclick="homeOpenFundModal()">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-[#c9a227]/10 text-[#c9a227] flex items-center justify-center group-hover:bg-[#c9a227] group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
             <i class="fas fa-vault text-xl"></i>
           </div>
-          <i class="fas fa-external-link-alt text-slate-300 group-hover:text-[#c9a227] text-xs"></i>
+          <i class="fas fa-external-link-alt text-slate-300 group-hover:text-amber-500 text-xs"></i>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-0.5">رصيد الصندوق الرئيسي</p>
         <p class="text-[10px] text-slate-400 mb-1">(محاسبي)</p>
-        <p class="text-2xl font-bold text-slate-900" id="cashBalance">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="cashBalance">0.00</p>
       </div>
 
       <!-- Deferred Balance -->
-      <a href="/deferred-balance" id="deferredBalanceLink" class="group bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md hover:border-[#1e3a5f]/20 transition-all duration-200">
+      <a href="/deferred-balance" id="deferredBalanceLink" class="group bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-lg hover:border-sky-200 transition-all duration-200">
         <div class="flex items-start justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-all">
+          <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-500 group-hover:text-white transition-all">
             <i class="fas fa-clock-rotate-left text-xl"></i>
           </div>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">رصيد المؤجل</p>
-        <p class="text-2xl font-bold text-slate-900" id="deferredBalance">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="deferredBalance">0.00</p>
       </a>
 
       <!-- Shipping Balance -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
         <div class="flex items-start justify-between mb-4">
           <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
             <i class="fas fa-truck-fast text-xl"></i>
           </div>
         </div>
         <p class="text-xs text-slate-500 font-medium mb-1">رصيد الشحن (كمية)</p>
-        <p class="text-2xl font-bold text-slate-900" id="shippingBalance">0.00</p>
+        <p class="text-2xl font-bold text-slate-800" id="shippingBalance">0.00</p>
       </div>
     </div>
   </section>
@@ -167,7 +167,7 @@
       </div>
       <div class="w-px h-5 bg-slate-200"></div>
       <span id="homeSheetsStatus" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-500">جاري التحقق...</span>
-      <a href="/settings" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-[#1e3a5f] transition-all" title="الإعدادات">
+      <a href="/settings" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-blue-900 transition-all" title="الإعدادات">
         <i class="fas fa-cog text-sm"></i>
       </a>
     </div>
@@ -179,10 +179,10 @@
   <div class="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
     <div class="flex justify-between items-center gap-3 px-6 py-5 border-b border-slate-100 bg-gradient-to-br from-slate-50 to-white">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-[#c9a227]/10 flex items-center justify-center">
-          <i class="fas fa-vault text-[#c9a227]"></i>
+        <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+          <i class="fas fa-vault text-amber-600"></i>
         </div>
-        <h4 class="text-lg font-bold text-slate-900">مصادر الأموال والصناديق</h4>
+        <h4 class="text-lg font-bold text-slate-800">مصادر الأموال والصناديق</h4>
       </div>
       <button type="button" onclick="homeCloseFundModal()" class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all" aria-label="إغلاق">
         <i class="fas fa-times text-lg"></i>
