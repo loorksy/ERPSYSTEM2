@@ -154,14 +154,6 @@ function initHomeStats() {
             pdH.className = HOME_METRIC_CLASS + ' text-slate-400';
           }
         }
-        var sub = document.getElementById('cashBalanceSub');
-        if (sub) {
-          var parts = [];
-          if (data.snapshotCash != null && data.snapshotCash !== 0) {
-            parts.push('مرجع لقطة الجداول (W+Y+Z) للدورة: ' + formatMoney(data.snapshotCash));
-          }
-          sub.textContent = parts.join(' ');
-        }
         var link = document.getElementById('deferredBalanceLink');
         if (link) link.href = '/deferred-balance';
       })
@@ -196,12 +188,6 @@ window.homeOpenFundModal = function() {
       html += '<div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 mt-2"><strong>صندوق الربح</strong> ' +
         '<span class="text-xs text-slate-500">(منفصل عن بطاقة رصيد الصندوق)</span>' +
         '<p class="font-semibold text-indigo-800 mt-1">' + formatMoney(d.profitPoolUsd) + ' USD</p></div>';
-    }
-    if (d.recentSnapshots && d.recentSnapshots.length) {
-      html += '<p class="font-semibold text-slate-700 mt-2">لقطات من الجداول (مرجع)</p>';
-      d.recentSnapshots.forEach(function(s) {
-        html += '<p class="text-xs">' + (s.name || '') + ': ' + formatMoney(s.cash_balance || 0) + '</p>';
-      });
     }
     body.innerHTML = html || '<p class="text-slate-400">لا بيانات</p>';
   });

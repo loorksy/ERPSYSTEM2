@@ -36,7 +36,6 @@ router.get('/stats', requireAuth, async (req, res) => {
     let cashBalance = 0;
     let deferredBalance = 0;
     let shippingBalance = 0;
-    let snapshotCash = 0;
     let totalRevenue = 0;
     let netProfit = 0;
     let capitalRecovered = 0;
@@ -145,13 +144,6 @@ router.get('/stats', requireAuth, async (req, res) => {
     const { usd: mainFundUsd } = await getMainFundUsdBalance(db, userId);
     const { usd: profitFundUsd, profitFundId } = await getProfitFundUsdBalance(db, userId);
 
-    if (defaultCycleId) {
-      const cashSnapshot = (await db.query(`
-        SELECT cash_balance FROM cash_box_snapshot WHERE cycle_id = $1 ORDER BY snapshot_at DESC LIMIT 1
-      `, [defaultCycleId])).rows[0];
-      snapshotCash = cashSnapshot?.cash_balance ?? 0;
-    }
-
     /** إجمالي المؤجل عبر كل الدورات (أرصدة غير مدققة متراكمة) */
     deferredBalance = await sumDeferredTotalAllCycles(db, userId);
 
@@ -165,7 +157,6 @@ router.get('/stats', requireAuth, async (req, res) => {
     res.json({
       success: true,
       cashBalance,
-      snapshotCash,
       fundTotals,
       mainFund,
       profitFundUsd,
@@ -254,19 +245,9 @@ router.get('/fund-sources', requireAuth, async (req, res) => {
       )).rows;
       out.push({ ...f, balances: bals });
     }
-    const snap = (await db.query(
-      `SELECT c.id, c.name, s.cash_balance
-       FROM financial_cycles c
-       LEFT JOIN LATERAL (
-         SELECT cash_balance FROM cash_box_snapshot WHERE cycle_id = c.id ORDER BY snapshot_at DESC LIMIT 1
-       ) s ON true
-       WHERE c.user_id = $1 ORDER BY c.created_at DESC LIMIT 5`,
-      [userId]
-    )).rows;
     res.json({
       success: true,
       funds: out,
-      recentSnapshots: snap,
       profitPoolUsd,
       profitPoolFundId,
     });
